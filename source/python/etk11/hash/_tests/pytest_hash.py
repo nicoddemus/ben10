@@ -1,0 +1,40 @@
+from StringIO import StringIO
+
+
+
+pytest_plugins = ["etk11._pytest.fixtures"]
+
+
+
+#===================================================================================================
+# Test
+#===================================================================================================
+class Test():
+
+
+    def testMd5Hash(self, embed_data):
+        from etk11 import hash
+
+        embed_data.CreateDataDir()
+
+        stringio = StringIO()
+        hash.DumpDirHashToStringIO(embed_data.GetDataDirectory(), stringio, 'bin')
+        val = stringio.getvalue()
+        assert val.splitlines() == [
+            'bin/file1.txt=4124bc0a9335c27f086f24ba207a4912',
+            'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
+        ]
+
+        stringio = StringIO()
+        hash.DumpDirHashToStringIO(embed_data.GetDataDirectory(), stringio, 'bin', exclude='*1.txt')
+        val = stringio.getvalue()
+        assert val.splitlines() == [
+            'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
+        ]
+
+        stringio = StringIO()
+        hash.DumpDirHashToStringIO(embed_data.GetDataDirectory(), stringio, '', exclude='*1.txt')
+        val = stringio.getvalue()
+        assert val.splitlines() == [
+            'file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
+        ]
