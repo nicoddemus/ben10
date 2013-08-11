@@ -100,7 +100,7 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
                 - exe_path: Path to the executable (either Python.exe or the application)
             - Extra variables: parameter extra_vars
     '''
-    import coilib50.system
+    import etk11.uname
 
     abs_path = os.path.abspath(filename)
     basename = os.path.basename(filename)
@@ -111,10 +111,10 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
     d.update({
         'abs_path'  : abs_path,
         'platform'  : sys.platform,
-        'PLATFORM'  : coilib50.system.Platform(),
+        'PLATFORM'  : etk11.uname.Platform(),
         'filename'  : filename,
         'basename'  : basename,
-        'app_dir'   : coilib50.system.GetApplicationDir(),
+        'app_dir'   : etk11.uname.GetApplicationDir(),
         'exe_path'  : os.path.dirname(sys.executable),
     })
 
@@ -332,9 +332,9 @@ def SameFile(src, dst):
 def GetAppDir():
     '''Find the Application Working Directory
     '''
-    import coilib50
+    from etk11.is_frozen import IsFrozen
 
-    if coilib50.IsFrozen():
+    if IsFrozen():
         return os.path.abspath(os.path.dirname(sys.executable))
     else:
         raise RuntimeError('Cannot find App Dir in development mode')

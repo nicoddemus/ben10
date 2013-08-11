@@ -22,7 +22,7 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
     :param str include:
         Pattern to match files to include in the hashing. E.g.: *.zip
     '''
-    from etk11.filesystem.path import path
+    from path import path
     import fnmatch
     p = path(directory)
     for f in p.files():

@@ -86,7 +86,6 @@ class _EmbedDataFixture(object):
         if IsFrozen():
             raise RuntimeError("_EmbedDataFixture is not ready for execution inside an executable.")
 
-
         if IsDir(self._source_dir):
             CopyDirectory(self._source_dir, self._data_dir)
         else:

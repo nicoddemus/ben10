@@ -1,5 +1,6 @@
-from etk11.reraise import Reraise
+import pytest
 
+from etk11.reraise import Reraise, ReraiseKeyError
 
 
 #=======================================================================================================================
@@ -86,3 +87,13 @@ class Test(object):
             obtained = str(exception)
 
         assert 'SecondaryError' in obtained, 'Expected "SecondaryError" to be in: ' + obtained
+
+
+    def testReraiseKey(self):
+        with pytest.raises(ReraiseKeyError) as key_error:
+            try:
+                raise KeyError('key')
+            except KeyError as exception:
+                Reraise(exception, "Reraising")
+
+        assert str(key_error) == '''%s:95\nReraiseKeyError:''' % __file__

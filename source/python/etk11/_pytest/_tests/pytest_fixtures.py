@@ -1,24 +1,26 @@
 '''
 COVERAGE:
-  > ii load pytest_cov .
-  > pytest --cov-report term-missing --cov sharedscripts10._pytest.fixtures source\python\sharedscripts10\_pytest\_tests\pytest_fixtures.py
-  ====================================== test session starts =======================================
-  platform win32 -- Python 2.7.3 -- pytest-2.3.4
-  collected 5 items
+    Name                                                           Stmts   Miss  Cover   Missing
+    --------------------------------------------------------------------------------------------
+    source\python\etk11\_pytest\fixtures                              78      2    97%   87, 92    
 
-  source/python/sharedscripts10/_pytest/_tests/pytest_fixtures.py .....
-  ------------------------- coverage: platform win32, python 2.7.3-final-0 -------------------------
-  Name                                             Stmts   Miss  Cover   Missing
-  ------------------------------------------------------------------------------
-  source\python\sharedscripts10\_pytest\fixtures     126      4    97%   83, 89, 181, 318
-
-  ==================================== 5 passed in 0.40 seconds ====================================
+PYLINK:
+    ************* Module etk11._pytest.fixtures
+    C:  1,0: Missing docstring
+    C:  8,0:MultipleFilesNotFound: Missing docstring
+    W: 10,4:MultipleFilesNotFound.__init__: __init__ method from base class 'RuntimeError' is not called
+    C:179,8:_EmbedDataFixture.AssertEqualFiles.FindFile: Missing docstring
+    C:202,0:embed_data: Invalid name "embed_data" for type function (should match [A-Z_][a-zA-Z0-9_]{2,30}$)
+    E:201,1:embed_data: Module 'pytest' has no 'fixture' member
 '''
 from __future__ import with_statement
-from etk11._pytest.fixtures import MultipleFilesNotFound
-from etk11.filesystem import CreateFile
+
 import os
+
 import pytest
+
+from etk11._pytest.fixtures import MultipleFilesNotFound
+from etk11.filesystem import CreateFile, StandardizePath
 
 
 pytest_plugins = ["etk11._pytest.fixtures"]
@@ -45,6 +47,11 @@ class Test(object):
         # Checking auxiliary functions
         assert embed_data.GetDataDirectory() == 'data_fixtures__test_embed_data'
         assert embed_data.GetDataFilename('alpha.txt') == 'data_fixtures__test_embed_data/alpha.txt'
+
+        assert embed_data.GetDataDirectory(absolute=True) \
+            == StandardizePath(os.path.abspath('data_fixtures__test_embed_data'))
+        assert embed_data.GetDataFilename('alpha.txt', absolute=True) \
+            == StandardizePath(os.path.abspath('data_fixtures__test_embed_data/alpha.txt'))
 
 
     def test_embed_data_ExistingDataDir(self, embed_data):

@@ -26,22 +26,32 @@ class Test():
 
 
     def testRefcount(self):
+
+        def AssertEqual(a, b):
+            '''
+            Avoiding using "assert a == b" because it adds another reference to the ref-count.
+            '''
+            if a == b:
+                pass
+            else:
+                assert False, "%s != %s" % (a, b)
+
         self.SetupTestAttributes()
 
-        assert sys.getrefcount(self.c) == 2  # 2: one in self, and one as argument to getrefcount()
+        AssertEqual(sys.getrefcount(self.c), 2)  # 2: one in self, and one as argument to getrefcount()
         cf = self.c.f
-        assert sys.getrefcount(self.c) == 3  # 3: as above, plus cf
+        AssertEqual(sys.getrefcount(self.c), 3)  # 3: as above, plus cf
         rf = WeakMethodRef(self.c.f)
         pf = WeakMethodProxy(self.c.f)
-        assert sys.getrefcount(self.c) == 3
+        AssertEqual(sys.getrefcount(self.c), 3)
         del cf
-        assert sys.getrefcount(self.c) == 2
+        AssertEqual(sys.getrefcount(self.c), 2)
         rf2 = WeakMethodRef(self.c.f)
-        assert sys.getrefcount(self.c) == 2
+        AssertEqual(sys.getrefcount(self.c), 2)
         del rf
         del rf2
         del pf
-        assert sys.getrefcount(self.c) == 2
+        AssertEqual(sys.getrefcount(self.c), 2)
 
 
     def testDies(self):

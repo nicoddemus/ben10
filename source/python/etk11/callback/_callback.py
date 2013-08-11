@@ -31,12 +31,15 @@ def HandleErrorOnCallback(func, *args, **kwargs):
         The keyword arguments passed to the callback.
     '''
     if hasattr(func, 'func_code'):
-        name, filename, line = \
-            func.func_code.co_name, func.func_code.co_filename, func.func_code.co_firstlineno
-        #Use default python trace format so that we have linking on pydev.
+        name, filename, line = (
+            func.func_code.co_name,
+            func.func_code.co_filename,
+            func.func_code.co_firstlineno
+        )
+        # Use default python trace format so that we have linking on pydev.
         func = '\n  File "%s", line %s, in %s (Called from Callback)\n' % (filename, line, name)
     else:
-        #That's ok, it may be that it's not really a method.
+        # That's ok, it may be that it's not really a method.
         func = '%r\n' % (func,)
 
     msg = 'Error while trying to call %s' % (func,)
@@ -45,6 +48,6 @@ def HandleErrorOnCallback(func, *args, **kwargs):
     if kwargs:
         msg += 'Kwargs: %s\n' % (kwargs,)
 
-    from coilib50.debug import handle_exception
+    from etk11.debug import handle_exception
     handle_exception.HandleException(msg)
 

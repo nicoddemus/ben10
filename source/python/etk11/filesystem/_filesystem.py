@@ -312,7 +312,7 @@ def _CopyFileLocal(source_filename, target_filename, copy_symlink=True):
                 DeleteFile(target_filename)
 
             # >>> Obtain the relative path from link to source_filename (linkto)
-            from .path import path
+            from path import path
             source_filename = path(source_filename)
             linkto = source_filename.readlink()
 
@@ -949,7 +949,7 @@ def CreateDirectory(directory):
 
     # Handle local
     if _UrlIsLocal(directory_url):
-        from .path import path
+        from path import path
         target = path(directory)
         if not target.exists():
             target.makedirs()

@@ -1,9 +1,12 @@
+import weakref
+
+import pytest
+
 from etk11 import callback
 from etk11.callback import FunctionNotRegisteredError, Callbacks, _callback, _CallbackWrapper, After
+from etk11.debug import handle_exception
 from etk11.null import Null
 from etk11.weak_ref import WeakMethodRef
-import pytest
-import weakref
 
 
 #===================================================================================================
@@ -651,21 +654,17 @@ class Test(object):
         c.Register(After2)
 
         error_handled_on = []
-        def HandleErrorOnCallback(func, *args, **kwargs):
-            error_handled_on.append(func)
+        def MyHandleException(msg):
+            error_handled_on.append(msg)
 
-        monkeypatch.setattr(_callback, 'HandleErrorOnCallback', HandleErrorOnCallback)
-        try:
-            c()
-            assert len(error_handled_on) == 2
-            assert self.called == 2
+        monkeypatch.setattr(handle_exception, 'HandleException', MyHandleException)
+        c()
+        assert len(error_handled_on) == 2
+        assert self.called == 2
 
-            c(1, a=2)
-            assert len(error_handled_on) == 4
-            assert self.called == 4
-        finally:
-            pass
-            # monkeypatch.reset(_callback)
+        c(1, a=2)
+        assert len(error_handled_on) == 4
+        assert self.called == 4
 
         # test the default behaviour: errors are not handled and stop execution as usual
         self.called = 0
