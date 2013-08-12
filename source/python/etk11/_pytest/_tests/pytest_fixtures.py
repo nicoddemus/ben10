@@ -105,11 +105,12 @@ class Test(object):
         assert str(e.value) == 'Files not found: missing.txt,data_fixtures__test_embed_data_AssertEqualFiles/missing.txt'
 
 
-    def testNotOnFrozen(self, embed_data):
-        with PushPop(is_frozen, 'IsFrozen', lambda:True):
-            with pytest.raises(RuntimeError) as exception:
-                embed_data.CreateDataDir()
-            assert str(exception) == r'X:\etk11\source\python\etk11\_pytest\fixtures.py:87: RuntimeError: _EmbedDataFixture is not ready for execution inside an executable.'
+    def testNotOnFrozen(self, monkeypatch, embed_data):
+        monkeypatch.setattr(is_frozen, 'IsFrozen', lambda:True)
+
+        with pytest.raises(RuntimeError) as exception:
+            embed_data.CreateDataDir()
+        assert str(exception) == r'X:\etk11\source\python\etk11\_pytest\fixtures.py:87: RuntimeError: _EmbedDataFixture is not ready for execution inside an executable.'
 
 
 
