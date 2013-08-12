@@ -18,7 +18,6 @@ class Test():
                     '''
                     docstring
                     '''
-                    return 1
 
 
             class B(A):
@@ -37,28 +36,28 @@ class Test():
             class A(object):
 
                 def MyMethod(self):
-                    pass
+                    ''
 
 
             class B(A):
 
                 @Override(A.Method)  # it will raise an error at this point
                 def Method(self):
-                    pass
+                    ''
 
         def TestNoMatch():
 
             class A(object):
 
                 def Method(self):
-                    return 1
+                    ''
 
 
             class B(A):
 
                 @Override(A.Method)
                 def MethodNoMatch(self):
-                    return 2
+                    ''
 
 
         TestOK()

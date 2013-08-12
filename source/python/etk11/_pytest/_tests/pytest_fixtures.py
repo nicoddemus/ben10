@@ -19,7 +19,9 @@ import os
 
 import pytest
 
+from etk11 import is_frozen
 from etk11._pytest.fixtures import MultipleFilesNotFound
+from etk11.debug._tests.pytest_handle_exception import PushPop
 from etk11.filesystem import CreateFile, StandardizePath
 
 
@@ -101,4 +103,13 @@ class Test(object):
             )
 
         assert str(e.value) == 'Files not found: missing.txt,data_fixtures__test_embed_data_AssertEqualFiles/missing.txt'
+
+
+    def testNotOnFrozen(self, embed_data):
+        with PushPop(is_frozen, 'IsFrozen', lambda:True):
+            with pytest.raises(RuntimeError) as exception:
+                embed_data.CreateDataDir()
+            assert str(exception) == r'X:\etk11\source\python\etk11\_pytest\fixtures.py:87: RuntimeError: _EmbedDataFixture is not ready for execution inside an executable.'
+
+
 

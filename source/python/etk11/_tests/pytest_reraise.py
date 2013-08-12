@@ -96,4 +96,4 @@ class Test(object):
             except KeyError as exception:
                 Reraise(exception, "Reraising")
 
-        assert str(key_error) == '''%s:95\nReraiseKeyError:''' % __file__
+        assert str(key_error) == '%s:95: ReraiseKeyError:' % __file__

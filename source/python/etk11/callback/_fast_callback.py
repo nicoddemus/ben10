@@ -68,11 +68,8 @@ class Callback(object):
             func = func.OriginalMethod()
 
         try:
-            if func.im_self is not None:
-                # bound method
-                return (id(func.im_self), id(func.im_func), id(func.im_class))
-            else:
-                return (id(func.im_func), id(func.im_class))
+            assert func.im_self is not None, "The listener function must be bound, otherwise it can't be called"
+            return (id(func.im_self), id(func.im_func), id(func.im_class))
 
         except AttributeError:
             # not a method -- a callable: create a strong reference (the CallbackWrapper
@@ -90,12 +87,8 @@ class Callback(object):
         # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
         # at this point
         try:
-            if func.im_self is not None:
-                # bound method
-                return (weakref.ref(func.im_self), func.im_func, func.im_class)
-            else:
-                # unbound method
-                return (None, func.im_func, func.im_class)
+            assert func.im_self is not None, "The listener function must be bound, otherwise it can't be called"
+            return (weakref.ref(func.im_self), func.im_func, func.im_class)
         except AttributeError:
             # not a method -- a callable: create a strong reference (the CallbackWrapper
             # is depending on this behaviour... is it correct?)

@@ -3,7 +3,7 @@ import weakref
 import pytest
 
 from etk11 import callback
-from etk11.callback import FunctionNotRegisteredError, Callbacks, _callback, _CallbackWrapper, After
+from etk11.callback import Callbacks, _callback, _CallbackWrapper, After
 from etk11.debug import handle_exception
 from etk11.null import Null
 from etk11.weak_ref import WeakMethodRef
@@ -857,4 +857,26 @@ class Test(object):
         s = _MyNullSubClass()
         def AfterSetIstodraw():
             pass
-        w = After(s.SetIstodraw, AfterSetIstodraw)
+        After(s.SetIstodraw, AfterSetIstodraw)
+
+
+    def testUnbound(self):
+        '''
+        We don't accept unbound methods as callback listeners.
+        '''
+
+        output = []
+
+        class MyClass(object):
+
+            def MyMethod(self):
+                output.append('MyMethod')
+
+        class MyListener(object):
+
+            def Listen(self):
+                output.append('Listen')
+
+        a = MyClass()
+        with pytest.raises(AssertionError):
+            After(a.MyMethod, MyListener.Listen)

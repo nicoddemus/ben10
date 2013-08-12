@@ -22,9 +22,12 @@ class Test:
 
             @Implements(IFoo.Foo)
             def Foo(self):
-                pass
+                return self.__class__.__name__
 
         assert IFoo.Foo.__doc__ == Impl.Foo.__doc__
+
+        # Just for 100% coverage.
+        assert Impl().Foo() == 'Impl'
 
 
     def CreateClass(self):
@@ -32,10 +35,10 @@ class Test:
         class IFoo(object):
 
             def DoIt(self):
-                pass
+                ''
 
         class Implementation(object):
 
             @Implements(IFoo.DoIt)
             def DoNotDoIt(self):
-                pass
+                ''

@@ -57,6 +57,44 @@ class Test:
         assert 5 == self._calls
 
 
+    def testMemoizeAndMethod(self):
+        _calls = []
+
+        class F(object):
+
+            def __init__(self, name):
+                self.name = name
+
+            @Memoize(2)
+            def GetName(self, param):
+                result = self.name + param
+                _calls.append(result)
+                return result
+
+        f = F('F')
+        g = F('G')
+
+        f.GetName('1')
+        assert _calls == ['F1']
+        f.GetName('2')
+        assert _calls == ['F1', 'F2']
+        f.GetName('1')
+        assert _calls == ['F1', 'F2']  # Cache HIT
+
+        f.GetName('3')
+        assert _calls == ['F1', 'F2', 'F3']
+
+        f.GetName('1')
+        assert _calls == ['F1', 'F2', 'F3', 'F1']  # Cache miss because F1 was removed
+
+        g.GetName('1')
+        g.GetName('2')
+        assert _calls == ['F1', 'F2', 'F3', 'F1', 'G1', 'G2']
+
+        g.GetName('2')
+        assert _calls == ['F1', 'F2', 'F3', 'F1', 'G1', 'G2']  # Cache HIT because F and G have a separated cache.
+
+
     def testMemoizeLRU(self):
         counts = {}
 
