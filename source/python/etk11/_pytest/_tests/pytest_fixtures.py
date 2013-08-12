@@ -110,7 +110,12 @@ class Test(object):
 
         with pytest.raises(RuntimeError) as exception:
             embed_data.CreateDataDir()
-        assert str(exception) == r'X:\etk11\source\python\etk11\_pytest\fixtures.py:87: RuntimeError: _EmbedDataFixture is not ready for execution inside an executable.'
+
+        filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fixtures.py')
+        assert str(exception) in (
+            'File "%s", line 87\nRuntimeError: _EmbedDataFixture is not ready for execution inside an executable.' % filename,
+            '%s:87: RuntimeError: _EmbedDataFixture is not ready for execution inside an executable.' % filename,
+        )
 
 
 
