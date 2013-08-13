@@ -5,24 +5,21 @@ Some sort of wrapper for common builtin 'os' operations with a nicer interface.
 
 These functions abstract file location, most of them work for either local, ftp or http protocols
 
+FTP LIMITATIONS:
+================
 
-#===================================================================================================
-# FTP LIMITATIONS:
-#===================================================================================================
-    Right now, all functions that require a FTP connection are ALWAYS creating and closing a FTP
-    Host.
+Right now, all functions that require a FTP connection are ALWAYS creating and closing a FTP Host.
     
-    Keep in mind that this process can be slow if you perform many of such operations in sequence. 
+Keep in mind that this process can be slow if you perform many of such operations in sequence. 
 '''
 import os
 import re
 import sys
 
 
-
-#===================================================================================================
+#=======================================================================================================================
 # Constants
-#===================================================================================================
+#=======================================================================================================================
 SEPARATOR_UNIX = '/'
 SEPARATOR_WINDOWS = '\\'
 EOL_STYLE_NONE = None  # Binary files
