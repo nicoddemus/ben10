@@ -1,5 +1,5 @@
 from etk11.weak_ref import GetWeakRef
-from etk11.implements import Implements
+from etk11.decorators import Implements
 
 
 

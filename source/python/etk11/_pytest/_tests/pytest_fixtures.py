@@ -21,7 +21,6 @@ import pytest
 
 from etk11 import is_frozen
 from etk11._pytest.fixtures import MultipleFilesNotFound
-from etk11.debug._tests.pytest_handle_exception import PushPop
 from etk11.filesystem import CreateFile, StandardizePath
 
 

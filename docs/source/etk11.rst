@@ -9,10 +9,10 @@ etk11 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`implements` Module
+:mod:`decorators` Module
 ------------------------
 
-.. automodule:: etk11.implements
+.. automodule:: etk11.decorators
     :members:
     :undoc-members:
     :show-inheritance:
@@ -49,26 +49,10 @@ etk11 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`override` Module
-----------------------
-
-.. automodule:: etk11.override
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`pushpop` Module
 ---------------------
 
 .. automodule:: etk11.pushpop
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`reraise` Module
----------------------
-
-.. automodule:: etk11.reraise
     :members:
     :undoc-members:
     :show-inheritance:

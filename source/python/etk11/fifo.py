@@ -7,8 +7,7 @@ from etk11.odict import odict
 #=======================================================================================================================
 class FIFO(odict):
     '''
-    This is a First in, First out cache, so, when the maximum size is reached, the first item added
-    is removed.
+    This is a "First In, First Out" queue, so, when the queue size is reached, the first item added is removed.
     '''
 
     def __init__(self, maxsize):

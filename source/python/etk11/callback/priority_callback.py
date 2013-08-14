@@ -1,6 +1,6 @@
 from _fast_callback import Callback
 from etk11.odict import odict
-from etk11.override import Override
+from etk11.decorators import Override
 
 
 

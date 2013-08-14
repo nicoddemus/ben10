@@ -34,7 +34,7 @@ elif sys.platform == 'linux2':
 elif sys.platform == 'darwin':
     EOL_STYLE_NATIVE = EOL_STYLE_MAC
 else:
-    from etk11.filesystem import UnknownPlatformError
+    from ._filesystem_exceptions import UnknownPlatformError
     raise UnknownPlatformError(sys.platform)
 
 
@@ -225,7 +225,7 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
 
     # Copy md5 file after the file itself was copied, for safety
     if md5_check:
-        from etk11.filesystem import FileNotFoundError
+        from _filesystem_exceptions import FileNotFoundError
         try:
             _DoCopyFile(source_md5_filename, target_md5_filename)
         except FileNotFoundError:
@@ -249,7 +249,7 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
         If source_filename does not exist
     '''
     if not Exists(source_filename):
-        from etk11.filesystem import FileNotFoundError
+        from _filesystem_exceptions import FileNotFoundError
         raise FileNotFoundError(source_filename)
 
     from urlparse import urlparse
@@ -372,7 +372,7 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
         if create_target_dir:
             CreateDirectory(target_dir)
         else:
-            from _filesystem_exceptions import DirectoryNotFoundError
+            from ._filesystem_exceptions import DirectoryNotFoundError
             raise DirectoryNotFoundError(target_dir)
 
     # List and match files

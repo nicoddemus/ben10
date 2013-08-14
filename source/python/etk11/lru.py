@@ -4,7 +4,7 @@ LRU module. Based around heapq.
 from heapq import heappush, heappop, heapify
 import itertools
 
-from etk11.override import Override
+from etk11.decorators import Override
 
 
 DEFAULT_LRU_SIZE = 50
@@ -70,15 +70,16 @@ class _Node(object):
         return '_Node(time=%s)' % self.node_time
 
 
-#===================================================================================================
+
+#=======================================================================================================================
 # LRU
-#===================================================================================================
+#=======================================================================================================================
 class LRU(object):
     '''
     Least Recently Used (LRU) cache.
     
-    Based on heapq module (which is used to guarantee that the 1st item in _heap is
-    always the item that has the lowest access time).
+    Based on heapq module (which is used to guarantee that the 1st item in _heap is always the item that has the lowest
+    access time).
     '''
 
     def __init__(self, size=DEFAULT_LRU_SIZE, internal_dict=None):
