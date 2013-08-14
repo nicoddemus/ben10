@@ -3,7 +3,7 @@ from StringIO import StringIO
 from etk11.hash import Md5Hex
 
 
-pytest_plugins = ["etk11._pytest.fixtures"]
+pytest_plugins = ["etk11.fixtures"]
 
 
 

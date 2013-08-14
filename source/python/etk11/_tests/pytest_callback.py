@@ -1,17 +1,17 @@
-import weakref
-
-import pytest
-
 from etk11 import callback
-from etk11.callback import Callbacks, _callback, _CallbackWrapper, After
+from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback
 from etk11.debug import handle_exception
 from etk11.null import Null
 from etk11.weak_ref import WeakMethodRef
+import pytest
+import weakref
 
 
-#===================================================================================================
+
+
+#=======================================================================================================================
 # _MyClass
-#===================================================================================================
+#=======================================================================================================================
 class _MyClass(object):
 
     def SetAlpha(self, value):
@@ -22,9 +22,9 @@ class _MyClass(object):
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # Test
-#===================================================================================================
+#=======================================================================================================================
 class Test(object):
 
     def setup_method(self, method):
@@ -701,7 +701,7 @@ class Test(object):
         def HandleErrorOnCallback(func, *args, **kwargs):
             handled_errors.append(func)
 
-        monkeypatch.setattr(_callback, 'HandleErrorOnCallback', HandleErrorOnCallback)
+        monkeypatch.setattr(callback, 'HandleErrorOnCallback', HandleErrorOnCallback)
 
         assert c.Method(10) == 20
         assert self.before_called == 1
@@ -880,3 +880,33 @@ class Test(object):
         a = MyClass()
         with pytest.raises(AssertionError):
             After(a.MyMethod, MyListener.Listen)
+
+
+    def testPriorityCallback(self):
+        priority_callback = PriorityCallback()
+
+        called = []
+
+        def OnCall1():
+            called.append(1)
+
+        def OnCall2():
+            called.append(2)
+
+        def OnCall3():
+            called.append(3)
+
+        def OnCall4():
+            called.append(4)
+
+        def OnCall5():
+            called.append(5)
+
+        priority_callback.Register(OnCall1, priority=2)
+        priority_callback.Register(OnCall2, priority=2)
+        priority_callback.Register(OnCall3, priority=1)
+        priority_callback.Register(OnCall4, priority=3)
+        priority_callback.Register(OnCall5, priority=2)
+
+        priority_callback()
+        assert called == [3, 1, 2, 5, 4]

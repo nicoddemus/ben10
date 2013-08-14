@@ -10,7 +10,7 @@ import sys
 
 
 
-pytest_plugins = ["etk11._pytest.fixtures"]
+pytest_plugins = ["etk11.fixtures"]
 
 
 

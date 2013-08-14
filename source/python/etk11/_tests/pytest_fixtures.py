@@ -5,7 +5,7 @@ COVERAGE:
     source\python\etk11\_pytest\fixtures                              78      2    97%   87, 92    
 
 PYLINK:
-    ************* Module etk11._pytest.fixtures
+    ************* Module etk11.fixtures
     C:  1,0: Missing docstring
     C:  8,0:MultipleFilesNotFound: Missing docstring
     W: 10,4:MultipleFilesNotFound.__init__: __init__ method from base class 'RuntimeError' is not called
@@ -20,11 +20,11 @@ import os
 import pytest
 
 from etk11 import is_frozen
-from etk11._pytest.fixtures import MultipleFilesNotFound
+from etk11.fixtures import MultipleFilesNotFound
 from etk11.filesystem import CreateFile, StandardizePath
 
 
-pytest_plugins = ["etk11._pytest.fixtures"]
+pytest_plugins = ["etk11.fixtures"]
 
 
 

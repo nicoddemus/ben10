@@ -1,13 +1,12 @@
-from etk11 import log
 from StringIO import StringIO
+from etk11 import log
 import sys
 
 
-#===================================================================================================
+#=======================================================================================================================
 # Test
-#===================================================================================================
+#=======================================================================================================================
 class Test():
-
 
     def testHandlers(self):
         stream = StringIO()
@@ -30,3 +29,14 @@ class Test():
         # and a StreamHandler won't be automatically created!)
         assert stream.getvalue().strip() == ''
 
+
+    def testWithLogger(self):
+        contents = '''
+from __future__ import with_statement
+from etk11.log import StartLogging, GetLogger
+with StartLogging() as logger:
+    GetLogger('').Warn('something')
+    assert 'something' in logger.GetRecordedLog()
+    assert 'something' in logger.GetRecordedLog()
+'''
+        code = compile(contents, '<string>', 'exec')
