@@ -1,4 +1,5 @@
 from etk11.decorators import Override
+from etk11.interface import Method
 from etk11.odict import odict
 from etk11.reraise import Reraise
 from etk11.weak_ref import WeakMethodRef
@@ -88,8 +89,12 @@ class Callback(object):
         # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
         # at this point
         try:
-            assert func.im_self is not None, "The listener function must be bound, otherwise it can't be called"
-            return (weakref.ref(func.im_self), func.im_func, func.im_class)
+            if func.im_self is None:
+                # unbound method
+                return (None, func.im_func, func.im_class)
+            else:
+                # bound method
+                return (weakref.ref(func.im_self), func.im_func, func.im_class)
         except AttributeError:
             # not a method -- a callable: create a strong reference (the CallbackWrapper
             # is depending on this behaviour... is it correct?)
@@ -529,7 +534,7 @@ def _CreateBeforeOrAfter(method, callback, sender_as_parameter, before=True):
 #=======================================================================================================================
 # _MethodWrapper
 #=======================================================================================================================
-class _MethodWrapper(object):  # It needs to be a subclass of Method for interface checks.
+class _MethodWrapper(Method):  # It needs to be a subclass of Method for interface checks.
 
     __slots__ = [
         '_before',

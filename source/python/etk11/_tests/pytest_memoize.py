@@ -1,6 +1,6 @@
 import pytest
 
-from etk11.cache.memoize import Memoize
+from etk11.memoize import Memoize
 from etk11.weak_ref import GetWeakRef
 
 

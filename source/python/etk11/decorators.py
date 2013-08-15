@@ -1,6 +1,8 @@
 '''
 Collection of decorator with ONLY standard library dependencies.
 '''
+from etk11.is_frozen import IsFrozen
+import warnings
 
 
 #=======================================================================================================================
@@ -92,3 +94,45 @@ def Implements(method):
         return func
 
     return Wrapper
+
+
+
+#=======================================================================================================================
+# Deprecated
+#=======================================================================================================================
+def Deprecated(name=None):
+    '''
+    Decorator that marks a method as deprecated.
+        
+    :param str name:
+        The name of the method that substitutes this one, if any.
+    '''
+    if IsFrozen():
+        # Optimization: we don't want deprecated to add overhead in release mode.
+
+        def DeprecatedDecorator(func):
+            return func
+
+    else:
+        def DeprecatedDecorator(func):
+            '''
+            The actual deprecated decorator, configured with the name parameter.
+            '''
+
+            def DeprecatedWrapper(*args, **kwargs):
+                '''
+                This method wrapper gives a deprecated message before calling the original
+                implementation.
+                '''
+                if name is not None:
+                    msg = 'DEPRECATED: %r is deprecated, use %r instead' % (func.__name__, name)
+                else:
+                    msg = 'DEPRECATED: %r is deprecated' % func.__name__
+                warnings.warn(msg, stacklevel=2)
+                return func(*args, **kwargs)
+
+            DeprecatedWrapper.__name__ = func.__name__
+            DeprecatedWrapper.__doc__ = func.__doc__
+            return DeprecatedWrapper
+
+    return DeprecatedDecorator

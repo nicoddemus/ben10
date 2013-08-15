@@ -1,12 +1,12 @@
-import weakref
-
-import pytest
-
 from etk11 import callback
-from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback, ErrorNotHandledInCallback
+from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback, ErrorNotHandledInCallback, Remove
 from etk11.debug import handle_exception
 from etk11.null import Null
 from etk11.weak_ref import WeakMethodRef
+import pytest
+import weakref
+
+
 
 
 #=======================================================================================================================
@@ -246,7 +246,7 @@ class Test(object):
             self.args[0] = args
 
         def f2(*args):
-            self.args[1] = args
+            'Never called!'
 
 
         c = callback.Callback()
@@ -339,7 +339,7 @@ class Test(object):
 
     def testContains(self):
         def foo(x):
-            pass
+            'Never called!'
 
         c = callback.Callback()
         assert not c.Contains(foo)
@@ -597,13 +597,16 @@ class Test(object):
                 self.name = name
 
             def OnCallback(self):
-                pass
+                'Never called!'
 
             def __eq__(self, other):
                 return self.name == other.name
 
             def __ne__(self, other):
+                '''
+                Never called!
                 return not self == other
+                '''
 
         instance1 = C('instance')
         instance2 = C('instance')
@@ -729,7 +732,8 @@ class Test(object):
         assert len(handled_errors) == 4
 
 
-    def TODO_testKeyReusedAfterDead(self, monkeypatch):
+    # TODO:
+    def testKeyReusedAfterDead(self, monkeypatch):
         self._gotten_key = False
         def GetKey(*args, **kwargs):
             self._gotten_key = True
@@ -738,10 +742,10 @@ class Test(object):
         monkeypatch.setattr(callback.Callback, '_GetKey', GetKey)
 
         def AfterMethod(*args):
-            pass
+            'Not called!'
 
         def AfterMethodB(*args):
-            pass
+            'Not called!'
 
         c = callback.Callback()
 
@@ -760,9 +764,25 @@ class Test(object):
         assert self._gotten_key
 
         class A(object):
-            property.Create(a=10)
+
+            def __init__(self):
+                self._a = 0
+
+            def GetA(self):
+                return self._a
+
+            def SetA(self, value):
+                self._a = value
+
+            a = property(GetA, SetA)
 
         a = A()
+
+        # Coverage exercise
+        assert a.a == 0
+        a.a = 10
+        assert a.a == 10
+
         # If registering a bound, it doesn't contain the unbound
         c.Register(a.SetA)
         assert not c.Contains(AfterMethodB)
@@ -793,7 +813,7 @@ class Test(object):
         c = callback.Callback()
         # Even when the function isn't registered, we not raise an error.
         def Func():
-            pass
+            'Never called!'
 
         # self.assertNotRaises(RuntimeError,
         c.Unregister(Func)
@@ -805,22 +825,25 @@ class Test(object):
         # self.assertNotRaises(AttributeError,
         c.UnregisterAll()
 
-        self.called = False
+        self.called = 0
         def Func():
-            self.called = True
+            self.called += 1
 
         c.Register(Func)
-        c.UnregisterAll()
-
         c()
-        assert self.called == False
+        assert self.called == 1
+
+        c.UnregisterAll()
+        c()
+        assert self.called == 1
 
 
     def testOnClassAndOnInstance(self):
         vals = []
         class Stub(object):
             def call(self, *args, **kwargs):
-                pass
+                'Never called!'
+
 
         def OnCall1(instance, val):
             vals.append(('call_instance', val))
@@ -837,42 +860,70 @@ class Test(object):
 
 
     def testOnClassAndOnInstance2(self):
-        vals = []
+
         class Stub(object):
-            def call(self, *args, **kwargs):
+            def Method(self, *args, **kwargs):
                 pass
 
-        def OnCall1(instance, val):
+        def OnCallClass(instance, val):
             vals.append(('call_class', val))
 
-        def OnCall2(val):
+        def OnCallInstance(val):
             vals.append(('call_instance', val))
 
-        s = Stub()
-        After(s.call, OnCall2)
-        After(Stub.call, OnCall1)
-
-        # Tricky thing here: because we added the callback in the class after we added it to the
-        # instance, the callback on the instance cannot be rebound, thus, calling it on the instance
+        # Tricky thing here: because we added the callback in the class (2) after we added it to the
+        # instance (1), the callback on the instance cannot be rebound, thus, calling it on the instance
         # won't really trigger the callback on the class (not really what would be expected of the
         # after method, but I couldn't find a reasonable way to overcome that).
         # A solution could be keeping track of all callbacks and rebinding all existent ones in the
         # instances to the one in the class, but it seems overkill for such an odd situation.
-        s.call(True)
-        assert vals == [('call_instance', True), ]
+        vals = []
+        s = Stub()
+        After(s.Method, OnCallInstance)  # (1)
+        After(Stub.Method, OnCallClass)  # (2)
+        s.Method(1)
+        assert vals == [('call_instance', 1), ]
+        Remove(s.Method, OnCallInstance)
+        Remove(Stub.Method, OnCallClass)
+
+        vals = []
+        s = Stub()
+        s.Method(2)
+        assert vals == []
+
+        vals = []
+        s = Stub()
+        After(Stub.Method, OnCallClass)  # (2)
+        After(s.Method, OnCallInstance)  # (1)
+        s.Method(3)
+        assert vals == [('call_class', 3), ('call_instance', 3) ]
 
 
     def testOnNullClass(self):
+        '''
+        On Null classes, After/Before has no effect.
+        '''
 
-        class _MyNullSubClass(Null):
+        class MyNullSubClass(Null):
+            ''
 
-            def GetIstodraw(self):
-                return True
+        count = [0]
+        def AfterSetIt():
+            count[0] += 1
 
-        s = _MyNullSubClass()
-        def AfterSetIstodraw():
-            pass
-        After(s.SetIstodraw, AfterSetIstodraw)
+
+        AfterSetIt()
+        assert count == [1]
+
+        s = Null()
+        After(s.SetIt, AfterSetIt)
+        s.SetIt()
+        assert count == [1]
+
+        s = MyNullSubClass()
+        After(s.SetIt, AfterSetIt)
+        s.SetIt()
+        assert count == [1]
 
 
     def testUnbound(self):
@@ -893,8 +944,19 @@ class Test(object):
                 output.append('Listen')
 
         a = MyClass()
+        a.MyMethod()
+        assert output == ['MyMethod']
+
+        # Registering bound method, OK
+        b = MyListener()
+        After(a.MyMethod, b.Listen)
+        a.MyMethod()
+        assert output == ['MyMethod', 'MyMethod', 'Listen']
+
+        # Registering unbound method, FAIL
         with pytest.raises(AssertionError):
             After(a.MyMethod, MyListener.Listen)
+        assert output == ['MyMethod', 'MyMethod', 'Listen']
 
 
     def testPriorityCallback(self):
