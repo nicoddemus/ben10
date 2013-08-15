@@ -23,15 +23,14 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
         Pattern to match files to include in the hashing. E.g.: *.zip
     '''
     from path import path
-    import fnmatch
     p = path(directory)
     for f in p.files():
         if include is not None:
-            if not fnmatch.fnmatch(f, include):
+            if not f.fnmatch(include):
                 continue
 
         if exclude is not None:
-            if fnmatch.fnmatch(f, exclude):
+            if f.fnmatch(exclude):
                 continue
 
         md5 = Md5Hex(f)
