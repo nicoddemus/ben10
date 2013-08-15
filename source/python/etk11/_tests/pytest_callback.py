@@ -1,12 +1,12 @@
+import weakref
+
+import pytest
+
 from etk11 import callback
-from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback
+from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback, ErrorNotHandledInCallback
 from etk11.debug import handle_exception
 from etk11.null import Null
 from etk11.weak_ref import WeakMethodRef
-import pytest
-import weakref
-
-
 
 
 #=======================================================================================================================
@@ -674,6 +674,21 @@ class Test(object):
         with pytest.raises(RuntimeError):
             c()
         assert self.called == 1
+
+
+    def testErrorNotHandledInCallback(self, monkeypatch):
+
+        class MyError(ErrorNotHandledInCallback):
+            pass
+
+        def After(*args, **kwargs):
+            raise MyError()
+
+        c = callback.Callback(handle_errors=True)
+        c.Register(After)
+
+        with pytest.raises(MyError):
+            c()
 
 
     def testAfterBeforeHandleError(self, monkeypatch):

@@ -1,11 +1,12 @@
 import os
 import sys
 
+from etk11.translation import tr
 
 
-#===================================================================================================
+#=======================================================================================================================
 # FindFiles
-#===================================================================================================
+#=======================================================================================================================
 def FindFiles(dir, in_filters=None, out_filters=None, recursive=True, include_root_dir=True, standard_paths=False):
     '''
     Searches for files in a given directory that match with the given patterns.
@@ -520,9 +521,11 @@ def GetUnusedFilenameInDirectory(directory_path, base_filename):
 
     return candidate
 
-#===================================================================================================
+
+
+#=======================================================================================================================
 # CheckInvalidCharsInFilename
-#===================================================================================================
+#=======================================================================================================================
 def CheckInvalidCharsInFilename(filename, accept_directory_structure=True):
     '''
     Checks if a given filename has any invalid chars.
@@ -544,6 +547,5 @@ def CheckInvalidCharsInFilename(filename, accept_directory_structure=True):
         invalid_chars_found = list(set(invalid_chars_found))
 
         invalid_chars_found = str(invalid_chars_found)
-        raise ValueError(
-            tr('The characters: %s are not accepted in filename') % invalid_chars_found)
+        raise ValueError(tr('The characters: %s are not accepted in filename') % invalid_chars_found)
 
