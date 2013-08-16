@@ -1,14 +1,12 @@
-import sys
 import pstats
-try:
-    import cProfile as profile
-except ImportError:
-    import profile
+import sys
+
+import cProfile as profile
 
 
-#===================================================================================================
+#=======================================================================================================================
 # ObtainStats
-#===================================================================================================
+#=======================================================================================================================
 def ObtainStats(method, *args, **kwargs):
     '''
     Runs the method in profile mode and returns the pstats.Stats method relative to that run.
@@ -29,18 +27,22 @@ def ObtainStats(method, *args, **kwargs):
     return stats
 
 
-#===================================================================================================
+
+#=======================================================================================================================
 # ProfileMethod
-#===================================================================================================
+#=======================================================================================================================
 def ProfileMethod(filename, rows=50, sort=(('cumul',), ('time',))):
     '''Decorator to profile the decorated function or method.
-    :type filename: where to save the profiling information. If None, profile information
-    :param filename:
-    will be printed to the output.
-    :type rows: If the profile will be printed to the output, how many rows of data to print.
+
+    :param filename: 
+        Where to save the profiling information. If None, profile information will be printed to the output.
+
     :param rows:
-    :type sort: If the profile will be printed to the output, how to sort the stats. 
+        If the profile will be printed to the output, how many rows of data to print.
+
+    :type sort: tuple(str, ...), tuple(tuple(str, ...), ...)
     :param sort:
+        If the profile will be printed to the output (filename=None), how to sort the stats. 
         It may be a list of strings or a list of lists of strings (in which case it will print
         the result multiple times, one for each inner list. E.g.: (('time',), ('cumul',))
     
@@ -78,9 +80,10 @@ def ProfileMethod(filename, rows=50, sort=(('cumul',), ('time',))):
     return wrapper
 
 
-#===================================================================================================
+
+#=======================================================================================================================
 # PrintProfile
-#===================================================================================================
+#=======================================================================================================================
 def PrintProfile(filename, rows=30, sort=('time', 'calls'), streams=None):
     '''
         Prints the profiling info for a given function.
@@ -94,9 +97,11 @@ def PrintProfile(filename, rows=30, sort=('time', 'calls'), streams=None):
     '''
     PrintProfileMultiple(filename, rows, [sort], streams)
 
-#===================================================================================================
+
+
+#=======================================================================================================================
 # PrintProfileMultiple
-#===================================================================================================
+#=======================================================================================================================
 def PrintProfileMultiple(filename, rows=30, sort=(('cumulative', 'time'), ('time', 'calls')),
     streams=None):
     '''

@@ -90,8 +90,13 @@ def AddDebugStreamHandler(logger=''):
     
     :param str logger:
         The logger to which the handler should be added.
+        
+    :returns:
+        Return a logger with the specified name, creating it if necessary.
     '''
-    GetLogger(logger).AddHandler(StreamHandler())
+    result = GetLogger(logger)
+    result.AddHandler(StreamHandler())
+    return result
 
 
 #===================================================================================================

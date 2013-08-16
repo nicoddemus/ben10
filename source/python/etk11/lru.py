@@ -139,6 +139,7 @@ class LRU(object):
         :returns:
             True if the key is in the cache and False otherwise.
         '''
+        print key, self._dict.keys()
         return key in self._dict
 
 

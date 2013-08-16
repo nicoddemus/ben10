@@ -1,11 +1,14 @@
 import copy
+
 from etk11.null import Null
 
 
+pytest_plugins = ["etk11.fixtures"]
 
-#===================================================================================================
+
+#=======================================================================================================================
 # Test
-#===================================================================================================
+#=======================================================================================================================
 class Test():
 
     def testNull(self):
@@ -20,7 +23,6 @@ class Test():
         n('value', param='value')
 
         # attribute handling
-
         n.attr1
         n.attr1.attr2
         n.method1()
@@ -37,8 +39,11 @@ class Test():
         del n.attr1
         del n.attr1.attr2.attr3
 
-        # representation and conversion to a string
+        # Iteration
+        for i in n:
+            'Not executed'
 
+        # representation and conversion to a string
         assert repr(n) == '<Null>'
         assert str(n) == 'Null'
 
@@ -48,6 +53,10 @@ class Test():
 
         dummy = Null()
         assert dummy.__name__ == 'Null'  # Name should return a string.
+
+        # Null objects are always equal to other null object
+        assert n != 1
+        assert n == dummy
 
 
     def testCopy(self):

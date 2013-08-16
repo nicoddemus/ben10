@@ -90,16 +90,16 @@ def MatchMasks(filename, filters):
 #===================================================================================================
 def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ):
     '''
-        Expands the variables in the given expression:
-            - Environmetn variables
-            - Other varibles:
-                - abs_path: The absolute patch of the given filename
-                - platform: The current platform (sys.platform)
-                - PLATFORM: The platform string (coilib50.system.Platform())
-                - filename: The given filename
-                - basename: The given filename base name (with out path)
-                - exe_path: Path to the executable (either Python.exe or the application)
-            - Extra variables: parameter extra_vars
+    Expands the variables in the given expression:
+        - Environmetn variables
+        - Other varibles:
+            - abs_path: The absolute patch of the given filename
+            - platform: The current platform (sys.platform)
+            - PLATFORM: The platform string (coilib50.system.Platform())
+            - filename: The given filename
+            - basename: The given filename base name (with out path)
+            - exe_path: Path to the executable (either Python.exe or the application)
+        - Extra variables: parameter extra_vars
     '''
     import etk11.uname
 
@@ -118,8 +118,8 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
         'app_dir'   : etk11.uname.GetApplicationDir(),
         'exe_path'  : os.path.dirname(sys.executable),
     })
-
     return expression % d
+
 
 
 #===================================================================================================
@@ -127,10 +127,10 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
 #===================================================================================================
 def Filenames(filename, masks, extra_vars={}, environ=os.environ):
     '''
-        Returns a list of filenames, one for each mask, replacing 'dict' values using
-        FilenamesExpandVars
+    Returns a list of filenames, one for each mask, replacing 'dict' values using FilenamesExpandVars
     '''
     return [os.path.normpath(FilenamesExpandVars(i, filename, extra_vars, environ)) for i in masks]
+
 
 
 #===================================================================================================
@@ -138,8 +138,7 @@ def Filenames(filename, masks, extra_vars={}, environ=os.environ):
 #===================================================================================================
 def FindFilename(filenames, is_dir=False):
     '''
-        Returns the first filename in the given list that exists or raises an "IOError"
-        exception
+    Returns the first filename in the given list that exists or raises an "IOError" exception
     '''
     if is_dir:
         Test = os.path.isdir
@@ -154,6 +153,7 @@ def FindFilename(filenames, is_dir=False):
     if (result is None):
         raise IOError, '\n - '.join([''] + filenames)
     return result
+
 
 
 #===================================================================================================

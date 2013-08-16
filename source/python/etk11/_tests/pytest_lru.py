@@ -1,4 +1,6 @@
-from etk11.lru import LRU, LRUWithRemovalMemo
+import pytest
+
+from etk11.lru import LRU, LRUWithRemovalMemo, _Node
 
 
 #=======================================================================================================================
@@ -7,12 +9,20 @@ from etk11.lru import LRU, LRUWithRemovalMemo
 class Test:
 
     def testLRU(self):
+
+        with pytest.raises(ValueError):
+            lru = LRU(-1)
+
         lru = LRU(2)
 
         def CheckLru():
             lru[1] = 1
             lru[2] = 2
             lru[3] = 3
+
+            assert 1 not in lru
+            assert 2 in lru
+            assert 3 in lru
 
             assert 2 == len(lru)
             assert lru.keys() == [2, 3]
@@ -71,6 +81,18 @@ class Test:
         assert len(lru) == 1
         lru.clear()
         assert lru.GetAndClearRemovedItems() == []
+
+
+    def testNode(self):
+        a = _Node(1, 'one', 1)
+        b = _Node(2, 'two', 2)
+        assert a < b
+        assert b > a
+
+        c = _Node(3, 'three', 2)
+        assert b == c
+
+        assert repr(a) == '_Node(time=1)'
 
 
 #     def profile(self):

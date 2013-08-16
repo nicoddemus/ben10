@@ -1,6 +1,9 @@
 from StringIO import StringIO
-from etk11 import log
 import sys
+
+from etk11 import log
+from etk11.log import AddDebugStreamHandler
+from etk11.pushpop import PushPop
 
 
 #=======================================================================================================================
@@ -40,3 +43,18 @@ with StartLogging() as logger:
     assert 'something' in logger.GetRecordedLog()
 '''
         code = compile(contents, '<string>', 'exec')
+
+
+    def testAddDebugStreamHandler(self, capsys):
+        logger = AddDebugStreamHandler('test_handler')
+        logger.Error('alpha')
+        assert capsys.readouterr() == ('', 'alpha\n')
+
+
+    def testStartLogging(self, capsys):
+        logger = log.GetLogger('test_handler')
+        logger.Error('alpha')
+        with log.StartLogging('test_handler') as logger_stack:
+            logger.Error('bravo')
+        logger.Error('bravo')
+        assert logger_stack.GetRecordedLog() == 'bravo\n'

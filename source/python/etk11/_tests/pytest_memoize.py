@@ -95,6 +95,58 @@ class Test:
         assert _calls == ['F1', 'F2', 'F3', 'F1', 'G1', 'G2']  # Cache HIT because F and G have a separated cache.
 
 
+    def testMemoizeBoundMethod(self):
+        _calls = []
+
+        class F(object):
+
+            def __init__(self, name):
+                self.name = name
+
+            @Memoize(2)
+            def GetName(self, param):
+                result = self.name + param
+                _calls.append(result)
+                return result
+
+        # Testing memozoize in a bound method
+        f = F('F')
+        m = Memoize(2)
+        m(f.GetName)
+
+        f.GetName('1')
+        f.GetName('1')
+        f.GetName('2')
+        f.GetName('2')
+        f.GetName('3')
+        f.GetName('3')
+        f.GetName('1')
+        assert _calls == ['F1', 'F2', 'F3', 'F1']
+
+
+    def testMemoizeErrors(self):
+        with pytest.raises(TypeError):
+            class MyClass(object):
+
+                @Memoize(2)
+                @classmethod
+                def MyMethod(self):
+                    'Not called'
+
+        with pytest.raises(TypeError) as exception:
+            number = 999
+            Memoize(2)(number)
+
+            assert str(exception) == 'Expecting a function/method/classmethod for Memoize.'
+
+        with pytest.raises(AssertionError) as exception:
+            @Memoize(2, 'INVALID')
+            def MyFunction():
+                'Not called!'
+
+            assert str(exception) == 'Memoize prune method not supported: INVALID'
+
+
     def testMemoizeLRU(self):
         counts = {}
 
@@ -126,7 +178,6 @@ class Test:
         assert counts['Double'] == 3
         Double(3)  # It has discarded this one, so, it has to be added again!
         assert counts['Double'] == 4
-
 
 
     def testMemoize(self):

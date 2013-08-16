@@ -126,7 +126,7 @@ class Memoize(object):
                         'the classmethod\n(will work as a global cache where cls will be part of the '
                         'cache-key).')
                 else:
-                    raise TypeError('Expecting  a function for Memoize.')
+                    raise TypeError('Expecting a function/method/classmethod for Memoize.')
             else:
                 if 'self' in check_func.func_code.co_varnames:
                     self._memo_target = self.MEMO_INSTANCE_METHOD
@@ -173,6 +173,10 @@ class Memoize(object):
             This is the function that is being cached.
         '''
 
+        assert \
+            self._memo_target in (self.MEMO_INSTANCE_METHOD, self.MEMO_FUNCTION), \
+            "Don't know how to deal with memo target: %s" % self._memo_target
+
         SENTINEL = ()
         if self._memo_target == self.MEMO_INSTANCE_METHOD:
 
@@ -204,7 +208,7 @@ class Memoize(object):
             Call.ClearCache = ClearCache
             return Call
 
-        elif self._memo_target == self.MEMO_FUNCTION:
+        if self._memo_target == self.MEMO_FUNCTION:
 
             # When it's a function, we can use the same cache the whole time (i.e.: it's global)
             cache = self._CreateCacheObject()
@@ -219,9 +223,3 @@ class Memoize(object):
 
             Call.ClearCache = cache.clear
             return Call
-
-        else:
-            raise AssertionError("Don't know how to deal with memo target: %s" % self._memo_target)
-
-
-
