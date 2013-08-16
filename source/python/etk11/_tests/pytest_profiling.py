@@ -1,11 +1,10 @@
 from StringIO import StringIO
 from UserList import UserList
+from etk11.profiling import ProfileMethod, PrintProfile, PrintProfileMultiple
 import os
-import pstats
 import re
 import sys
 
-from etk11.debug.profiling import ProfileMethod, PrintProfile, PrintProfileMultiple, ObtainStats
 
 
 pytest_plugins = ["etk11.fixtures"]
@@ -18,6 +17,8 @@ pytest_plugins = ["etk11.fixtures"]
 class Test:
 
     def testProfile(self, embed_data):
+        embed_data.CreateDataDir()
+
         test_filename = embed_data.GetDataFilename('test.prof')
         test3_filename = embed_data.GetDataFilename('test3.prof')
 
@@ -68,7 +69,7 @@ class Test:
                     output_stream = sys.stdout.getvalue()
 
                 if not re.search(expected_in, output_stream):
-                    self.fail('>>%s<< not found in >>%s<<' % (expected_in, output_stream))
+                    assert False, '>>%s<< not found in >>%s<<' % (expected_in, output_stream)
 
             CheckOutput("UserList.py:\d+\(append\)")
 
@@ -85,33 +86,3 @@ class Test:
 
         finally:
             sys.stdout = original
-
-
-    def testProfileSort(self, embed_data, capfd):
-        @ProfileMethod(None)
-        def MyFunction1():
-            pass
-
-        MyFunction1()
-        out, _err = capfd.readouterr()
-        out = [i.strip() for i in out.splitlines() if i.strip().startswith('Ordered by:')]
-        assert out == ['Ordered by: cumulative time', 'Ordered by: internal time']
-
-
-        @ProfileMethod(None, sort=('time',))
-        def MyFunction2():
-            pass
-
-        MyFunction2()
-        out, _err = capfd.readouterr()
-        out = [i.strip() for i in out.splitlines() if i.strip().startswith('Ordered by:')]
-        assert out == ['Ordered by: internal time']
-
-
-    def testObtainStats(self):
-
-        def MyFunction():
-            pass
-
-        s = ObtainStats(MyFunction)
-        assert s.__class__ == pstats.Stats

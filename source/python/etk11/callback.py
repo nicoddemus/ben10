@@ -725,6 +725,6 @@ def HandleErrorOnCallback(func, *args, **kwargs):
     if kwargs:
         msg += 'Kwargs: %s\n' % (kwargs,)
 
-    from etk11.debug import handle_exception
+    from etk11 import handle_exception
     handle_exception.HandleException(msg)
 

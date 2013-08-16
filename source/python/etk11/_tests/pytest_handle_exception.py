@@ -1,9 +1,9 @@
+from etk11 import handle_exception
+from etk11.pushpop import PushPop
+import pytest
 import sys
 
-import pytest
 
-from etk11.debug import handle_exception
-from etk11.pushpop import PushPop
 
 
 #=======================================================================================================================
