@@ -1,9 +1,8 @@
-from etk11 import handle_exception
-from etk11.pushpop import PushPop
-import pytest
 import sys
 
+import pytest
 
+from etk11 import handle_exception
 
 
 #=======================================================================================================================
@@ -42,17 +41,32 @@ def exception_handler(request):
 #=======================================================================================================================
 class Test():
 
-    def testHandleException(self, exception_handler):
-        from StringIO import StringIO
+    def testHandleException(self, exception_handler, capfd):
+        try:
+            raise RuntimeError()
+        except:
+            handle_exception.HandleException('Test')
+        assert len(exception_handler.exceptions) == 1
 
-        with PushPop(sys, 'stderr', StringIO()) as output:
+        assert capfd.readouterr() == [
+            u'',
+            u'''Traceback (most recent call last):
+  File "x:\\etk11\\source\\python\\etk11\\_tests\\pytest_handle_exception.py", line 46, in testHandleException
+    raise RuntimeError()
+RuntimeError
+''',
+        ]
+
+
+    def testIgnoreHandleException(self, exception_handler, capfd):
+        handle_exception.StartIgnoreHandleException()
+        try:
             try:
                 raise RuntimeError()
             except:
                 handle_exception.HandleException('Test')
             assert len(exception_handler.exceptions) == 1
+        finally:
+            handle_exception.EndIgnoreHandleException()
 
-#         assert output.getvalue() == '''Traceback (most recent call last):
-#   File "x:\etk11\source\python\etk11\debug\_tests\pytest_handle_exception.py", line 64, in testHandleException
-#     raise RuntimeError()
-# RuntimeError'''
+        assert capfd.readouterr() == [u'', u'', ]

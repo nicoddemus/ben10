@@ -1,6 +1,9 @@
+import warnings
+
 import pytest
 
-from etk11.decorators import Implements, Override
+from etk11 import is_frozen
+from etk11.decorators import Implements, Override, Deprecated
 
 
 #=======================================================================================================================
@@ -102,3 +105,57 @@ class Test():
 
         with pytest.raises(AssertionError):
             TestNoMatch()
+
+
+#     def setUp(self):
+#         unittest.TestCase.setUp(self)
+#         unittest.installMocks(warnings, warn=self._warn)
+#
+#     def tearDown(self):
+#         unittest.TestCase.tearDown(self)
+#         unittest.uninstallMocks(warnings)
+
+    def testDeprecated(self, monkeypatch):
+
+        def MyWarn(*args, **kwargs):
+            warn_params.append((args, kwargs))
+
+        monkeypatch.setattr(warnings, 'warn', MyWarn)
+
+        old_is_frozen = is_frozen.SetIsFrozen(False)
+        try:
+            # Emit messages when in development (not frozen)
+            warn_params = []
+
+            # ... deprecation with alternative
+            @Deprecated('OtherMethod')
+            def Method1():
+                pass
+
+            # ... deprecation without alternative
+            @Deprecated()
+            def Method2():
+                pass
+
+            Method1()
+            Method2()
+            assert warn_params == [
+                (("DEPRECATED: 'Method1' is deprecated, use 'OtherMethod' instead",), {'stacklevel': 2}),
+                (("DEPRECATED: 'Method2' is deprecated",), {'stacklevel': 2})
+            ]
+
+            # No messages on release code (frozen)
+            is_frozen.SetIsFrozen(True)
+
+            warn_params = []
+
+            @Deprecated()
+            def FrozenMethod():
+                pass
+
+            FrozenMethod()
+            assert warn_params == []
+        finally:
+            is_frozen.SetIsFrozen(old_is_frozen)
+
+

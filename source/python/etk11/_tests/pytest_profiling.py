@@ -1,10 +1,11 @@
 from StringIO import StringIO
 from UserList import UserList
-from etk11.profiling import ProfileMethod, PrintProfile, PrintProfileMultiple
 import os
+import pstats
 import re
 import sys
 
+from etk11.profiling import ProfileMethod, PrintProfile, PrintProfileMultiple, ObtainStats
 
 
 pytest_plugins = ["etk11.fixtures"]
@@ -86,3 +87,16 @@ class Test:
 
         finally:
             sys.stdout = original
+
+
+    def testObtainStats(self, embed_data):
+
+        def SlowFunction(start):
+            reals = UserList()
+            for x in range(start, 30000):
+                r = x / float(x + 1)
+                reals.append(r)
+            return reals
+
+        stats = ObtainStats(SlowFunction, 10000)
+        assert stats.__class__ == pstats.Stats
