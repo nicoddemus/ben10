@@ -1,4 +1,4 @@
-from etk11.filesystem import OpenReadOnlyFile
+from etk11.fileutils import OpenReadOnlyFile
 import os
 import pytest
 import sys

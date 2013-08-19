@@ -1,26 +1,95 @@
 from __future__ import with_statement
+
+import codecs
+import os
+import subprocess
+import sys
+
+import pytest
+
 from etk11.filesystem import GetFileContents, CreateFile, EOL_STYLE_MAC, ListFiles, CreateDirectory, MoveFile, \
     DeleteDirectory, NotImplementedForRemotePathError, AppendToFile, DeleteFile, CopyDirectory, CopyFile, CopyFiles, \
     DirectoryNotFoundError, CopyFilesX, IsDir, IsFile, FileAlreadyExistsError, MoveDirectory, DirectoryAlreadyExistsError, \
     MD5_SKIP, CheckIsFile, FileNotFoundError, GetMTime, StandardizePath, NormStandardPath, NormalizePath, CanonicalPath, \
-    EOL_STYLE_NONE, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX, OpenFile, CreateMD5, GetFileLines, CheckIsDir
-import os
-import pytest
-import sys
-
+    EOL_STYLE_NONE, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX, OpenFile, CreateMD5, GetFileLines, CheckIsDir, UnknownPlatformError, \
+    _GetNativeEolStyle, NotImplementedProtocol, FileError
 
 
 pytest_plugins = ["etk11.fixtures"]
 
 
+@pytest.fixture
+def ftpserver(monkeypatch, embed_data, request):
+    from pyftpdlib import ftpserver
 
-# ==================================================================================================
+    # Redirect ftpserver messages to "logging"
+    import logging
+    monkeypatch.setattr(ftpserver, 'log', logging.info)
+    monkeypatch.setattr(ftpserver, 'logline', logging.info)
+    monkeypatch.setattr(ftpserver, 'logerror', logging.info)
+
+    class FtpServerFixture():
+
+        def __init__(self):
+            self._ftpd = None
+            self._port = None
+
+
+        def Serve(self, directory):
+            '''
+            Starts a phony ftp-server for testing purpose.
+    
+            Usage:
+                self._StartFtpServer()
+                try:
+                    # ...
+                finally:
+                    self._StopFtpServer()
+            '''
+            assert self._ftpd is None
+            self._ftpd = PhonyFtpServer(directory)
+            self._port = self._ftpd.Start()
+
+
+        def _GetAnonymousFTPDir(self, sub_dir):
+            assert self._ftpd is not None, "FTPServer not serving, call ftpserver.Serve method."
+            base_dir = 'ftp://127.0.0.1:%s' % self._port
+            return '/'.join([base_dir, sub_dir])
+
+
+        def GetFTPUrl(self, sub_dir):
+            assert self._ftpd is not None, "FTPServer not serving, call ftpserver.Serve method."
+            base_dir = 'ftp://dev:123@127.0.0.1:%s' % self._port
+            return '/'.join([base_dir, sub_dir])
+
+
+        def StopServing(self):
+            '''
+            Stops the phony ftp-server previously started with "_StartFtpServer" method.
+            '''
+            if self._ftpd is not None:
+                self._ftpd.Stop()
+                self._ftpd = None
+
+    r_ftpserver = FtpServerFixture()
+    r_ftpserver.Serve(embed_data.GetDataDirectory())
+    request.addfinalizer(r_ftpserver.StopServing)
+    return r_ftpserver
+
+
+#=======================================================================================================================
 # Test
-# ==================================================================================================
+#=======================================================================================================================
 class Test:
 
     def assertSetEqual(self, a, b):
         assert set(a) == set(b)
+
+
+    def testUnknownPlatform(self, monkeypatch, embed_data):
+
+        with pytest.raises(UnknownPlatformError):
+            _GetNativeEolStyle('iOS')
 
 
     def testCreateMD5(self, embed_data):
@@ -245,12 +314,18 @@ class Test:
         inexistent_dir = embed_data.GetDataFilename('INEXISTENT_DIR')
         CopyFiles(inexistent_dir + '/*', target_dir)
 
+        with pytest.raises(NotImplementedProtocol):
+            CopyFiles('ERROR://source', embed_data.GetDataFilename('target'))
+
+        with pytest.raises(NotImplementedProtocol):
+            CopyFiles(embed_data.GetDataFilename('source'), 'ERROR://target')
+
 
     def testCopyFileSymlink(self, embed_data):
         if sys.platform.startswith('win'):
             return
 
-        # Create a filei
+        # Create a file
         original = embed_data.GetDataFilename('original_file.txt')
         CreateFile(original, contents='original')
 
@@ -320,17 +395,21 @@ class Test:
         assert GetFileLines(test_filename) == expected
 
 
-    def testFTPFileContents(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            obtained = GetFileContents(self._GetFTPUrl('file.txt'))
-            expected = GetFileContents(embed_data.GetDataFilename('file.txt'))
-            assert obtained == expected
+    def testFileError(self):
+        '''
+        FileError is a base class, not intented to be used by itself.
+        '''
+        with pytest.raises(NotImplementedError):
+            FileError('alpha.txt')
 
-            with pytest.raises(FileNotFoundError):
-                GetFileContents(self._GetFTPUrl('missing_file.txt'))
-        finally:
-            self._StopFtpServer()
+
+    def testFTPFileContents(self, monkeypatch, embed_data, ftpserver):
+        obtained = GetFileContents(ftpserver.GetFTPUrl('file.txt'))
+        expected = GetFileContents(embed_data.GetDataFilename('file.txt'))
+        assert obtained == expected
+
+        with pytest.raises(FileNotFoundError):
+            GetFileContents(ftpserver.GetFTPUrl('missing_file.txt'))
 
 
     def testCreateFile(self, embed_data):
@@ -338,6 +417,7 @@ class Test:
         contents_unix = 'First\nSecond\nThird\nFourth'
         contents_mac = 'First\rSecond\rThird\rFourth'
         contents_windows = 'First\r\nSecond\r\nThird\r\nFourth'
+        contents_unicode = u'This is Unicode'
 
         target_file = embed_data.GetDataFilename('mac.txt')
         CreateFile(target_file, contents, eol_style=EOL_STYLE_MAC)
@@ -356,8 +436,12 @@ class Test:
         CreateFile(target_file, contents, eol_style=EOL_STYLE_NONE)
         assert GetFileContents(target_file, binary=True) == contents_binary
 
+# TODO: CreateFile works with unicode, GetFileContents not.
+#        CreateFile(target_file, contents_unicode)
+#        assert GetFileContents(target_file) == codecs.BOM_UTF8 + contents_unicode
 
-    def testCreateFileInMissingDirectory(self, monkeypatch, embed_data):
+
+    def testCreateFileInMissingDirectory(self, monkeypatch, embed_data, ftpserver):
         from ftputil.ftp_error import FTPIOError
 
         # Trying to create a file in a directory that does not exist should raise an error
@@ -377,18 +461,13 @@ class Test:
         finally:
             DeleteFile(single_file)
 
-        # Same goes for FTP
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            target_ftp_file = self._GetFTPUrl('missing_ftp_dir/sub_dir/file.txt')
+        target_ftp_file = ftpserver.GetFTPUrl('missing_ftp_dir/sub_dir/file.txt')
 
-            with pytest.raises(FTPIOError):
-                CreateFile(target_ftp_file, contents='contents', create_dir=False)
+        with pytest.raises(FTPIOError):
+            CreateFile(target_ftp_file, contents='contents', create_dir=False)
 
-            CreateFile(target_ftp_file, contents='contents', create_dir=True)
-            assert GetFileContents(target_ftp_file) == 'contents'
-        finally:
-            self._StopFtpServer()
+        CreateFile(target_ftp_file, contents='contents', create_dir=True)
+        assert GetFileContents(target_ftp_file) == 'contents'
 
 
     def testAppendToFile(self, embed_data):
@@ -560,7 +639,7 @@ class Test:
 
     def testCopyFile(self, embed_data):
         source_file = embed_data.GetDataFilename('files/source/alpha.txt')
-        target_file = embed_data.GetDataFilename('alpha_copy.txt')
+        target_file = embed_data.GetDataFilename('target/alpha_copy.txt')
 
         # Sanity check
         assert not os.path.isfile(target_file)
@@ -569,78 +648,78 @@ class Test:
         CopyFile(source_file, target_file)
         embed_data.AssertEqualFiles(source_file, target_file)
 
+        # Copy again... overrides with no error.
+        source_file = embed_data.GetDataFilename('files/source/bravo.txt')
+        CopyFile(source_file, target_file)
+        embed_data.AssertEqualFiles(source_file, target_file)
+
+        # Exceptions
+        with pytest.raises(NotImplementedProtocol):
+            CopyFile('ERROR://source', embed_data.GetDataFilename('target'))
+
+        with pytest.raises(NotImplementedProtocol):
+            CopyFile(source_file, 'ERROR://target')
+
+        with pytest.raises(NotImplementedProtocol):
+            CopyFile('ERROR://source', 'ERROR://target')
+
 
     def testIsDir(self, embed_data):
         assert IsDir('.')
         assert not IsDir(embed_data.GetDataFilename('missing_dir'))
 
 
-    def testFTPIsDir(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-
-        try:
-            assert IsDir(self._GetFTPUrl('.'))
-            assert not IsDir(self._GetFTPUrl('missing_dir'))
-        finally:
-            self._StopFtpServer()
+    def testFTPIsDir(self, monkeypatch, embed_data, ftpserver):
+        assert IsDir(ftpserver.GetFTPUrl('.'))
+        assert not IsDir(ftpserver.GetFTPUrl('missing_dir'))
 
 
-    def testFTPCopyFiles(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
+    def testFTPCopyFiles(self, monkeypatch, embed_data, ftpserver):
+        source_dir = embed_data.GetDataFilename('files/source')
+        target_dir = ftpserver.GetFTPUrl('ftp_target_dir')
 
-        try:
-            source_dir = embed_data.GetDataFilename('files/source')
-            target_dir = self._GetFTPUrl('ftp_target_dir')
+        # Make sure that the target dir does not exist
+        assert not os.path.isdir(target_dir)
 
-            # Make sure that the target dir does not exist
-            assert not os.path.isdir(target_dir)
+        # We should get an error if trying to copy files into a missing dir
+        with pytest.raises(DirectoryNotFoundError):
+            CopyFiles(source_dir, target_dir)
 
-            # We should get an error if trying to copy files into a missing dir
-            with pytest.raises(DirectoryNotFoundError):
-                CopyFiles(source_dir, target_dir)
+        # Create dir and check files
+        CopyFiles(source_dir, target_dir, create_target_dir=True)
 
-            # Create dir and check files
-            CopyFiles(source_dir, target_dir, create_target_dir=True)
-
-            assert set(ListFiles(source_dir)) == set(ListFiles(target_dir))
-        finally:
-            self._StopFtpServer()
+        assert set(ListFiles(source_dir)) == set(ListFiles(target_dir))
 
 
-    def testMoveDirectoryFTP(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
+    def testMoveDirectoryFTP(self, monkeypatch, embed_data, ftpserver):
+        source_dir = ftpserver.GetFTPUrl('files/source')
+        target_dir = ftpserver.GetFTPUrl('ftp_target_dir')
 
-        try:
-            source_dir = self._GetFTPUrl('files/source')
-            target_dir = self._GetFTPUrl('ftp_target_dir')
+        # Make sure that the source exists, and target does not
+        assert IsDir(source_dir)
+        assert not IsDir(target_dir)
 
-            # Make sure that the source exists, and target does not
-            assert IsDir(source_dir)
-            assert not IsDir(target_dir)
+        # Keep a list of files in source_dir
+        source_files = ListFiles(source_dir)
 
-            # Keep a list of files in source_dir
-            source_files = ListFiles(source_dir)
+        # Move directory
+        MoveDirectory(source_dir, target_dir)
 
-            # Move directory
+        # Make sure that the target exists, and source does not
+        assert IsDir(target_dir)
+        assert not IsDir(source_dir)
+
+        # list of files should be the same as before
+        assert ListFiles(target_dir) == source_files
+
+        # Cannot rename a directory if the target dir already exists
+        source_dir = ftpserver.GetFTPUrl('some_directory')
+        CreateDirectory(source_dir)
+        with pytest.raises(DirectoryAlreadyExistsError):
             MoveDirectory(source_dir, target_dir)
 
-            # Make sure that the target exists, and source does not
-            assert IsDir(target_dir)
-            assert not IsDir(source_dir)
 
-            # list of files should be the same as before
-            assert ListFiles(target_dir) == source_files
-
-            # Cannot rename a directory if the target dir already exists
-            source_dir = self._GetFTPUrl('some_directory')
-            CreateDirectory(source_dir)
-            with pytest.raises(DirectoryAlreadyExistsError):
-                MoveDirectory(source_dir, target_dir)
-        finally:
-            self._StopFtpServer()
-
-
-    def testFTPCopyFile(self, monkeypatch, embed_data):
+    def testFTPCopyFile(self, monkeypatch, embed_data, ftpserver):
         def CopyAndCheckFiles(source_file, target_file, override=True):
             CopyFile(
                 source_file,
@@ -649,74 +728,54 @@ class Test:
             )
             assert GetFileContents(source_file) == GetFileContents(target_file)
 
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            # Upload file form local to FTP
-            source_file = embed_data.GetDataFilename('files/source/alpha.txt')
-            target_file = self._GetFTPUrl('alpha.txt')
-            CopyAndCheckFiles(source_file, target_file)
+        # Upload file form local to FTP
+        source_file = embed_data.GetDataFilename('files/source/alpha.txt')
+        target_file = ftpserver.GetFTPUrl('alpha.txt')
+        CopyAndCheckFiles(source_file, target_file)
 
-            # Upload file form local to FTP, testing override
-            source_file = embed_data.GetDataFilename('files/source/alpha.txt')
-            target_file = self._GetFTPUrl('alpha.txt')
-            with pytest.raises(FileAlreadyExistsError):
-                CopyAndCheckFiles(source_file, target_file, override=False,)
+        # Upload file form local to FTP, testing override
+        source_file = embed_data.GetDataFilename('files/source/alpha.txt')
+        target_file = ftpserver.GetFTPUrl('alpha.txt')
+        with pytest.raises(FileAlreadyExistsError):
+            CopyAndCheckFiles(source_file, target_file, override=False,)
 
-            # Download file to local
-            source_file = self._GetFTPUrl('alpha.txt')
-            target_file = embed_data.GetDataFilename('alpha_copied_from_ftp.txt')
-            CopyAndCheckFiles(source_file, target_file)
-        finally:
-            self._StopFtpServer()
+        # Download file to local
+        source_file = ftpserver.GetFTPUrl('alpha.txt')
+        target_file = embed_data.GetDataFilename('alpha_copied_from_ftp.txt')
+        CopyAndCheckFiles(source_file, target_file)
 
-
-    def testFTPCreateFile(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            target_file = self._GetFTPUrl('ftp.txt')
-            contents = 'This is a new file.'
-            CreateFile(
-                target_file,
-                contents
-            )
-            assert GetFileContents(target_file) == contents
-
-        finally:
-            self._StopFtpServer()
+        with pytest.raises(NotImplementedProtocol):
+            CopyFile(ftpserver.GetFTPUrl('alpha.txt'), 'ERROR://target')
 
 
-    def testFTPIsFile(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            assert IsFile(self._GetFTPUrl('file.txt')) == True
-            assert IsFile(self._GetFTPUrl('files/source/alpha.txt')) == True
-            assert IsFile(self._GetFTPUrl('doesnt_exist')) == False
-            assert IsFile(self._GetFTPUrl('files/doesnt_exist')) == False
-        finally:
-            self._StopFtpServer()
+    def testFTPCreateFile(self, monkeypatch, embed_data, ftpserver):
+        target_file = ftpserver.GetFTPUrl('ftp.txt')
+        contents = 'This is a new file.'
+        CreateFile(
+            target_file,
+            contents
+        )
+        assert GetFileContents(target_file) == contents
 
 
-    def testFTPListFiles(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            # List FTP files
-            assert ListFiles(self._GetFTPUrl('files/source')) == ['alpha.txt', 'bravo.txt', 'subfolder']
-
-            # Try listing a directory that does not exist
-            assert ListFiles(self._GetFTPUrl('/files/non-existent')) is None
-        finally:
-            self._StopFtpServer()
+    def testFTPIsFile(self, ftpserver):
+        assert IsFile(ftpserver.GetFTPUrl('file.txt')) == True
+        assert IsFile(ftpserver.GetFTPUrl('files/source/alpha.txt')) == True
+        assert IsFile(ftpserver.GetFTPUrl('doesnt_exist')) == False
+        assert IsFile(ftpserver.GetFTPUrl('files/doesnt_exist')) == False
 
 
-    def testFTPMakeDirs(self, monkeypatch, embed_data):
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
+    def testFTPListFiles(self, monkeypatch, embed_data, ftpserver):
+        # List FTP files
+        assert ListFiles(ftpserver.GetFTPUrl('files/source')) == ['alpha.txt', 'bravo.txt', 'subfolder']
 
-        try:
-            CreateDirectory(self._GetFTPUrl('/ftp_dir1'))
-            assert os.path.isdir(embed_data.GetDataFilename('ftp_dir1'))
+        # Try listing a directory that does not exist
+        assert ListFiles(ftpserver.GetFTPUrl('/files/non-existent')) is None
 
-        finally:
-            self._StopFtpServer()
+
+    def testFTPMakeDirs(self, monkeypatch, embed_data, ftpserver):
+        CreateDirectory(ftpserver.GetFTPUrl('/ftp_dir1'))
+        assert os.path.isdir(embed_data.GetDataFilename('ftp_dir1'))
 
 
     def testStandardizePath(self):
@@ -734,6 +793,8 @@ class Test:
 
     def testNormalizePath(self):
         assert NormalizePath('c:/alpha/zulu/../bravo') == os.path.normpath('c:/alpha/bravo')
+        assert NormalizePath('c:/alpha/') == os.path.normpath('c:/alpha') + os.sep
+        assert NormalizePath('c:/alpha/zulu/../bravo/') == os.path.normpath('c:/alpha/bravo') + os.sep
         assert NormalizePath('') == '.'
 
 
@@ -743,6 +804,8 @@ class Test:
 
         assert NormStandardPath('/alpha/bravo') == '/alpha/bravo'
         assert NormStandardPath('/alpha/zulu/../bravo') == '/alpha/bravo'
+
+        assert NormStandardPath('c:/alpha/') == 'c:/alpha/'
 
         assert NormStandardPath('') == '.'
 
@@ -768,7 +831,7 @@ class Test:
             assert obtained == expected
 
 
-    def testCheckIsFile(self, monkeypatch, embed_data):
+    def testCheckIsFile(self, monkeypatch, embed_data, ftpserver):
         # assert not raises Exception
         CheckIsFile(embed_data.GetDataFilename('file.txt'))
 
@@ -778,19 +841,15 @@ class Test:
         with pytest.raises(FileNotFoundError):
             CheckIsFile(embed_data.GetDataDirectory())  # Not a file
 
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            # assert not raises Exception
-            CheckIsFile(self._GetFTPUrl('file.txt'))
-            with pytest.raises(FileNotFoundError):
-                CheckIsFile(self._GetFTPUrl('MISSING_FILE'))
-            with pytest.raises(FileNotFoundError):
-                CheckIsFile(self._GetFTPUrl('.'))  # Not a file
-        finally:
-            self._StopFtpServer()
+        # assert not raises Exception
+        CheckIsFile(ftpserver.GetFTPUrl('file.txt'))
+        with pytest.raises(FileNotFoundError):
+            CheckIsFile(ftpserver.GetFTPUrl('MISSING_FILE'))
+        with pytest.raises(FileNotFoundError):
+            CheckIsFile(ftpserver.GetFTPUrl('.'))  # Not a file
 
 
-    def testCheckIsDir(self, monkeypatch, embed_data):
+    def testCheckIsDir(self, monkeypatch, embed_data, ftpserver):
         # assert not raises Exception
         CheckIsDir(embed_data.GetDataDirectory())
 
@@ -800,19 +859,14 @@ class Test:
         with pytest.raises(DirectoryNotFoundError):
             CheckIsDir(embed_data.GetDataFilename('file.txt'))  # Not a directory
 
-        self._StartFtpServer(monkeypatch, embed_data.GetDataDirectory())
-        try:
-            # assert not raises Exception
-            CheckIsDir(self._GetFTPUrl('.'))
+        # assert not raises Exception
+        CheckIsDir(ftpserver.GetFTPUrl('.'))
 
-            with pytest.raises(DirectoryNotFoundError):
-                CheckIsDir(self._GetFTPUrl('MISSING_DIR'))
+        with pytest.raises(DirectoryNotFoundError):
+            CheckIsDir(ftpserver.GetFTPUrl('MISSING_DIR'))
 
-            with pytest.raises(DirectoryNotFoundError):
-                CheckIsDir(self._GetFTPUrl('file.txt'))  # Not a directory
-        finally:
-            self._StopFtpServer()
-
+        with pytest.raises(DirectoryNotFoundError):
+            CheckIsDir(ftpserver.GetFTPUrl('file.txt'))  # Not a directory
 
 
     def testGetMTime__slow(self, embed_data):
@@ -870,83 +924,105 @@ class Test:
 
 
     def testHandleContents(self):
-        from etk11.filesystem import _filesystem
-        HandleContents = _filesystem._HandleContentsEol
-        assert 'a\r\nb' == HandleContents('a\nb', _filesystem.EOL_STYLE_WINDOWS)
-        assert 'a\r\nb' == HandleContents('a\r\nb', _filesystem.EOL_STYLE_WINDOWS)
-        assert 'a\r\nb' == HandleContents('a\rb', _filesystem.EOL_STYLE_WINDOWS)
+        from etk11 import filesystem
+        HandleContents = filesystem._HandleContentsEol
+        assert 'a\r\nb' == HandleContents('a\nb', filesystem.EOL_STYLE_WINDOWS)
+        assert 'a\r\nb' == HandleContents('a\r\nb', filesystem.EOL_STYLE_WINDOWS)
+        assert 'a\r\nb' == HandleContents('a\rb', filesystem.EOL_STYLE_WINDOWS)
 
-        assert 'a\rb' == HandleContents('a\rb', _filesystem.EOL_STYLE_MAC)
-        assert 'a\rb' == HandleContents('a\r\nb', _filesystem.EOL_STYLE_MAC)
-        assert 'a\rb' == HandleContents('a\nb', _filesystem.EOL_STYLE_MAC)
-        assert 'a\rb\r' == HandleContents('a\nb\n', _filesystem.EOL_STYLE_MAC)
+        assert 'a\rb' == HandleContents('a\rb', filesystem.EOL_STYLE_MAC)
+        assert 'a\rb' == HandleContents('a\r\nb', filesystem.EOL_STYLE_MAC)
+        assert 'a\rb' == HandleContents('a\nb', filesystem.EOL_STYLE_MAC)
+        assert 'a\rb\r' == HandleContents('a\nb\n', filesystem.EOL_STYLE_MAC)
 
-        assert 'a\nb' == HandleContents('a\rb', _filesystem.EOL_STYLE_UNIX)
-        assert 'a\nb' == HandleContents('a\r\nb', _filesystem.EOL_STYLE_UNIX)
-        assert 'a\nb' == HandleContents('a\nb', _filesystem.EOL_STYLE_UNIX)
-        assert 'a\nb\n' == HandleContents('a\nb\n', _filesystem.EOL_STYLE_UNIX)
-
-
-
-    #===============================================================================================
-    # FTP server utility functions
-    #===============================================================================================
-    def _StartFtpServer(self, monkeypatch, directory):
-        '''
-        Starts a phony ftp-server for testing purpose.
-
-        Usage:
-            self._StartFtpServer()
-            try:
-                # ...
-            finally:
-                self._StopFtpServer()
-        '''
-        from pyftpdlib import ftpserver
-        import logging
-
-        # Redirect ftpserver messages to "logging"
-        monkeypatch.setattr(ftpserver, 'log', logging.info)
-        monkeypatch.setattr(ftpserver, 'logline', logging.info)
-        monkeypatch.setattr(ftpserver, 'logerror', logging.info)
-
-        from _phony_ftp_server import PhonyFtpServer
-        self._ftpd = PhonyFtpServer(directory)
-        self._ftp_port = self._ftpd.Start()
+        assert 'a\nb' == HandleContents('a\rb', filesystem.EOL_STYLE_UNIX)
+        assert 'a\nb' == HandleContents('a\r\nb', filesystem.EOL_STYLE_UNIX)
+        assert 'a\nb' == HandleContents('a\nb', filesystem.EOL_STYLE_UNIX)
+        assert 'a\nb\n' == HandleContents('a\nb\n', filesystem.EOL_STYLE_UNIX)
 
 
-    def _GetAnonymousFTPDir(self, sub_dir):
-        base_dir = 'ftp://127.0.0.1:%s' % self._ftp_port
-        return '/'.join([base_dir, sub_dir])
+    def testDownloadUrlToFile(self, embed_data, httpserver):
+        httpserver.serve_content('Hello, world!', 200)
 
-
-    def _GetFTPUrl(self, sub_dir):
-        base_dir = 'ftp://dev:123@127.0.0.1:%s' % self._ftp_port
-        return '/'.join([base_dir, sub_dir])
-
-
-    def _StopFtpServer(self):
-        '''
-        Stops the phony ftp-server previously started with "_StartFtpServer" method.
-        '''
-        self._ftpd.Stop()
+        filename = embed_data.GetDataFilename('testDownloadUrlToFile.txt')
+        CopyFile(httpserver.url, filename)
+        assert GetFileContents(filename) == 'Hello, world!'
 
 
     def testListMappedNetworkDrives(self, embed_data, monkeypatch):
-        from etk11.filesystem import ListMappedNetworkDrives, _filesystem
+        from etk11 import filesystem
 
         if sys.platform != 'win32':
             return
 
-        def _MockWindowsNetCommand(*args):
-            net_use_output = GetFileContents(embed_data.GetDataFilename('net_use.txt'))
-            return net_use_output.replace("\n", EOL_STYLE_WINDOWS)
+        class MyPopen():
+            def __init__(self, *args, **kwargs):
+                pass
 
-        monkeypatch.setattr(_filesystem, '_CallWindowsNetCommand', _MockWindowsNetCommand)
-        mapped_drives = ListMappedNetworkDrives()
+            def communicate(self):
+                stdoutdata = GetFileContents(embed_data.GetDataFilename('net_use.txt'))
+                return stdoutdata.replace("\n", EOL_STYLE_WINDOWS), ''
+
+        monkeypatch.setattr(subprocess, 'Popen', MyPopen)
+
+        mapped_drives = filesystem.ListMappedNetworkDrives()
         assert mapped_drives[0][0] == 'H:'
         assert mapped_drives[0][1] == r'\\br\CXMR'
         assert mapped_drives[0][2] == True
         assert mapped_drives[1][0] == 'O:'
         assert mapped_drives[1][2] == False
         assert mapped_drives[2][0] == 'P:'
+
+
+
+#=======================================================================================================================
+# PhonyFtpServer
+#=======================================================================================================================
+class PhonyFtpServer(object):
+    '''
+    Creates a phony ftp-server in the given port serving the given directory. Register
+    two users:
+        - anonymous
+        - dev (password: 123)
+
+    Both users map to the given directory.
+    '''
+
+    def __init__(self, directory):
+        self._directory = directory
+
+
+    def Start(self, port=0):
+        '''
+        :param int port:
+            The port to serve.
+            Default to zero with selects an available port (return value)
+
+        :rtype: int
+        :returns:
+            The port the ftp-server is serving
+        '''
+        from threading import Thread
+        from pyftpdlib import ftpserver
+
+        authorizer = ftpserver.DummyAuthorizer()
+        authorizer.add_user("dev", "123", self._directory, perm="elradfmw")
+        authorizer.add_anonymous(self._directory)
+
+        handler = ftpserver.FTPHandler
+        handler.authorizer = authorizer
+
+        address = ("127.0.0.1", port)
+        self.ftpd = ftpserver.FTPServer(address, handler)
+        if port == 0:
+            _address, port = self.ftpd.getsockname()
+
+        self.thread = Thread(target=self.ftpd.serve_forever)
+        self.thread.start()
+
+        return port
+
+
+    def Stop(self):
+        self.ftpd.stop_serve_forever()
+        self.thread.join()

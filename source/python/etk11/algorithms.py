@@ -102,6 +102,7 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
         - Extra variables: parameter extra_vars
     '''
     import etk11.uname
+    from etk11.platform_ import Platform
 
     abs_path = os.path.abspath(filename)
     basename = os.path.basename(filename)
@@ -112,7 +113,7 @@ def FilenamesExpandVars(expression, filename, extra_vars={}, environ=os.environ)
     d.update({
         'abs_path'  : abs_path,
         'platform'  : sys.platform,
-        'PLATFORM'  : etk11.uname.Platform(),
+        'PLATFORM'  : str(Platform.GetCurrentPlatform()),
         'filename'  : filename,
         'basename'  : basename,
         'app_dir'   : etk11.uname.GetApplicationDir(),

@@ -16,6 +16,110 @@ import os
 import re
 import sys
 
+from ftputil.ftp_error import FTPIOError  # @UnusedImport
+from ftputil.ftp_error import PermanentError  # @UnresolvedImport @UnusedImport @Reimport
+
+from etk11.reraise import Reraise
+
+
+#=======================================================================================================================
+# Exceptions
+#=======================================================================================================================
+#-----------------------------------------------------------------------------------------------------------------------
+# UnknownPlatformError
+#-----------------------------------------------------------------------------------------------------------------------
+class UnknownPlatformError(RuntimeError):
+
+    def __init__(self, platform):
+        self.platform = platform
+        RuntimeError.__init__(self, 'Unknown platform "%s".' % platform)
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# NotImplementedProtocol
+#-----------------------------------------------------------------------------------------------------------------------
+class NotImplementedProtocol(RuntimeError):
+    def __init__(self, protocol):
+        RuntimeError.__init__(self, "Function can't handle protocol '%s'." % protocol)
+        self.protocol = protocol
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# NotImplementedForRemotePathError
+#-----------------------------------------------------------------------------------------------------------------------
+class NotImplementedForRemotePathError(NotImplementedError):
+    def __init__(self):
+        NotImplementedError.__init__(self, 'Function not implemented remote paths.')
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# FileError
+#-----------------------------------------------------------------------------------------------------------------------
+class FileError(RuntimeError):
+    def __init__(self, filename):
+        self.filename = filename
+        RuntimeError.__init__(self, self.GetMessage(filename))
+
+    def GetMessage(self, filename):
+        raise NotImplementedError()
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# FileNotFoundError
+#-----------------------------------------------------------------------------------------------------------------------
+class FileNotFoundError(FileError):
+    def GetMessage(self, filename):
+        return 'File "%s" not found.' % filename
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# CantOpenFileThroughProxyError
+#-----------------------------------------------------------------------------------------------------------------------
+class CantOpenFileThroughProxyError(FileError):
+    def GetMessage(self, filename):
+        return 'Can\'t open file "%s" through a proxy.' % filename
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# DirectoryNotFoundError
+#-----------------------------------------------------------------------------------------------------------------------
+class DirectoryNotFoundError(FileError):
+    def GetMessage(self, directory):
+        return 'Directory "%s" not found.' % directory
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# DirectoryAlreadyExistsError
+#-----------------------------------------------------------------------------------------------------------------------
+class DirectoryAlreadyExistsError(FileError):
+    def GetMessage(self, directory):
+        return 'Directory "%s" already exists.' % directory
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# ServerTimeoutError
+#-----------------------------------------------------------------------------------------------------------------------
+class ServerTimeoutError(FileError):
+    def GetMessage(self, filename):
+        return 'Server timeout while accessing file "%s"' % filename
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# FileAlreadyExistsError
+#-----------------------------------------------------------------------------------------------------------------------
+class FileAlreadyExistsError(FileError):
+    def GetMessage(self, filename):
+        return 'File "%s" already exists.' % filename
+
+
+#-----------------------------------------------------------------------------------------------------------------------
+# FileOnlyActionError
+#-----------------------------------------------------------------------------------------------------------------------
+class FileOnlyActionError(FileError):
+    def GetMessage(self, filename):
+        return 'Action performed over "%s" only possible with a file.' % filename
+
+
 
 #=======================================================================================================================
 # Constants
@@ -27,21 +131,26 @@ EOL_STYLE_UNIX = '\n'
 EOL_STYLE_WINDOWS = '\r\n'
 EOL_STYLE_MAC = '\r'
 
-if sys.platform == 'win32':
-    EOL_STYLE_NATIVE = EOL_STYLE_WINDOWS
-elif sys.platform == 'linux2':
-    EOL_STYLE_NATIVE = EOL_STYLE_UNIX
-elif sys.platform == 'darwin':
-    EOL_STYLE_NATIVE = EOL_STYLE_MAC
-else:
-    from ._filesystem_exceptions import UnknownPlatformError
-    raise UnknownPlatformError(sys.platform)
+def _GetNativeEolStyle(platform=sys.platform):
+    _NATIVE_EOL_STYLE_MAP = {
+        'win32' : EOL_STYLE_WINDOWS,
+        'linux2' : EOL_STYLE_UNIX,
+        'darwin' : EOL_STYLE_MAC,
+    }
+    result = _NATIVE_EOL_STYLE_MAP.get(platform)
+
+    if result is None:
+        raise UnknownPlatformError(platform)
+
+    return result
+
+EOL_STYLE_NATIVE = _GetNativeEolStyle()
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # NormalizePath
-#===================================================================================================
+#=======================================================================================================================
 def NormalizePath(path):
     '''
     Normalizes a path maintaining the final slashes.
@@ -205,7 +314,6 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
     '''
     # Check override
     if not override and Exists(target_filename):
-        from _filesystem_exceptions import FileAlreadyExistsError
         raise FileAlreadyExistsError(target_filename)
 
 
@@ -225,7 +333,6 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
 
     # Copy md5 file after the file itself was copied, for safety
     if md5_check:
-        from _filesystem_exceptions import FileNotFoundError
         try:
             _DoCopyFile(source_md5_filename, target_md5_filename)
         except FileNotFoundError:
@@ -248,35 +355,32 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
     :raises FileNotFoundError:
         If source_filename does not exist
     '''
-    if not Exists(source_filename):
-        from _filesystem_exceptions import FileNotFoundError
-        raise FileNotFoundError(source_filename)
-
     from urlparse import urlparse
 
     source_url = urlparse(source_filename)
     target_url = urlparse(target_filename)
 
     if _UrlIsLocal(source_url):
+        if not Exists(source_filename):
+            raise FileNotFoundError(source_filename)
+
         if _UrlIsLocal(target_url):
             # local to local
             _CopyFileLocal(source_filename, target_filename, copy_symlink=copy_symlink)
-        else:
+        elif target_url.scheme in ['ftp']:
             # local to remote
-            from _filesystem_remote import FTPUploadFileToUrl
-            FTPUploadFileToUrl(source_filename, target_url)
+            RemoteImpl.FTPUploadFileToUrl(source_filename, target_url)
+        else:
+            raise NotImplementedProtocol(target_url.scheme)
 
     elif source_url.scheme in ['http', 'ftp']:
         if _UrlIsLocal(target_url):
             # HTTP/FTP to local
-            from _filesystem_remote import DownloadUrlToFile
-            DownloadUrlToFile(source_url, target_filename)
+            RemoteImpl.DownloadUrlToFile(source_url, target_filename)
         else:
             # HTTP/FTP to other ==> NotImplemented
-            from _filesystem_exceptions import NotImplementedProtocol
             raise NotImplementedProtocol(target_url.scheme)
     else:
-        from _filesystem_exceptions import NotImplementedProtocol  # @Reimport
         raise NotImplementedProtocol(source_url.scheme)
 
 
@@ -319,14 +423,13 @@ def _CopyFileLocal(source_filename, target_filename, copy_symlink=True):
             shutil.copyfile(source_filename, target_filename)
             shutil.copymode(source_filename, target_filename)
     except Exception, e:
-        from etk11.reraise import Reraise
         Reraise(e, 'While executiong _filesystem._CopyFileLocal(%s, %s)' % (source_filename, target_filename))
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # CopyFiles
-#===================================================================================================
+#=======================================================================================================================
 def CopyFiles(source_dir, target_dir, create_target_dir=False):
     '''
     Copy files from the given source to the target.
@@ -372,7 +475,6 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
         if create_target_dir:
             CreateDirectory(target_dir)
         else:
-            from ._filesystem_exceptions import DirectoryNotFoundError
             raise DirectoryNotFoundError(target_dir)
 
     # List and match files
@@ -414,7 +516,7 @@ def CopyFilesX(file_mapping):
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from .algorithms import FindFiles
-    from etk11.filesystem.extended_path_mask import ExtendedPathMask
+    from etk11.extended_path_mask import ExtendedPathMask
 
     # List files that match the mapping
     files = []
@@ -472,10 +574,8 @@ def IsFile(path):
         return os.path.isfile(path)
 
     elif url.scheme == 'ftp':
-        from etk11.filesystem._filesystem_remote import FTPIsFile
-        return FTPIsFile(url)
+        return RemoteImpl.FTPIsFile(url)
     else:
-        from etk11.filesystem import NotImplementedProtocol
         raise NotImplementedProtocol(url.scheme)
 
 
@@ -503,17 +603,15 @@ def IsDir(directory):
     if _UrlIsLocal(directory_url):
         return os.path.isdir(directory)
     elif directory_url.scheme == 'ftp':
-        from etk11.filesystem._filesystem_remote import FTPIsDir
-        return FTPIsDir(directory_url)
+        return RemoteImpl.FTPIsDir(directory_url)
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # Exists
-#===================================================================================================
+#=======================================================================================================================
 def Exists(path):
     '''
     :rtype: bool
@@ -526,9 +624,9 @@ def Exists(path):
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # CopyDirectory
-#===================================================================================================
+#=======================================================================================================================
 def CopyDirectory(source_dir, target_dir, override=False):
     '''
     Recursively copy a directory tree.
@@ -580,10 +678,8 @@ def DeleteFile(target_filename):
         if os.path.isfile(target_filename):
             os.remove(target_filename)
         elif IsDir(target_filename):
-            from _filesystem_exceptions import FileOnlyActionError
             raise FileOnlyActionError(target_filename)
     except Exception, e:
-        from etk11.reraise import Reraise
         Reraise(e, 'While executing filesystem.DeleteFile(%s)' % (target_filename))
 
 
@@ -655,15 +751,11 @@ def MoveDirectory(source_dir, target_dir):
         If trying to move anything other than:
             Local dir -> local dir
             FTP dir -> FTP dir (same host)
-            
-        
     '''
     if not IsDir(source_dir):
-        from etk11.filesystem import DirectoryNotFoundError
         raise DirectoryNotFoundError(source_dir)
 
     if Exists(target_dir):
-        from etk11.filesystem import DirectoryAlreadyExistsError
         raise DirectoryAlreadyExistsError(target_dir)
 
     from urlparse import urlparse
@@ -679,9 +771,7 @@ def MoveDirectory(source_dir, target_dir):
     elif source_url.scheme == 'ftp' and target_url.scheme == 'ftp':
         if source_url.hostname != target_url.hostname:
             raise NotImplementedError('Can only move FTP directories in the same host')
-
-        from etk11.filesystem._filesystem_remote import FTPMoveDirectory
-        return FTPMoveDirectory(source_url, target_url)
+        return RemoteImpl.FTPMoveDirectory(source_url, target_url)
     else:
         raise NotImplementedError('Can only move directories local->local or ftp->ftp')
 
@@ -755,7 +845,6 @@ def OpenFile(filename, binary=False):
     # Check if file is local
     if _UrlIsLocal(filename_url):
         if not os.path.isfile(filename):
-            from _filesystem_exceptions import FileNotFoundError
             raise FileNotFoundError(filename)
         mode = 'r'
         if binary:
@@ -765,14 +854,13 @@ def OpenFile(filename, binary=False):
         return file(filename, mode)
 
     # Not local
-    import _filesystem_remote
-    return _filesystem_remote.OpenFile(filename_url)
+    return RemoteImpl.OpenFile(filename_url)
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # ListFiles
-#===================================================================================================
+#=======================================================================================================================
 def ListFiles(directory):
     '''
     Lists the files in the given directory
@@ -801,18 +889,15 @@ def ListFiles(directory):
 
     # Handle FTP
     elif directory_url.scheme == 'ftp':
-        from _filesystem_remote import FTPListFiles
-        return FTPListFiles(directory_url)
-
+        return RemoteImpl.FTPListFiles(directory_url)
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
 
-#===================================================================================================
+#=======================================================================================================================
 # CheckIsFile
-#===================================================================================================
+#=======================================================================================================================
 def CheckIsFile(filename):
     '''
     Check if the given file exists.
@@ -824,7 +909,6 @@ def CheckIsFile(filename):
         Raises if the file does not exist. 
     '''
     if not IsFile(filename):
-        from _filesystem_exceptions import FileNotFoundError
         raise FileNotFoundError(filename)
 
 
@@ -843,7 +927,6 @@ def CheckIsDir(directory):
         Raises if the directory does not exist. 
     '''
     if not IsDir(directory):
-        from _filesystem_exceptions import DirectoryNotFoundError
         raise DirectoryNotFoundError(directory)
 
 
@@ -892,11 +975,9 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True):
 
     # Handle FTP
     elif filename_url.scheme == 'ftp':
-        from _filesystem_remote import FTPCreateFile
-        FTPCreateFile(filename_url, contents)
+        RemoteImpl.FTPCreateFile(filename_url, contents)
 
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(filename_url.scheme)
 
 
@@ -953,11 +1034,9 @@ def CreateDirectory(directory):
 
     # Handle FTP
     elif directory_url.scheme == 'ftp':
-        from _filesystem_remote import FTPCreateDirectory
-        FTPCreateDirectory(directory_url)
+        RemoteImpl.FTPCreateDirectory(directory_url)
 
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -1025,7 +1104,7 @@ def GetMTime(path):
         http://stackoverflow.com/questions/2428556/os-path-getmtime-doesnt-return-fraction-of-a-second
     '''
     if os.path.isdir(path):
-        from etk11.filesystem.algorithms import FindFiles
+        from etk11.algorithms import FindFiles
         files = FindFiles(path)
 
         if len(files) > 0:
@@ -1067,7 +1146,6 @@ def _AssertIsLocal(path):
     '''
     from urlparse import urlparse
     if not _UrlIsLocal(urlparse(path)):
-        from _filesystem_exceptions import NotImplementedForRemotePathError
         raise NotImplementedForRemotePathError
 
 
@@ -1124,9 +1202,309 @@ def _CallWindowsNetCommand(parameters):
     :return: command output
     '''
     import subprocess
-    popen = subprocess.Popen(["net"] + parameters, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    popen.wait()
-    if popen.stderr:
-        err = popen.stderr.read()
-        raise OSError("Failed on call net.exe: %s" % err)
-    return popen.stdout.read()
+    popen = subprocess.Popen(["net"] + parameters, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdoutdata, stderrdata = popen.communicate()
+    if stderrdata:
+        raise OSError("Failed on call net.exe: %s" % stderrdata)
+    return stdoutdata
+
+
+
+#=======================================================================================================================
+# RemoteImpl
+#=======================================================================================================================
+class RemoteImpl:
+
+    @classmethod
+    def FTPHost(cls, url):
+        '''
+        Create an ftputil.FTPHost instance at the target url. Configure the host to correctly use the
+        url's port.
+    
+        :param ParseResult url:
+            As returned by urlparse.urlparse
+    
+        :rtype: ftputil.FTPHost
+        '''
+        from ftputil.ftputil import FTPHost as ftputil_host
+        import ftplib
+
+        class DefaultFTP(ftplib.FTP):
+            def __init__(self, host='', user='', passwd='', acct='', port=ftplib.FTP.port):
+                # Must call parent constructor without any parameter so it don't try to perform
+                # the connect without the port parameter (it have the same "if host" code in there)
+                ftplib.FTP.__init__(self)
+
+                if host:
+                    self.connect(host, port)
+
+                    if user:
+                        self.login(user, passwd, acct)
+                    else:
+                        self.login()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self):
+                self.close()
+
+
+        class ActiveFTP(DefaultFTP):
+            def __init__(self, *args, **kwargs):
+                DefaultFTP.__init__(self, *args, **kwargs)
+                self.set_pasv(False)
+
+
+        from functools import partial
+        create_host = partial(ftputil_host, url.hostname, url.username, url.password, port=url.port)
+
+        # Try to create active ftp host
+        host = create_host(session_factory=ActiveFTP)
+
+        # Check if a simple operation fails in active ftp, if it does, switch to default (passive) ftp
+        try:
+            host.stat('~')
+        except Exception, e:
+            if e.errno == 425:  # Errno raised when trying to a server without active ftp
+                host = create_host(session_factory=DefaultFTP)
+
+        return host
+
+
+    @classmethod
+    def FTPUploadFileToUrl(cls, source_filename, target_url):
+        '''
+        Uploads the given LOCAL file to the given ftp url.
+    
+        :param str source_filename:
+            The local filename to copy from.
+    
+        :param ParseResult target_url:
+            The target directory.
+            
+            A parsed url as returned by urlparse.urlparse
+        '''
+        with cls.FTPHost(target_url) as ftp_host:
+            ftp_host.upload(source_filename, target_url.path, 'b')
+
+
+    @classmethod
+    def DownloadUrlToFile(cls, source_url, target_filename):
+        '''
+        Downloads file in source_url to target_filename
+        
+        :param ParseResult source_url:
+            A parsed url as returned by urlparse.urlparse
+        
+        :param str target_filename:
+            A target filename
+        
+        '''
+        if source_url.scheme == 'ftp':
+            return cls._FTPDownload(source_url, target_filename)
+
+        # Use shutil for other schemes
+        iss = cls.OpenFile(source_url)
+        with file(target_filename, 'wb') as oss:
+            import shutil
+            shutil.copyfileobj(iss, oss)
+
+
+    @classmethod
+    def OpenFile(cls, filename_url):
+        '''
+        :param ParseResult filename_url:
+            Target file to be opened
+        
+            A parsed url as returned by urlparse.urlparse
+            
+        :rtype: file
+        :returns:
+            The open file
+            
+        @raise: FileNotFoundError
+            When the given filename cannot be found
+            
+        @raise: CantOpenFileThroughProxyError
+            When trying to access a file through a proxy, using a protocol not supported by urllib
+            
+        @raise: DirectoryNotFoundError
+            When trying to access a remote directory that does not exist
+            
+        @raise: ServerTimeoutError
+            When failing to connect to a remote server
+        '''
+
+        if filename_url.scheme == 'ftp':
+            try:
+                return cls._FTPOpenFile(filename_url)
+            except FTPIOError, e:
+                if e.errno == 550:
+                    raise FileNotFoundError(filename_url.path)
+                raise
+
+        try:
+            import urllib
+            return urllib.urlopen(filename_url.geturl(), None)
+        except IOError, e:
+            # Raise better errors than the ones given by urllib
+            import errno
+            filename = filename_url.path
+            if e.errno == errno.ENOENT:  # File does not exist
+                raise FileNotFoundError(filename)
+
+            if 'proxy' in str(e.strerror):
+                raise CantOpenFileThroughProxyError(filename)
+
+            if '550' in str(e.strerror):
+                raise DirectoryNotFoundError(filename)
+
+            if '11001' in str(e.strerror):
+                raise ServerTimeoutError(filename)
+
+            # If it's another error, just raise it again.
+            raise e
+
+
+    @classmethod
+    def _FTPDownload(cls, source_url, target_filename):
+        '''
+        Downloads a file through FTP
+        
+        :param source_url:
+            .. see:: DownloadUrlToFile
+        :param target_filename:
+            .. see:: DownloadUrlToFile
+        '''
+        with cls.FTPHost(source_url) as ftp_host:
+            ftp_host.download(source=source_url.path, target=target_filename, mode='b')
+
+
+    @classmethod
+    def _FTPOpenFile(cls, filename_url):
+        '''
+        Opens a file (FTP only) and sets things up to close ftp connection when the file is closed.
+        
+        :param filename_url:
+            .. see:: OpenFile
+        '''
+        ftp_host = cls.FTPHost(filename_url)
+        try:
+            open_file = ftp_host.open(filename_url.path)
+
+            # Set it up so when open_file is closed, ftp_host closes too
+            def FTPClose():
+                # Before closing, remove callback to avoid recursion, since ftputil closes all files
+                # it has
+                from etk11.callback import Remove
+                Remove(open_file.close, FTPClose)
+
+                ftp_host.close()
+
+            from etk11.callback import After
+            After(open_file.close, FTPClose)
+
+            return open_file
+        except:
+            ftp_host.close()
+            raise
+
+
+    @classmethod
+    def FTPCreateFile(cls, url, contents):
+        '''
+        Creates a file in a ftp server.
+    
+        :param ParseResult url:
+            File to be created.
+        
+            A parsed url as returned by urlparse.urlparse
+    
+        :param text contents:
+            The file contents.
+        '''
+        with cls.FTPHost(url) as ftp_host:
+            with ftp_host.file(url.path, 'w') as oss:
+                oss.write(contents)
+
+
+    @classmethod
+    def FTPIsFile(cls, url):
+        '''
+        :param ParseResult url:
+            URL for file we want to check
+        
+        :rtype: bool
+        :returns:
+            True if file exists.
+        '''
+        with cls.FTPHost(url) as ftp_host:
+            return ftp_host.path.isfile(url.path)
+
+
+    @classmethod
+    def FTPCreateDirectory(cls, url):
+        '''
+        :param ParseResult url:
+            Target url to be created
+            
+            A parsed url as returned by urlparse.urlparse
+        '''
+        with cls.FTPHost(url) as ftp_host:
+            ftp_host.makedirs(url.path)
+
+
+    @classmethod
+    def FTPMoveDirectory(cls, source_url, target_url):
+        '''
+        :param ParseResult url:
+            Target url to be created
+            
+            A parsed url as returned by urlparse.urlparse
+        '''
+        with cls.FTPHost(source_url) as ftp_host:
+            ftp_host.rename(source_url.path, target_url.path)
+
+
+    @classmethod
+    def FTPIsDir(cls, url):
+        '''
+        List files in a url
+        
+        :param ParseResult url:
+            Directory url we are checking
+            
+            A parsed url as returned by urlparse.urlparse
+            
+        :rtype: bool
+        :returns:
+            True if url is an existing dir
+        '''
+        with cls.FTPHost(url) as ftp_host:
+            return ftp_host.path.isdir(url.path)
+
+
+    @classmethod
+    def FTPListFiles(cls, url):
+        '''
+        List files in a url
+        
+        :param ParseResult url:
+            Target url being searched for files
+            
+            A parsed url as returned by urlparse.urlparse
+            
+        :rtype: list(str) or None
+        :returns:
+            List of files, or None if directory does not exist (error 550 CWD)
+        '''
+        with cls.FTPHost(url) as ftp_host:
+            try:
+                return ftp_host.listdir(url.path)
+            except PermanentError, e:
+                if e.errno == 550:
+                    # "No such file or directory"
+                    return None
+                else:
+                    raise

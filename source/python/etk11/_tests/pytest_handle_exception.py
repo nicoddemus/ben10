@@ -51,10 +51,10 @@ class Test():
         assert capfd.readouterr() == [
             u'',
             u'''Traceback (most recent call last):
-  File "x:\\etk11\\source\\python\\etk11\\_tests\\pytest_handle_exception.py", line 46, in testHandleException
+  File "%s", line 46, in testHandleException
     raise RuntimeError()
 RuntimeError
-''',
+''' % __file__,
         ]
 
 

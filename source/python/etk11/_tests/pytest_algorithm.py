@@ -3,11 +3,14 @@ import sys
 
 import pytest
 
-from etk11.filesystem import CreateFile, CreateDirectory, GetFileContents
-from etk11.filesystem.algorithms import FindFiles, Filenames, FindFilename, ReplaceInFile, MakeDirs, SplitAll, \
-    RelativePath, NormPath, IsValidFilename, MakeValidFilename, GetInvalidCharsInFilename, CheckInvalidCharsInFilename, \
+from etk11.algorithms import FindFiles, Filenames, FindFilename, ReplaceInFile, MakeDirs, SplitAll, RelativePath, \
+    NormPath, IsValidFilename, MakeValidFilename, GetInvalidCharsInFilename, CheckInvalidCharsInFilename, \
     GetUnusedFilenameInDirectory
-from etk11.fixtures import embed_data
+from etk11.filesystem import CreateFile, CreateDirectory, GetFileContents
+
+
+pytest_plugins = ["etk11.fixtures"]
+
 
 
 #=======================================================================================================================
