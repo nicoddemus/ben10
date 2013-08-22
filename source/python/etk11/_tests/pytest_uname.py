@@ -15,7 +15,7 @@ class Test():
 
 
     def testGetUserHomeDir(self):
-        assert GetUserHomeDir() == r'C:\Users\Kaniabi'
+        assert GetUserHomeDir() == '%(HOMEDRIVE)s%(HOMEPATH)s' % os.environ
 
 
     def testGetApplicationDir(self):
