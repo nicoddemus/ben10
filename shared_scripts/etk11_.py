@@ -1,7 +1,6 @@
 from sharedscripts10.shared_scripts.esss_project import EsssProject
 
 
-
 #===================================================================================================
 # Etk11
 #===================================================================================================
@@ -12,6 +11,9 @@ class Etk11(EsssProject):
         'ftputil',
         'ordereddict',
         'path_py',
+        'pytest',
+        'pytest_cov',
+        'pytest_localserver',
         'pywin32',
     ]
 

@@ -1,8 +1,6 @@
 from __future__ import with_statement
 
-import codecs
 import os
-import subprocess
 import sys
 
 import pytest
@@ -13,9 +11,11 @@ from etk11.filesystem import GetFileContents, CreateFile, EOL_STYLE_MAC, ListFil
     MD5_SKIP, CheckIsFile, FileNotFoundError, GetMTime, StandardizePath, NormStandardPath, NormalizePath, CanonicalPath, \
     EOL_STYLE_NONE, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX, OpenFile, CreateMD5, GetFileLines, CheckIsDir, UnknownPlatformError, \
     _GetNativeEolStyle, NotImplementedProtocol, FileError
+import logging
+import subprocess
 
 
-pytest_plugins = ["etk11.fixtures"]
+pytest_plugins = ["etk11.fixtures", "pytest_localserver.plugin"]
 
 
 @pytest.fixture
@@ -23,7 +23,6 @@ def ftpserver(monkeypatch, embed_data, request):
     from pyftpdlib import ftpserver
 
     # Redirect ftpserver messages to "logging"
-    import logging
     monkeypatch.setattr(ftpserver, 'log', logging.info)
     monkeypatch.setattr(ftpserver, 'logline', logging.info)
     monkeypatch.setattr(ftpserver, 'logerror', logging.info)
