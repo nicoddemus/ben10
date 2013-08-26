@@ -10,6 +10,8 @@ import pytest
 class Test:
 
     def testImmutable(self):
+        assert AsImmutable(1) == 1
+
         d = AsImmutable(dict(a=1, b=dict(b=2)))
         assert d == {'a': 1, 'b': {'b': 2}}
         with pytest.raises(NotImplementedError):

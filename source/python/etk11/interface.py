@@ -1,10 +1,15 @@
-from etk11.decorators import Override, Deprecated
-from etk11.is_frozen import IsFrozen
-from etk11.memoize import Memoize
-from etk11.reraise import Reraise
 import inspect
 import sys
 
+from etk11 import immutable
+from etk11.decorators import Override, Deprecated
+from etk11.is_frozen import IsFrozen
+from etk11.klass import IsInstance
+from etk11.memoize import Memoize
+from etk11.odict import odict
+from etk11.reraise import Reraise
+from etk11.types_ import Null
+from etk11.weak_ref import WeakMethodRef
 
 
 #===================================================================================================
@@ -41,10 +46,10 @@ class InterfaceImplementationMetaClass(type):
 #===================================================================================================
 class InterfaceImplementorStub(object):
     '''
-        A helper for acting as a stub for some object (in this way, we're only able to access
-        attributes declared directly in the interface.
-    
-        It forwards the calls to the actual implementor (the wrapped object)
+    A helper for acting as a stub for some object (in this way, we're only able to access
+    attributes declared directly in the interface.
+
+    It forwards the calls to the actual implementor (the wrapped object)
     '''
 
     def __init__(self, wrapped, implemented_interface):
@@ -57,14 +62,16 @@ class InterfaceImplementorStub(object):
 
     def GetWrappedFromImplementorStub(self):
         '''
-            Really big and awkward name because we don't want name-clashes
+        Really big and awkward name because we don't want name-clashes
         '''
         return self.__wrapped
+
 
     def __getattr__(self, attr):
         if attr not in self.__attrs and attr not in self.__interface_methods:
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, attr))
         return getattr(self.__wrapped, attr)
+
 
     def __getitem__(self, *args, **kwargs):
         if '__getitem__' not in self.__interface_methods:
@@ -237,7 +244,6 @@ class CacheInterfaceAttrs(object):
             cache = self.cache
         except AttributeError:
             # create it on the 1st access
-            from etk11.cached_method import ImmutableParamsCachedMethod
             cache = self.cache = ImmutableParamsCachedMethod(self.__GetInterfaceMethodsAndAttrs)
         return cache(interface)
 
@@ -299,8 +305,6 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
     :param chk_attr:
     '''
     # Moved from the file to avoid cyclic import:
-    from etk11.null import Null
-
     try:
         is_interface = issubclass(interface, Interface)
     except TypeError, e:
@@ -402,35 +406,35 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
 
 
 
-#===================================================================================================
-# PROFILING FOR ASSERT IMPLEMENTS -- it can be quite slow, so, this is useful for seeing where exactly
-# it is being slow
-#===================================================================================================
-PROFILE_ASSERT_IMPLEMENTS = False
-if PROFILE_ASSERT_IMPLEMENTS:
-    __original_assert_implements = AssertImplements
-    __cache = {}
-    def AssertImplementsWithCount(class_or_instance, interface_, check_attr=True):
-        try:
-            classname = class_or_instance.__name__
-        except:
-            classname = class_or_instance.__class__.__name__
-
-        cache_key = (classname, interface_)
-        v = __cache.setdefault(cache_key, 0)
-        __cache[cache_key] = v + 1
-
-        __original_assert_implements(class_or_instance, interface_, check_attr)
-
-    AssertImplements = AssertImplementsWithCount
-
-    def PrintAssertImplementsCount():
-        p = []
-        for key, value in __cache.iteritems():
-            p.append((value, key))
-
-        for value, key in sorted(p):
-            print '%s: %s' % (value, key)
+# #===================================================================================================
+# # PROFILING FOR ASSERT IMPLEMENTS -- it can be quite slow, so, this is useful for seeing where exactly
+# # it is being slow
+# #===================================================================================================
+# PROFILE_ASSERT_IMPLEMENTS = False
+# if PROFILE_ASSERT_IMPLEMENTS:
+#     __original_assert_implements = AssertImplements
+#     __cache = {}
+#     def AssertImplementsWithCount(class_or_instance, interface_, check_attr=True):
+#         try:
+#             classname = class_or_instance.__name__
+#         except:
+#             classname = class_or_instance.__class__.__name__
+#
+#         cache_key = (classname, interface_)
+#         v = __cache.setdefault(cache_key, 0)
+#         __cache[cache_key] = v + 1
+#
+#         __original_assert_implements(class_or_instance, interface_, check_attr)
+#
+#     AssertImplements = AssertImplementsWithCount
+#
+#     def PrintAssertImplementsCount():
+#         p = []
+#         for key, value in __cache.iteritems():
+#             p.append((value, key))
+#
+#         for value, key in sorted(p):
+#             print '%s: %s' % (value, key)
 
 
 
@@ -567,34 +571,34 @@ def IsInterfaceDeclared(class_or_instance, interface):
 
 
 
-#===================================================================================================
-# PROFILING FOR IsInterfaceDeclared -- it can be somewhat slow, so, this is useful for seeing
-# where exactly it is being called
-#===================================================================================================
-PROFILE_IS_INTERFACE_DECLARED = False
-if PROFILE_IS_INTERFACE_DECLARED:
-    _count_calls = CountCalls()
-    _original_is_interface_declared = IsInterfaceDeclared
-    _cache_is_interface_declared = {}
-
-    def IsInterfaceDeclaredWithCount(class_or_instance, interface_):
-        try:
-            classname = class_or_instance.__name__
-        except:
-            classname = class_or_instance.__class__.__name__
-
-        cache_key = (classname, interface_)
-        v = _cache_is_interface_declared.setdefault(cache_key, 0)
-        _cache_is_interface_declared[cache_key] = v + 1
-        _count_calls.AddCallerToCount()
-        return _original_is_interface_declared(class_or_instance, interface_)
-
-    IsInterfaceDeclared = IsInterfaceDeclaredWithCount
-
-    def PrintIsInterfaceDeclaredCount():
-        for value, key in sorted((value, key) for key, value in _cache_is_interface_declared.iteritems()):
-            print '%s: %s' % (value, key)
-        _count_calls.PrintStatistics()
+# #===================================================================================================
+# # PROFILING FOR IsInterfaceDeclared -- it can be somewhat slow, so, this is useful for seeing
+# # where exactly it is being called
+# #===================================================================================================
+# PROFILE_IS_INTERFACE_DECLARED = False
+# if PROFILE_IS_INTERFACE_DECLARED:
+#     _count_calls = CountCalls()
+#     _original_is_interface_declared = IsInterfaceDeclared
+#     _cache_is_interface_declared = {}
+#
+#     def IsInterfaceDeclaredWithCount(class_or_instance, interface_):
+#         try:
+#             classname = class_or_instance.__name__
+#         except:
+#             classname = class_or_instance.__class__.__name__
+#
+#         cache_key = (classname, interface_)
+#         v = _cache_is_interface_declared.setdefault(cache_key, 0)
+#         _cache_is_interface_declared[cache_key] = v + 1
+#         _count_calls.AddCallerToCount()
+#         return _original_is_interface_declared(class_or_instance, interface_)
+#
+#     IsInterfaceDeclared = IsInterfaceDeclaredWithCount
+#
+#     def PrintIsInterfaceDeclaredCount():
+#         for value, key in sorted((value, key) for key, value in _cache_is_interface_declared.iteritems()):
+#             print '%s: %s' % (value, key)
+#         _count_calls.PrintStatistics()
 
 
 
@@ -687,8 +691,8 @@ class ReadOnlyAttribute(Attribute):
 #===================================================================================================
 class Method(object):
     '''
-        This class is an 'organization' class, so that subclasses are considered as methods
-        (and its __call__ method is checked for the parameters)
+    This class is an 'organization' class, so that subclasses are considered as methods (and its
+    __call__ method is checked for the parameters)
     '''
 
 
@@ -696,8 +700,6 @@ class Method(object):
 # ScalarAttribute
 #===================================================================================================
 class ScalarAttribute(Attribute):
-    '''
-    '''
 
     def __init__(self, category):
         '''
@@ -719,3 +721,216 @@ class ScalarAttribute(Attribute):
             )
 
         return (True, None)
+
+
+
+#=======================================================================================================================
+#=======================================================================================================================
+# CACHED METHOD
+#=======================================================================================================================
+#=======================================================================================================================
+
+
+
+#=======================================================================================================================
+# AbstractCachedMethod
+#=======================================================================================================================
+class AbstractCachedMethod(Method):
+    '''
+    Base class for cache-manager.
+    The abstract class does not implement the storage of results.
+    '''
+
+    def __init__(self, cached_method=None):
+        # REMARKS: Use WeakMethodRef to avoid cyclic reference.
+        self._method = WeakMethodRef(cached_method)
+        self.enabled = True
+        self.ResetCounters()
+
+
+    def __call__(self, *args, **kwargs):
+        key = self.GetCacheKey(*args, **kwargs)
+        result = None
+
+        if self.enabled and self._HasResult(key):
+            self.hit_count += 1
+            result = self._GetCacheResult(key, result)
+        else:
+            self.miss_count += 1
+            result = self._CallMethod(*args, **kwargs)
+            self._AddCacheResult(key, result)
+
+        self.call_count += 1
+        return result
+
+
+    def _CallMethod(self, *args, **kwargs):
+        return self._method()(*args, **kwargs)
+
+
+    def GetCacheKey(self, *args, **kwargs):
+        '''
+            Use the arguments to build the cache-key.
+        '''
+        if args:
+            if kwargs:
+                return immutable.AsImmutable(args), immutable.AsImmutable(kwargs)
+
+            return immutable.AsImmutable(args)
+
+        if kwargs:
+            return immutable.AsImmutable(kwargs)
+
+
+    def _HasResult(self, key):
+        raise NotImplementedError()
+
+
+    def _AddCacheResult(self, key, result):
+        raise NotImplementedError()
+
+
+    def DoClear(self):
+        raise NotImplementedError()
+
+
+    def Clear(self):
+        self.DoClear()
+        self.ResetCounters()
+
+
+    def ResetCounters(self):
+        self.call_count = 0
+        self.hit_count = 0
+        self.miss_count = 0
+
+
+    def _GetCacheResult(self, key, result):
+        raise NotImplementedError()
+
+
+
+#===================================================================================================
+# CachedMethod
+#===================================================================================================
+class CachedMethod(AbstractCachedMethod):
+    '''
+    Stores ALL the different results and never delete them.
+    '''
+
+    def __init__(self, cached_method=None):
+        super(CachedMethod, self).__init__(cached_method)
+        self._results = {}
+
+
+    def _HasResult(self, key):
+        return key in self._results
+
+
+    def _AddCacheResult(self, key, result):
+        self._results[key] = result
+
+
+    def DoClear(self):
+        self._results.clear()
+
+
+    def _GetCacheResult(self, key, result):
+        return self._results[key]
+
+
+
+#===================================================================================================
+# ImmutableParamsCachedMethod
+#===================================================================================================
+class ImmutableParamsCachedMethod(CachedMethod):
+    '''
+    Expects all parameters to already be immutable
+    Considers only the positional parameters of key, ignoring the keyword arguments 
+    '''
+
+    def GetCacheKey(self, *args, **kwargs):
+        '''
+        Use the arguments to build the cache-key.
+        '''
+        return args
+
+
+
+#===================================================================================================
+# LastResultCachedMethod
+#===================================================================================================
+class LastResultCachedMethod(AbstractCachedMethod):
+    '''
+        A cache that stores only the last result.
+    '''
+
+    def __init__(self, cached_method=None):
+        super(LastResultCachedMethod, self).__init__(cached_method)
+        self._key = None
+        self._result = None
+
+
+    def _HasResult(self, key):
+        return self._key == key
+
+
+    def _AddCacheResult(self, key, result):
+        self._key = key
+        self._result = result
+
+
+    def DoClear(self):
+        self._key = None
+        self._result = None
+
+
+    def _GetCacheResult(self, key, result):
+        return self._result
+
+
+
+#===================================================================================================
+# AttributeBasedCachedMethod
+#===================================================================================================
+class AttributeBasedCachedMethod(CachedMethod):
+    '''
+    This cached method consider changes in object attributes
+    '''
+
+
+    def __init__(self, cached_method, attr_name_list, cache_size=1, results=None):
+        '''
+        :type cached_method: bound method to be cached
+        :param cached_method:
+        :type attr_name_list: attr names in a C{str} separated by spaces OR in a sequence of C{str}
+        :param attr_name_list:
+        :type cache_size: the cache size
+        :param cache_size:
+        :type results: an optional ref. to an C{odict} for keep cache results
+        :param results:
+        '''
+        CachedMethod.__init__(self, cached_method)
+        if isinstance(attr_name_list, str):
+            self._attr_name_list = attr_name_list.split()
+        else:
+            self._attr_name_list = attr_name_list
+        self._cache_size = cache_size
+        if results is None:
+            self._results = odict()
+        else:
+            self._results = results
+
+
+    def GetCacheKey(self, *args, **kwargs):
+        object = self._method().im_self
+        for attr_name in self._attr_name_list:
+            kwargs['_object_%s' % attr_name] = getattr(object, attr_name)
+        return AbstractCachedMethod.GetCacheKey(self, *args, **kwargs)
+
+
+    def _AddCacheResult(self, key, result):
+        CachedMethod._AddCacheResult(self, key, result)
+        if len(self._results) > self._cache_size:
+            key0 = self._results.keys()[0]
+            del self._results[key0]

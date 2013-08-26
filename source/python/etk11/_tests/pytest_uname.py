@@ -2,6 +2,7 @@ import os
 import sys
 
 from etk11 import is_frozen
+from etk11.platform_ import Platform
 from etk11.uname import GetApplicationDir, IsRunningOn64BitMachine, GetUserHomeDir
 
 
@@ -10,8 +11,14 @@ from etk11.uname import GetApplicationDir, IsRunningOn64BitMachine, GetUserHomeD
 #=======================================================================================================================
 class Test():
 
-    def testIsRunningOn64BitMachine(self):
-        assert IsRunningOn64BitMachine
+    def testIsRunningOn64BitMachine(self, monkeypatch):
+        monkeypatch.setattr(Platform, 'GetCurrentPlatform', classmethod(lambda x:'win64'))
+        assert IsRunningOn64BitMachine()
+
+#        TODO: In this case it checks using IsWow64Process... shoudn't be better/easier to check for PROGRAMFILES(x86)
+#              environment variable?
+#        monkeypatch.setattr(Platform, 'GetCurrentPlatform', classmethod(lambda x:'win32'))
+#        assert not IsRunningOn64BitMachine()
 
 
     def testGetUserHomeDir(self):

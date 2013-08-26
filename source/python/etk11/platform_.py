@@ -217,8 +217,6 @@ class Platform(object):
                 bits = MACHINE_MAP[platform.machine()]
                 return cls(dist, bits)
 
-        raise UnknownPlatform('Unrecognized platform.')
-
 
     @classmethod
     def GetOSPlatform(cls):

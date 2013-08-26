@@ -4,7 +4,7 @@ import pytest
 
 from etk11 import callback, handle_exception
 from etk11.callback import Callbacks, _CallbackWrapper, After, PriorityCallback, ErrorNotHandledInCallback, Remove
-from etk11.null import Null
+from etk11.types_ import Null
 from etk11.weak_ref import WeakMethodRef
 
 

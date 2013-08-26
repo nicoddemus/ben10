@@ -136,3 +136,51 @@ def Deprecated(name=None):
             return DeprecatedWrapper
 
     return DeprecatedDecorator
+
+
+
+#=======================================================================================================================
+# Abstract
+#=======================================================================================================================
+def Abstract(func):
+    '''
+    Decorator to make methods 'abstract', which are meant to be overwritten in subclasses. If some
+    subclass doesn't override the method, it will raise NotImplementedError when called. Note that
+    this decorator should be used together with :dec:Override.
+
+    Example::
+
+        class Base(object):
+
+            @Abstract
+            def Foo(self):
+                """
+                This method ...
+                """
+                # no body required here; an exception will be raised automatically
+
+
+        class Derived(Base):
+
+            @Override(Base.Foo)
+            def Foo(self):
+                ...
+
+    '''
+
+    def AbstractWrapper(self, *args, **kwargs):
+        '''
+        This wrapper method replaces the implementation of the (abstract) method, providing a
+        friendly message to the user.
+        '''
+        # # Unused argument args, kwargs
+        # # pylint: disable-msg=W0613
+        msg = 'method %r not implemented in class %r.' % (func.__name__, self.__class__)
+        raise NotImplementedError(msg)
+
+    # # Redefining build-in
+    # # pylint: disable-msg=W0622
+    AbstractWrapper.__name__ = func.__name__
+    AbstractWrapper.__doc__ = func.__doc__
+    return AbstractWrapper
+

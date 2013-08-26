@@ -1,3 +1,7 @@
+import os
+import platform
+import sys
+
 import pytest
 
 from etk11.platform_ import Platform, UnknownPlatform
@@ -34,12 +38,6 @@ class Test:
         assert p.GetLongName() == 'Windows 64-bit DEBUG'
         assert p.GetPlatformFlavour() == 'windows'
         assert p.GetMneumonic() == 'w64'
-
-        p = Platform.CreateFromString('win32')
-        assert str(p) == 'win32'
-
-        p = Platform.CreateFromSimplePlatform('i686.win32')
-        assert str(p) == 'win32'
 
         with pytest.raises(ValueError):
             p = Platform('INVALID', '32')
@@ -87,6 +85,55 @@ class Test:
         plat = Platform.GetCurrentPlatform()
         assert Platform.Create(plat) is plat
 
+        p = Platform.CreateFromString('win32')
+        assert str(p) == 'win32'
 
-    def testGetOSPlatform(self):
+        p = Platform.CreateFromSimplePlatform('i686.win32')
+        assert str(p) == 'win32'
+
+        with pytest.raises(UnknownPlatform):
+            Platform.Create(123)
+
+        with pytest.raises(UnknownPlatform):
+            Platform.CreateFromSimplePlatform('UNKNOWN')
+
+
+    def testGetCurrentPlatform(self, monkeypatch):
+        '''
+        This is a white box test, but I found it necessary to full coverage.
+        '''
+        monkeypatch.setattr(sys, 'platform', 'win32')
+        monkeypatch.setattr(platform, 'python_compiler', lambda:'WINDOWS')
+        assert str(Platform.GetCurrentPlatform()) == 'win32'
+        assert str(Platform.GetDefaultPlatform()) == 'win32'
+
+        monkeypatch.setattr(platform, 'python_compiler', lambda:'AMD64')
+        assert str(Platform.GetCurrentPlatform()) == 'win64'
+        assert str(Platform.GetDefaultPlatform()) == 'win32'
+
+        monkeypatch.setattr(sys, 'platform', 'darwin')
+        assert str(Platform.GetCurrentPlatform()) == 'darwin64'
+        assert str(Platform.GetDefaultPlatform()) == 'darwin64'
+
+        monkeypatch.setattr(sys, 'platform', 'linux2')
+        monkeypatch.setattr(platform, 'dist', lambda:['fedora'])
+        monkeypatch.setattr(platform, 'machine', lambda:'x86_64')
+        assert str(Platform.GetCurrentPlatform()) == 'redhat64'
+        assert str(Platform.GetDefaultPlatform()) == 'redhat64'
+
+
+    def testGetOSPlatform(self, monkeypatch):
+        monkeypatch.setattr(sys, 'platform', 'win32')
+        monkeypatch.setattr(platform, 'python_compiler', lambda:'WINDOWS')
+
+        monkeypatch.setattr(os, 'environ', {})
+        assert str(Platform.GetOSPlatform()) == 'win32'
+
+        monkeypatch.setattr(os, 'environ', {'PROGRAMFILES(X86)':''})
         assert str(Platform.GetOSPlatform()) == 'win64'
+
+        monkeypatch.setattr(sys, 'platform', 'linux2')
+        monkeypatch.setattr(platform, 'dist', lambda:['fedora'])
+        monkeypatch.setattr(platform, 'machine', lambda:'x86_64')
+        assert str(Platform.GetOSPlatform()) == 'redhat64'
+

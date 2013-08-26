@@ -1,7 +1,12 @@
 from __future__ import with_statement
 
+import errno
+import logging
 import os
+import subprocess
 import sys
+import time
+import urllib
 
 import pytest
 
@@ -10,12 +15,10 @@ from etk11.filesystem import GetFileContents, CreateFile, EOL_STYLE_MAC, ListFil
     DirectoryNotFoundError, CopyFilesX, IsDir, IsFile, FileAlreadyExistsError, MoveDirectory, DirectoryAlreadyExistsError, \
     MD5_SKIP, CheckIsFile, FileNotFoundError, GetMTime, StandardizePath, NormStandardPath, NormalizePath, CanonicalPath, \
     EOL_STYLE_NONE, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX, OpenFile, CreateMD5, GetFileLines, CheckIsDir, UnknownPlatformError, \
-    _GetNativeEolStyle, NotImplementedProtocol, FileError
-import logging
-import subprocess
+    _GetNativeEolStyle, NotImplementedProtocol, FileError, MatchMasks, FindFiles, ServerTimeoutError, CheckForUpdate
 
 
-pytest_plugins = ["etk11.fixtures", "pytest_localserver.plugin"]
+pytest_plugins = ["etk11.fixtures"]
 
 
 @pytest.fixture
@@ -347,7 +350,8 @@ class Test:
         assert not os.path.islink(real_file)
 
 
-    def testOpenFile(self, embed_data):
+    @pytest.mark.doing
+    def testOpenFile(self, embed_data, monkeypatch):
         test_filename = embed_data.GetDataFilename('testOpenFile.data')
 
         # Create a file with a mixture of "\r" and "\n" characters
@@ -363,6 +367,34 @@ class Test:
 
         iss = OpenFile(test_filename, binary=True)
         assert iss.read() == 'Alpha\nBravo\r\nCharlie\rDelta'
+
+        # Emulating many urllib errors and their "nicer" versions provided by filesystem.
+        class Raise():
+            def __init__(self, strerror, errno=0):
+                self.__strerror = strerror
+                self.__errno = errno
+
+            def __call__(self, *args):
+                exception = IOError(self.__strerror)
+                exception.errno = self.__errno
+                exception.strerror = self.__strerror
+                raise exception
+
+        monkeypatch.setattr(urllib, 'urlopen', Raise('', errno.ENOENT))
+        with pytest.raises(FileNotFoundError):
+            OpenFile('http://www.esss.com.br/missing.txt')
+
+        monkeypatch.setattr(urllib, 'urlopen', Raise('550'))
+        with pytest.raises(DirectoryNotFoundError):
+            OpenFile('http://www.esss.com.br/missing.txt')
+
+        monkeypatch.setattr(urllib, 'urlopen', Raise('11001'))
+        with pytest.raises(ServerTimeoutError):
+            OpenFile('http://www.esss.com.br/missing.txt')
+
+        monkeypatch.setattr(urllib, 'urlopen', Raise('OTHER'))
+        with pytest.raises(IOError):
+            OpenFile('http://www.esss.com.br/missing.txt')
 
 
     def testFileContents(self, embed_data):
@@ -971,6 +1003,176 @@ class Test:
         assert mapped_drives[1][0] == 'O:'
         assert mapped_drives[1][2] == False
         assert mapped_drives[2][0] == 'P:'
+
+
+    def testMatchMasks(self):
+        assert MatchMasks('alpha.txt', '*.txt')
+        assert MatchMasks('alpha.txt', ('*.txt',))
+        assert MatchMasks('alpha.txt', ['*.txt'])
+
+
+    def testFindFiles(self, embed_data):
+        '''
+        Test folder organization:
+            testFindFiles/  --> FILES: testRoot.bmp, mytestRoot.txt
+              A/            --> FILES: testA.bmp, mytestA.txt
+                B/          --> FILES: testB.bmp, mytestB.txt
+                C/          --> FILES: testC.bmp, mytestC.txt
+        '''
+
+        def PATH(p_path):
+            return os.path.normpath(p_path)
+
+        def Compare(p_obtained, p_expected):
+            obtained = set(map(PATH, p_obtained))
+            expected = set(map(PATH, p_expected))
+            assert obtained == expected
+
+        def TestFilename(*args):
+            return embed_data.GetDataFilename('testFindFiles', *args)
+
+        CreateDirectory(TestFilename('A/B'))
+        CreateDirectory(TestFilename('A/C'))
+        CreateFile(TestFilename('testRoot.bmp'), '')
+        CreateFile(TestFilename('mytestRoot.txt'), '')
+        CreateFile(TestFilename('A/testA.bmp'), '')
+        CreateFile(TestFilename('A/mytestA.txt'), '')
+        CreateFile(TestFilename('A/B/testB.bmp'), '')
+        CreateFile(TestFilename('A/B/mytestB.txt'), '')
+        CreateFile(TestFilename('A/C/testC.bmp'), '')
+        CreateFile(TestFilename('A/C/mytestC.txt'), '')
+
+        # no recursion, must return only .bmp files
+        in_filter = ['*.bmp']
+        out_filter = []
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
+        Compare(found_files, [TestFilename('testRoot.bmp')])
+
+        # no recursion, must return all files
+        in_filter = ['*']
+        out_filter = []
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
+        assert_found_files = ['A', 'mytestRoot.txt', 'testRoot.bmp', ]
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # no recursion, return all files, except *.bmp
+        in_filter = ['*']
+        out_filter = ['*.bmp', ]
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
+        assert_found_files = ['A', 'mytestRoot.txt']
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion, to get just directories
+        in_filter = ['*']
+        out_filter = ['*.bmp', '*.txt']
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
+        assert_found_files = ['A', 'A/B', 'A/C', ]
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion with no out_filters, must return all files
+        in_filter = ['*']
+        out_filter = []
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
+        assert_found_files = [
+            'A',
+            'mytestRoot.txt',
+            'testRoot.bmp',
+            'A/B',
+            'A/C',
+            'A/mytestA.txt',
+            'A/testA.bmp',
+            'A/B/mytestB.txt',
+            'A/B/testB.bmp',
+            'A/C/mytestC.txt',
+            'A/C/testC.bmp',
+        ]
+        assert_found_files = map(PATH, assert_found_files)
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion with no out_filters, must return all files
+        # include_root_dir is False, it will be omitted from the found files
+        in_filter = ['*']
+        out_filter = []
+        found_files = list(FindFiles(TestFilename(), include_root_dir=False))
+        assert_found_files = [
+            'A',
+            'mytestRoot.txt',
+            'testRoot.bmp',
+            'A/B',
+            'A/C',
+            'A/mytestA.txt',
+            'A/testA.bmp',
+            'A/B/mytestB.txt',
+            'A/B/testB.bmp',
+            'A/C/mytestC.txt',
+            'A/C/testC.bmp',
+        ]
+        assert_found_files = map(PATH, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion must return just .txt files
+        in_filter = ['*.txt']
+        out_filter = []
+        found_files = list(FindFiles(TestFilename('A'), in_filter, out_filter))
+        assert_found_files = [
+            'A/mytestA.txt',
+            'A/B/mytestB.txt',
+            'A/C/mytestC.txt',
+        ]
+        assert_found_files = map(PATH, assert_found_files)
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion must return just .txt files
+        in_filter = ['*.txt']
+        out_filter = ['*A*']
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
+        assert_found_files = ['mytestRoot.txt', ]
+        assert_found_files = map(PATH, assert_found_files)
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+        # recursion must ignore everyting below a directory that match the out_filter
+        in_filter = ['*']
+        out_filter = ['B', 'C']
+        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
+        assert_found_files = [
+            'A',
+            'A/mytestA.txt',
+            'A/testA.bmp',
+            'mytestRoot.txt',
+            'testRoot.bmp',
+        ]
+        assert_found_files = map(TestFilename, assert_found_files)
+        Compare(found_files, assert_found_files)
+
+
+    def testCheckForUpdate(self, embed_data):
+        def touch(filename):
+            time.sleep(1.1)
+            f = file(filename, 'w')
+            f.write('xx')
+            f.close()
+
+        embed_data.CreateDataDir()
+        input_filename = embed_data.GetDataFilename('input.txt')
+        output_filename = embed_data.GetDataFilename('output.txt')
+        CreateFile(input_filename, '')
+
+        assert CheckForUpdate(input_filename, output_filename) == True
+
+        touch(output_filename)
+        assert CheckForUpdate(input_filename, output_filename) == False
+
+        touch(input_filename)
+        assert CheckForUpdate(input_filename, output_filename) == True
+
+        touch(output_filename)
+        assert CheckForUpdate(input_filename, output_filename) == False
 
 
 

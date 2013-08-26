@@ -24,9 +24,8 @@ def IsRunningOn64BitMachine():
         # Otherwise,
         import ctypes
         i = ctypes.c_int()
-        kernel32 = ctypes.windll.kernel32
-        process = kernel32.GetCurrentProcess()
-        kernel32.IsWow64Process(process, ctypes.byref(i))
+        process = ctypes.windll.kernel32.GetCurrentProcess()
+        ctypes.windll.kernel32.IsWow64Process(process, ctypes.byref(i))
         is64bit = (i.value != 0)
         return is64bit
 

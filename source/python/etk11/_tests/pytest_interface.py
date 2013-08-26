@@ -1,10 +1,10 @@
+import pytest
+
 from etk11 import interface, callback
 from etk11.decorators import Implements
 from etk11.interface import BadImplementationError, IAdaptable, InterfaceImplementorStub, Method, \
-    AssertImplementsFullChecking, InterfaceError
-from etk11.null import Null
-import pytest
-
+    AssertImplementsFullChecking, InterfaceError, CachedMethod, LastResultCachedMethod, AttributeBasedCachedMethod
+from etk11.types_ import Null
 
 
 #=======================================================================================================================
@@ -27,6 +27,37 @@ class _InterfM4(_InterfM3):
         ''
 
 
+@pytest.fixture
+def _cached_obj():
+    '''
+    A test_object common to many cached_method tests.
+    '''
+
+    class TestObj:
+        def __init__(self):
+            self.method_count = 0
+
+        def CachedMethod(self, *args, **kwargs):
+            self.method_count += 1
+            return self.method_count
+
+        def CheckCounts(self, cache, method=0, miss=0, hit=0):
+
+            if not hasattr(cache, 'check_counts'):
+                cache.check_counts = dict(method=0, miss=0, hit=0, call=0)
+
+            cache.check_counts['method'] += method
+            cache.check_counts['miss'] += miss
+            cache.check_counts['hit'] += hit
+            cache.check_counts['call'] += (miss + hit)
+
+            assert self.method_count == cache.check_counts['method']
+            assert cache.miss_count == cache.check_counts['miss']
+            assert cache.hit_count == cache.check_counts['hit']
+            assert cache.call_count == cache.check_counts['call']
+
+    return TestObj()
+
 
 #=======================================================================================================================
 # Test
@@ -37,28 +68,28 @@ class Test:
         class I(interface.Interface):
 
             def foo(self, a, b=None):
-                pass
+                ''
 
             def bar(self):
-                pass
+                ''
 
         class C(object):
             interface.Implements(I)
 
             def foo(self, a, b=None):
-                pass
+                ''
 
             def bar(self):
-                pass
+                ''
 
 
         class C2(object):
 
             def foo(self, a, b=None):
-                pass
+                ''
 
             def bar(self):
-                pass
+                ''
 
 
         class D(object):
@@ -82,26 +113,22 @@ class Test:
         class I(interface.Interface):
 
             def foo(self, a, b=None):
-                pass
+                ''
 
 
         def TestMissingMethod():
             class C(object):
                 interface.Implements(I)
 
-        try:
+        with pytest.raises(BadImplementationError):
             TestMissingMethod()
-            self.fail('Expecting BadImplementationError')
-        except BadImplementationError:
-            pass
-
 
         def TestMissingSignature():
             class C(object):
                 interface.Implements(I)
 
                 def foo(self, a):
-                    pass
+                    ''
 
 
         with pytest.raises(interface.BadImplementationError):
@@ -112,7 +139,7 @@ class Test:
                 interface.Implements(I)
 
                 def foo(self, a, b):
-                    pass
+                    ''
 
 
         with pytest.raises(interface.BadImplementationError):
@@ -124,7 +151,7 @@ class Test:
                 interface.Implements(I)
 
                 def foo(self, a, c):
-                    pass
+                    ''
 
         with pytest.raises(interface.BadImplementationError):
             TestWrongParameterName()
@@ -134,12 +161,12 @@ class Test:
         class I(interface.Interface):
 
             def foo(self, a, b=None):
-                pass
+                ''
 
         class C(object):
             interface.Implements(I)
             def foo(self, a, b=None):
-                pass
+                ''
 
         class D(C):
             pass
@@ -148,21 +175,21 @@ class Test:
     def testSubclasses2(self):
         class I(interface.Interface):
             def foo(self):
-                pass
+                ''
 
         class I2(interface.Interface):
             def bar(self):
-                pass
+                ''
 
         class C(object):
             interface.Implements(I)
             def foo(self):
-                pass
+                ''
 
         class D(C):
             interface.Implements(I2)
             def bar(self):
-                pass
+                ''
 
         class E(D):
             pass
@@ -176,11 +203,11 @@ class Test:
     def testNoName(self):
         class I(interface.Interface):
             def MyMethod(self, foo):
-                pass
+                ''
 
         class C(object):
             def MyMethod(self, bar):
-                pass
+                ''
 
         with pytest.raises(BadImplementationError):
             interface.AssertImplementsFullChecking(C(), I)
@@ -246,7 +273,7 @@ class Test:
             interface.Implements(_InterfM1, old_style=True)
 
             def m1(self):
-                pass
+                ''
 
         class Old2:
             interface.Implements(_InterfM1, old_style=True)
@@ -277,10 +304,10 @@ class Test:
             interface.Implements(_InterfM1)
 
             def m1(self):
-                return 'm1'
+                ''
 
         def MyCallback():
-            pass
+            ''
 
         o = My()
         interface.AssertImplementsFullChecking(o, _InterfM1)
@@ -300,7 +327,7 @@ class Test:
             def m1(self):
                 return 'm1'
             def m2(self):
-                return 'm2'
+                ''
 
         m0 = My()
         m1 = _InterfM1(m0)  # will make sure that we only access the attributes/methods declared in the interface
@@ -319,14 +346,12 @@ class Test:
             interface.Implements(_InterfM1)
 
             def m1(self):
-                return 'm1'
-
+                ''
 
         class My2(object):
 
             def m1(self):
-                return 'm1'
-
+                ''
 
         m1 = My()
         m2 = My2()
@@ -359,23 +384,22 @@ class Test:
             interface.Implements(_InterfM2)
 
             def m2(self):
-                return 'm2'
+                ''
 
         class My3(object):
             interface.Implements(_InterfM3)
 
             def m3(self, arg1, arg2):
-                return 'm3'
+                ''
 
         class My4(object):
             interface.Implements(_InterfM4)
 
             def m3(self, arg1, arg2):
-                return 'm3'
-
+                ''
 
             def m4(self):
-                return 'm4'
+                ''
 
         m2 = My2()
         m3 = My3()
@@ -419,17 +443,17 @@ class Test:
             interface.Implements(_InterfM1)
 
             def m1(self):
-                return 'm1'
+                ''
 
         class MyRightMethod(interface.Method):
 
             def __call__(self):
-                return 'm1'
+                ''
 
         class MyWrongMethod(object):
 
             def __call__(self):
-                return 'm1'
+                ''
 
         m = My()
         m.m1 = MyWrongMethod()
@@ -439,24 +463,28 @@ class Test:
         assert interface.IsImplementationFullChecking(m, _InterfM1)
 
     def testGetImplementedInterfaces(self):
+
         class A(object):
             interface.Implements(_InterfM1)
             def m1(self):
-                pass
+                ''
+
         class B(A):
             pass
 
         assert len(interface.GetImplementedInterfaces(B())) == 1
 
     def testGetImplementedInterfaces2(self):
+
         class A(object):
             interface.Implements(_InterfM1)
             def m1(self):
-                pass
+                ''
+
         class B(A):
             interface.Implements(_InterfM2)
             def m2(self):
-                pass
+                ''
 
         assert len(interface.GetImplementedInterfaces(B())) == 2
         with pytest.raises(AssertionError):
@@ -494,16 +522,20 @@ class Test:
 
 
     def testSetItem(self):
+
         class InterfSetItem(interface.Interface):
             def __setitem__(self, id, subject):
-                pass
+                ''
+
             def __getitem__(self, id):
-                pass
+                ''
 
         class A(object):
             interface.Implements(InterfSetItem)
+
             def __setitem__(self, id, subject):
                 self.set = (id, subject)
+
             def __getitem__(self, id):
                 return self.set
 
@@ -534,7 +566,7 @@ class Test:
         class M3(object):
 
             def m3(self, *args, **kwargs):
-                pass
+                ''
 
         AssertImplementsFullChecking(M3(), _InterfM3)
 
@@ -542,7 +574,7 @@ class Test:
         class M3(object):
 
             def m3(self, *args, **kwargs):
-                pass
+                ''
 
         with pytest.raises(InterfaceError):
             AssertImplementsFullChecking(M3(), M3)
@@ -680,11 +712,11 @@ class Test:
     def testImplementsTwice(self):
         class I1(interface.Interface):
             def Method1(self):
-                pass
+                ''
 
         class I2(interface.Interface):
             def Method2(self):
-                pass
+                ''
 
         def Create():
 
@@ -693,7 +725,7 @@ class Test:
                 interface.Implements(I2)
 
                 def Method2(self):
-                    pass
+                    ''
 
         # Error because I1 is not implemented.
         with pytest.raises(BadImplementationError):
@@ -711,13 +743,13 @@ class Test:
         # ok, calling a stub for a callable interface.
         class IFoo(interface.Interface):
             def __call__(self, bar):
-                pass
+                ''
 
         class Foo(object):
             interface.Implements(IFoo)
 
             def __call__(self, bar):
-                pass
+                ''
 
         foo = Foo()
         stub = IFoo(foo)
@@ -727,13 +759,13 @@ class Test:
         # wrong, calling a stub for a non-callable interface.
         class IBar(interface.Interface):
             def something(self, stuff):
-                pass
+                ''
 
         class Bar(object):
             interface.Implements(IBar)
 
             def something(self, stuff):
-                pass
+                ''
 
         bar = Bar()
         stub = IBar(bar)
@@ -759,6 +791,7 @@ class Test:
                 pass
 
         assert IFoo.Foo.__doc__ == Impl.Foo.__doc__
+        Impl().Foo()  # Coverage!
 
 
     def CreateClass(self):
@@ -766,13 +799,139 @@ class Test:
         class IFoo(interface.Interface):
 
             def DoIt(self):
-                pass
-
+                ''
 
         class Implementation(object):
 
             @Implements(IFoo.DoIt)
             def DoNotDoIt(self):
-                pass
+                ''
 
 
+    def testCacheMethod(self, _cached_obj):
+        cache = MyMethod = CachedMethod(_cached_obj.CachedMethod)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        MyMethod(2)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(2)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        # ALL results are stored, so these calls are HITs
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        MyMethod(2)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+
+    def testCacheMethodEnabled(self, _cached_obj):
+        cache = MyMethod = CachedMethod(_cached_obj.CachedMethod)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        MyMethod.enabled = False
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod.enabled = True
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+
+    def testCacheMethodLastResultCachedMethod(self, _cached_obj):
+        cache = MyMethod = LastResultCachedMethod(_cached_obj.CachedMethod)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        MyMethod(2)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(2)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        # Only the LAST result is stored, so this call is a MISS.
+        MyMethod(1)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+
+    def testCacheMethodObjectInKey(self, _cached_obj):
+        cache = MyMethod = CachedMethod(_cached_obj.CachedMethod)
+
+        class MyObject(object):
+
+            def __init__(self):
+                self.name = 'alpha'
+                self.id = 1
+
+            def __str__(self):
+                return '%s %d' % (self.name, self.id)
+
+        alpha = MyObject()
+
+        MyMethod(alpha)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+        MyMethod(alpha)
+        _cached_obj.CheckCounts(cache, hit=1)
+
+        alpha.name = 'bravo'
+        alpha.id = 2
+
+        MyMethod(alpha)
+        _cached_obj.CheckCounts(cache, method=1, miss=1)
+
+
+    def testCacheMethodAttributeBasedCachedMethod(self):
+
+        class TestObject(object):
+
+            def __init__(self):
+                self.name = 'alpha'
+                self.id = 1
+                self.n_calls = 0
+
+# TODO: Not covered
+#             def __str__(self):
+#                 return '%s %d' % (self.name, self.id)
+
+            def Foo(self, par):
+                self.n_calls += 1
+                return '%s %d' % (par, self.id)
+
+        alpha = TestObject()
+        alpha.Foo = AttributeBasedCachedMethod(alpha.Foo, 'id', cache_size=3)
+        alpha.Foo('test1')
+        alpha.Foo('test1')
+
+        assert alpha.n_calls == 1
+
+        alpha.Foo('test2')
+        assert alpha.n_calls == 2
+        assert len(alpha.Foo._results) == 2
+
+        alpha.id = 3
+        alpha.Foo('test2')
+        assert alpha.n_calls == 3
+
+        assert len(alpha.Foo._results) == 3
+
+        alpha.Foo('test3')
+        assert alpha.n_calls == 4
+        assert len(alpha.Foo._results) == 3
