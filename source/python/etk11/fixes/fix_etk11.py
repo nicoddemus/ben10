@@ -60,7 +60,6 @@ class FixEtk11(fixer_base.BaseFix):
         def build_pattern():
             keys = self.mapping.keys()
             mod_list = ' | '.join(map(import_pattern, keys))
-            sym_list=
 
             # FORMAT: import MODULE
             yield """name_import=import_name< 'import' ((%(mod_list)s) | multiple_imports=dotted_as_names< any* (%(mod_list)s) any* >) >""" % locals()
