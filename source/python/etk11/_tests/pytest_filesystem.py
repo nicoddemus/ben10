@@ -18,7 +18,7 @@ from etk11.filesystem import GetFileContents, CreateFile, EOL_STYLE_MAC, ListFil
     _GetNativeEolStyle, NotImplementedProtocol, FileError, MatchMasks, FindFiles, ServerTimeoutError, CheckForUpdate
 
 
-pytest_plugins = ["etk11.fixtures"]
+pytest_plugins = ["etk11.fixtures", "pytest_localserver.plugin"]
 
 
 @pytest.fixture
