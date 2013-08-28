@@ -256,7 +256,7 @@ class TextOutput(AbstractTextOutput):
         '''
             Set the output stream for the given one.
         '''
-        import color_stream
+        from etk11.foundation import color_stream
 
         if stream is None:
             stream = sys.stdout

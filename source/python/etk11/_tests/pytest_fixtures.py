@@ -19,9 +19,9 @@ import os
 
 import pytest
 
-from etk11 import is_frozen
 from etk11.fixtures import MultipleFilesNotFound
-from etk11.filesystem import CreateFile, StandardizePath
+from etk11.foundation import is_frozen
+from etk11.foundation.filesystem import CreateFile, StandardizePath
 
 
 pytest_plugins = ["etk11.fixtures"]

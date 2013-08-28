@@ -72,8 +72,8 @@ class _EmbedDataFixture(object):
         :returns:
             Path to created data dir
         '''
-        from etk11.filesystem import DeleteDirectory, CopyDirectory, IsDir, CreateDirectory
-        from etk11.is_frozen import IsFrozen
+        from etk11.foundation.filesystem import DeleteDirectory, CopyDirectory, IsDir, CreateDirectory
+        from etk11.foundation.is_frozen import IsFrozen
         import os
 
         assert not self._finalized, "Oops. Finalizer has been called in the middle. Something is wrong."
@@ -115,7 +115,7 @@ class _EmbedDataFixture(object):
 
         if absolute:
             import os
-            from etk11.filesystem import StandardizePath
+            from etk11.foundation.filesystem import StandardizePath
             return StandardizePath(os.path.abspath(self._data_dir))
 
         return self._data_dir
@@ -146,7 +146,7 @@ class _EmbedDataFixture(object):
 
         if 'absolute' in kwargs and kwargs['absolute']:
             import os
-            from etk11.filesystem import StandardizePath
+            from etk11.foundation.filesystem import StandardizePath
             result = StandardizePath(os.path.abspath(result))
 
         return result
@@ -156,7 +156,7 @@ class _EmbedDataFixture(object):
         '''
         Deletes the data-directory upon finalizing (see FixtureRequest.addfinalizer)
         '''
-        from etk11.filesystem import DeleteDirectory
+        from etk11.foundation.filesystem import DeleteDirectory
 
         if self.delete_dir:
             DeleteDirectory(self._data_dir, skip_on_error=True)
@@ -173,7 +173,7 @@ class _EmbedDataFixture(object):
 
         @filename2: str
         '''
-        from etk11.filesystem import GetFileLines
+        from etk11.foundation.filesystem import GetFileLines
         import os
 
         def FindFile(filename):

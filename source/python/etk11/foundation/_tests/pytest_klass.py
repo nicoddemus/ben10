@@ -1,0 +1,152 @@
+from etk11.foundation.klass import GetClassHierarchy, IsInstance, IsSubclass, AllBasesNames
+
+
+class _A(object):
+    pass
+
+class _B(object):
+    pass
+
+class _C(_B):
+    pass
+
+class _D(_C, _A):
+    pass
+
+class _E(_D, _C, _A):
+    pass
+
+
+
+#===================================================================================================
+# Test
+#===================================================================================================
+class Test:
+
+    def testClassHierarchy(self):
+
+        # check when cache is active
+        assert set([_E, _D, _C, _B, _A, object]) == GetClassHierarchy(_E)
+        assert set([_E, _D, _C, _B, _A, object]) == GetClassHierarchy(_E)
+
+        assert set([_D, _C, _B, _A, object]) == GetClassHierarchy(_D)
+        assert set([_C, _B, object]) == GetClassHierarchy(_C)
+
+        # check when cache is active
+        assert set([_A, object]) == GetClassHierarchy(_A)
+        assert set([_A, object]) == GetClassHierarchy(_A)
+
+
+    def testIsInstance(self):
+        assert IsInstance(_C(), '_B')
+        assert IsInstance(_C(), ('_B',))
+        assert not IsInstance(_C(), ('_A',))
+        assert IsInstance(_C(), ('_A', '_B'))
+        assert not IsInstance(_C(), ('_A', '_D'))
+
+
+    def testIsSubclass(self):
+        assert IsSubclass(_C, '_B')
+        assert IsSubclass(_C, ('_B',))
+        assert not IsSubclass(_C, ('_A',))
+        assert IsSubclass(_C, ('_A', '_B'))
+        assert not IsSubclass(_C, ('_A', '_D'))
+
+
+    def assertListEqual(self, p_list_a, p_list_b):
+        assert p_list_a == p_list_b
+
+    def test_klass__serial(self):
+
+        class A(object):
+            pass
+
+        class B(A):
+            pass
+
+        class C(B):
+            pass
+
+        class D(C):
+            pass
+
+        class Alpha(object):
+            pass
+
+        class AlphaC(Alpha, C):
+            pass
+
+        assert set(AllBasesNames(A)) == set(['object'])
+        assert set(AllBasesNames(B)) == set(['A', 'object'])
+        assert set(AllBasesNames(C)) == set(['B', 'A', 'object'])
+        assert set(AllBasesNames(D)) == set(['C', 'B', 'A', 'object'])
+        assert set(AllBasesNames(AlphaC)) == set(['Alpha', 'object', 'C', 'B', 'A'])
+
+        assert IsInstance(A(), 'object')
+        assert IsInstance(A(), 'A')
+        assert IsInstance(B(), 'object')
+        assert IsInstance(B(), 'A')
+        assert IsInstance(B(), 'B')
+        assert IsInstance(C(), 'object')
+        assert IsInstance(C(), 'A')
+        assert IsInstance(C(), 'B')
+        assert IsInstance(C(), 'C')
+        assert IsInstance(AlphaC(), 'object')
+        assert IsInstance(AlphaC(), 'A')
+        assert IsInstance(AlphaC(), A)
+        assert IsInstance(AlphaC(), 'B')
+        assert IsInstance(AlphaC(), 'C')
+        assert IsInstance(AlphaC(), 'Alpha')
+        assert IsInstance(AlphaC(), 'AlphaC')
+        assert IsInstance(AlphaC(), AlphaC)
+
+        assert not IsInstance(AlphaC(), 'Rubles')
+        assert not IsInstance(A(), 'B')
+        assert not IsInstance(B(), 'C')
+
+
+    def profileIsInstance(self):
+        '''
+            Results obtained (after optimizing):
+                Unnamed Timer: IsInstance str 0.131 secs
+                Unnamed Timer: IsInstance tuple 0.244 secs
+                Unnamed Timer: isinstance 0.041 secs
+                
+                With timeit implementation
+                IsInstance str 1.28110317487
+                IsInstance tuple 2.4118422541
+                isinstance 0.376544210033
+                
+                Changes: using IsSubclass
+                IsInstance str 1.52469482232
+                IsInstance tuple 2.62789000656
+                IsInstance classs 2.18690264229
+                isinstance 0.402243563057
+        '''
+        import timeit
+
+        setup = 'from __main__ import A, B, C, D, E;from coilib50.basic.klass import IsInstance'
+
+        timer = timeit.Timer(stmt='IsInstance(C(), "B")', setup=setup)
+        print 'IsInstance str', timer.timeit()
+
+        timer = timeit.Timer(stmt='IsInstance(C(), ("B", ))', setup=setup)
+        print 'IsInstance tuple', timer.timeit()
+
+        timer = timeit.Timer(stmt='IsInstance(C(), B)', setup=setup)
+        print 'IsInstance class', timer.timeit()
+
+        timer = timeit.Timer(stmt='isinstance(C(), B)', setup=setup)
+        print 'isinstance', timer.timeit()
+
+
+    def testIsInstanceWithDateTime(self):
+        '''
+        Make sure IsInstance works with DateTime objects.
+        
+        Previously passing a DateTime to IsInstance would yield an AttributeError for __class__. 
+        Changed IsInstance to use type() instead.
+        '''
+        import mx.DateTime
+        assert IsInstance(mx.DateTime.DateTime(2012), 'DateTime')
+        assert not IsInstance(mx.DateTime.DateTime(2012), 'Scalar')
