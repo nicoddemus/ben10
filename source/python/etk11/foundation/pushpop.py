@@ -1,6 +1,3 @@
-'''
-Collection of decorator with NO dependency to external libraries except contextlib.
-'''
 import contextlib
 
 
