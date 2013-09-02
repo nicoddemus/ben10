@@ -1,6 +1,10 @@
+'''
+Extensions to python native types.
+'''
 from etk11.foundation.is_frozen import IsFrozen
 from etk11.foundation.klass import IsInstance
 from etk11.foundation.translation import tr
+from etk11.foundation.weak_ref import WeakList
 
 
 _TRUE_VALUES = ['TRUE', 'YES', '1']
@@ -249,7 +253,6 @@ def IsBasicType(value, accept_compound=False, additional=None):
     return False
 
 
-
 #=======================================================================================================================
 # CheckBasicType
 #=======================================================================================================================
@@ -300,6 +303,135 @@ def CheckEnum(value, enum_values):
         msg = 'The value %r is not valid for the expected num: %s'
         raise ValueError(msg % (value, list(enum_values)))
 
+
+#=======================================================================================================================
+# Intersection
+#=======================================================================================================================
+def Intersection(*sequences):
+    '''Return the intersection of all the elements in the given sequences, ie,
+    the items common to all the sequences.
+    :type sequences: a list of sequences.
+    :param sequences:
+    :rtype: a set() with the intersection.
+    '''
+    if not sequences:
+        return set()
+    result = set(sequences[0])
+    for seq in sequences[1:]:
+        result.intersection_update(seq)
+    return result
+
+
+#=======================================================================================================================
+# OrderedIntersection
+#=======================================================================================================================
+def OrderedIntersection(*sequences):
+    '''Like Intersection, but the returned sequence is in the order of the first one.
+    '''
+    intersection = Intersection(*sequences)
+    if not intersection:
+        return []
+
+    return [x for x in sequences[0] if x in intersection]
+
+
+#=======================================================================================================================
+# AsList
+#=======================================================================================================================
+def AsList(arg):
+    '''Returns the given argument as a list; if already a list, return it unchanged, otherwise
+    return a list with the arg as only element.
+    '''
+    if isinstance(arg, (list, WeakList)):
+        return arg
+
+    if isinstance(arg, (tuple, set)):
+        return list(arg)
+
+    return [arg]
+
+
+#=======================================================================================================================
+# Flatten
+#=======================================================================================================================
+def Flatten(iterable, skip_types=None):
+    '''
+    Flattens recursively the passed iterable with subsequences into a flat list.
+    
+    Warning: This method also flattens tuples
+    
+    :type iterable: an iterable object, ie, an object that iter() can handle
+    :param iterable:
+        The iterable to be flattened.
+        
+    :param list(type) skip_types:
+        These types won't be flattened if they happen to be iterable.
+        
+    :rtype: list
+    :returns:
+        A list with the elements of the initial iterable flattened.
+    '''
+    if skip_types is None:
+        skip_types = []
+
+    if basestring not in skip_types:
+        # Exceptional case: we want to treat strings as elements!
+        skip_types.append(basestring)
+
+    skip_types_tuple = tuple(skip_types)
+
+    result = []
+    for element in iterable:
+        element_iter = None  # will be None if element is not iterable, or hold an iterator otherwise
+
+        if not isinstance(element, skip_types_tuple):
+            try:
+                element_iter = iter(element)
+            except TypeError:
+                pass
+
+        if element_iter is None:
+            result.append(element)
+        else:
+            result.extend(Flatten(element_iter, skip_types))
+
+    return result
+
+
+#=======================================================================================================================
+# MergeDictsRecursively
+#=======================================================================================================================
+def MergeDictsRecursively(original_dict, merging_dict):
+    '''
+    Merges two dictionaries by iterating over both of their keys and returning the merge
+    of each dict contained within both dictionaries.
+    The outer dict is also merged.
+    
+    ATTENTION: The :param(merging_dict) is modified in the process!
+    
+    :param dict original_dict
+    :param dict merging_dict
+    '''
+    items = original_dict.iteritems()
+
+    for key, value in items:
+        try:
+            other_value = merging_dict[key]
+            MergeDictsRecursively(value, other_value)
+            del merging_dict[key]
+        except KeyError:
+            continue
+        except TypeError:
+            continue
+        except AttributeError:
+            continue
+
+    try:
+        original_dict.update(merging_dict)
+    except ValueError:
+        raise TypeError('Wrong types passed. Expecting two dictionaries, got: "%s" and "%s"' % (type(original_dict).__name__, type(merging_dict).__name__))
+
+    return original_dict
 
 
 #=======================================================================================================================
