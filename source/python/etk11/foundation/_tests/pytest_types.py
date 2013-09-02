@@ -10,7 +10,7 @@ from etk11.foundation.types_ import CheckType, CheckFormatString, IsBasicType, C
 #=======================================================================================================================
 class Test:
 
-    def test_passing(self):
+    def testPassing(self):
         # self.failIfRaises TypeError
         CheckType('hellou', str)
 
@@ -21,7 +21,7 @@ class Test:
         CheckType(99, (int, str))
 
 
-    def test_raising(self):
+    def testRaising(self):
         with pytest.raises(TypeError):
             CheckType('hellou', int)
 
