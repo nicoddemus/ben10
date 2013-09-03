@@ -128,10 +128,13 @@ if DEBUG_CALLS:
 # DevelopmentCheckType
 # CheckType only in development mode.
 #=======================================================================================================================
-if IsFrozen():
-    DevelopmentCheckType = lambda * args, **kwargs: None  # it's a no-op if we're not in dev mode!
-else:
-    DevelopmentCheckType = CheckType
+def CreateDevelopmentCheckType():
+    if IsFrozen():
+        return lambda * args, **kwargs: None  # it's a no-op if we're not in dev mode!
+    else:
+        return CheckType
+
+DevelopmentCheckType = CreateDevelopmentCheckType
 
 
 
@@ -308,8 +311,10 @@ def CheckEnum(value, enum_values):
 # Intersection
 #=======================================================================================================================
 def Intersection(*sequences):
-    '''Return the intersection of all the elements in the given sequences, ie,
-    the items common to all the sequences.
+    '''
+    Return the intersection of all the elements in the given sequences, ie, the items common to all
+    the sequences.
+
     :type sequences: a list of sequences.
     :param sequences:
     :rtype: a set() with the intersection.
@@ -326,7 +331,8 @@ def Intersection(*sequences):
 # OrderedIntersection
 #=======================================================================================================================
 def OrderedIntersection(*sequences):
-    '''Like Intersection, but the returned sequence is in the order of the first one.
+    '''
+    Like Intersection, but the returned sequence is in the order of the first one.
     '''
     intersection = Intersection(*sequences)
     if not intersection:
