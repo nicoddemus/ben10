@@ -1,22 +1,14 @@
 from __future__ import with_statement
-
+from etk11.foundation.filesystem import AppendToFile, CanonicalPath, CheckForUpdate, CheckIsDir, CheckIsFile, CopyDirectory, CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError, DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError, FileError, FileNotFoundError, FileOnlyActionError, FindFiles, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile, ListFiles, ListMappedNetworkDrives, MD5_SKIP, MatchMasks, MoveDirectory, MoveFile, NormStandardPath, NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile, ServerTimeoutError, StandardizePath, UnknownPlatformError, _GetNativeEolStyle, _HandleContentsEol
 import errno
+import logging
 import os
+import pytest
+import subprocess
 import sys
 import time
-
-import pytest
-
-from etk11.foundation.filesystem import GetFileContents, CreateFile, EOL_STYLE_MAC, ListFiles, CreateDirectory, MoveFile, \
-    DeleteDirectory, NotImplementedForRemotePathError, AppendToFile, DeleteFile, CopyDirectory, CopyFile, CopyFiles, \
-    DirectoryNotFoundError, CopyFilesX, IsDir, IsFile, FileAlreadyExistsError, MoveDirectory, DirectoryAlreadyExistsError, \
-    MD5_SKIP, CheckIsFile, FileNotFoundError, GetMTime, StandardizePath, NormStandardPath, NormalizePath, CanonicalPath, \
-    EOL_STYLE_NONE, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX, OpenFile, CreateMD5, GetFileLines, CheckIsDir, UnknownPlatformError, \
-    _GetNativeEolStyle, NotImplementedProtocol, FileError, MatchMasks, FindFiles, ServerTimeoutError, CheckForUpdate, \
-    FileOnlyActionError, _HandleContentsEol, ListMappedNetworkDrives
-import logging
-import subprocess
 import urllib
+
 
 
 pytest_plugins = ["etk11.fixtures", "pytest_localserver.plugin"]
@@ -1200,8 +1192,8 @@ class PhonyFtpServer(object):
         :returns:
             The port the ftp-server is serving
         '''
-        from threading import Thread
         from pyftpdlib import ftpserver
+        from threading import Thread
 
         authorizer = ftpserver.DummyAuthorizer()
         authorizer.add_user("dev", "123", self._directory, perm="elradfmw")

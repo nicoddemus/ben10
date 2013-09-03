@@ -114,6 +114,8 @@ class Memoize(object):
         '''
         import inspect
 
+
+
         if self._memo_target == self.MEMO_FROM_ARGSPEC:
             check_func = func
             if inspect.ismethod(check_func):

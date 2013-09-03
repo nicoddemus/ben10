@@ -1,10 +1,9 @@
+from etk11.foundation import callback, interface
+from etk11.foundation.decorators import Implements
+from etk11.foundation.interface import AssertImplementsFullChecking, AttributeBasedCachedMethod, BadImplementationError, CachedMethod, IAdaptable, InterfaceError, InterfaceImplementorStub, LastResultCachedMethod, Method
+from etk11.foundation.types_ import Null
 import pytest
 
-from etk11.foundation import interface, callback
-from etk11.foundation.decorators import Implements
-from etk11.foundation.interface import BadImplementationError, IAdaptable, InterfaceImplementorStub, Method, \
-    AssertImplementsFullChecking, InterfaceError, CachedMethod, LastResultCachedMethod, AttributeBasedCachedMethod
-from etk11.foundation.types_ import Null
 
 
 #=======================================================================================================================

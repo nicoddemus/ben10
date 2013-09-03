@@ -7,9 +7,9 @@ with a few modifications:
 - include default comparison.
 - performance improvement on __init__: checking before copy.
 '''
+from etk11.foundation.decorators import Override
 import copy
 
-from etk11.foundation.decorators import Override
 
 
 #=======================================================================================================================
@@ -36,8 +36,8 @@ class MetaBunch(type):
         """ Everything needs to be done in __new__, since type.__new__ is
             where __slots__ are taken into account.
         """
-        import inspect
         from types import NoneType
+        import inspect
 
         # define as local functions the __init__ and __repr__ that we'll
         # use in the new class

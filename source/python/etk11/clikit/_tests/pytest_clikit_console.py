@@ -11,8 +11,8 @@ import sys
 class Test:
 
     def testConsole(self):
-        import pytest
         from StringIO import StringIO
+        import pytest
 
         # Test verbosity control
         with pytest.raises(ValueError):

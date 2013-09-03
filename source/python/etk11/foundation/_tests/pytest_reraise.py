@@ -1,6 +1,6 @@
+from etk11.foundation.reraise import Reraise, ReraiseKeyError
 import pytest
 
-from etk11.foundation.reraise import Reraise, ReraiseKeyError
 
 
 #=======================================================================================================================

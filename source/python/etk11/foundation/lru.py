@@ -1,10 +1,10 @@
 '''
 LRU module. Based around heapq.
 '''
-from heapq import heappush, heappop, heapify
+from etk11.foundation.decorators import Override
+from heapq import heapify, heappop, heappush
 import itertools
 
-from etk11.foundation.decorators import Override
 
 
 DEFAULT_LRU_SIZE = 50

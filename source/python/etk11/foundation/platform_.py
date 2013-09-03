@@ -191,8 +191,10 @@ class Platform(object):
         @raise UnknownPlatform
             Raises if the current system is an unknown platform.
         '''
-        import sys
         import platform
+        import sys
+
+
 
         if sys.platform == 'win32':
             if 'AMD64' in platform.python_compiler():

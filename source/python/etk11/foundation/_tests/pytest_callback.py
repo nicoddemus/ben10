@@ -1,11 +1,10 @@
-import weakref
-
-import pytest
-
 from etk11.foundation import callback, handle_exception
-from etk11.foundation.callback import Callbacks, _CallbackWrapper, After, PriorityCallback, ErrorNotHandledInCallback, Remove
+from etk11.foundation.callback import After, Callbacks, ErrorNotHandledInCallback, PriorityCallback, Remove, _CallbackWrapper
 from etk11.foundation.types_ import Null
 from etk11.foundation.weak_ref import WeakMethodRef
+import pytest
+import weakref
+
 
 
 #=======================================================================================================================

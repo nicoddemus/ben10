@@ -1,7 +1,6 @@
 from etk11.foundation.callback import After
 from etk11.foundation.decorators import Override
-from etk11.foundation.singleton import Singleton, SingletonAlreadySetError, PushPopSingletonError, \
-    SingletonNotSetError
+from etk11.foundation.singleton import PushPopSingletonError, Singleton, SingletonAlreadySetError, SingletonNotSetError
 import pytest
 
 

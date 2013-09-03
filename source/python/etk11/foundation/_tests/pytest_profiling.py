@@ -1,11 +1,11 @@
 from StringIO import StringIO
 from UserList import UserList
+from etk11.foundation.profiling import ObtainStats, PrintProfile, PrintProfileMultiple, ProfileMethod
 import os
 import pstats
 import re
 import sys
 
-from etk11.foundation.profiling import ProfileMethod, PrintProfile, PrintProfileMultiple, ObtainStats
 
 
 pytest_plugins = ["etk11.fixtures"]

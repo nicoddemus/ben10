@@ -9,6 +9,7 @@
 import sys
 
 
+
 _is_frozen = hasattr(sys, 'frozen') and getattr(sys, 'frozen')
 
 

@@ -1,6 +1,6 @@
+from etk11.foundation.lru import LRU, LRUWithRemovalMemo, _Node
 import pytest
 
-from etk11.foundation.lru import LRU, LRUWithRemovalMemo, _Node
 
 
 #=======================================================================================================================

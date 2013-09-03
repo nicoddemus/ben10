@@ -1,8 +1,8 @@
-import sys
-
 from StringIO import StringIO
 from etk11.foundation import log
 from etk11.foundation.log import AddDebugStreamHandler
+import sys
+
 
 
 #=======================================================================================================================

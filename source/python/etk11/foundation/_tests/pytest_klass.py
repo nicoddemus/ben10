@@ -1,4 +1,5 @@
-from etk11.foundation.klass import GetClassHierarchy, IsInstance, IsSubclass, AllBasesNames
+from etk11.foundation.klass import AllBasesNames, GetClassHierarchy, IsInstance, IsSubclass
+
 
 
 class _A(object):

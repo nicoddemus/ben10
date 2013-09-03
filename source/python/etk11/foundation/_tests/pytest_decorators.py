@@ -1,9 +1,8 @@
+from etk11.foundation import is_frozen
+from etk11.foundation.decorators import Deprecated, Implements, Override
+import pytest
 import warnings
 
-import pytest
-
-from etk11.foundation import is_frozen
-from etk11.foundation.decorators import Implements, Override, Deprecated
 
 
 #=======================================================================================================================

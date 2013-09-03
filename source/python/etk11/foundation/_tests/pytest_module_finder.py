@@ -1,6 +1,7 @@
 from etk11.foundation.module_finder import ModuleFinder
 
 
+
 pytest_plugins = ["etk11.fixtures"]
 
 

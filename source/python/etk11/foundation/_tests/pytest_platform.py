@@ -1,10 +1,9 @@
+from etk11.foundation.platform_ import Platform, UnknownPlatform
 import os
 import platform
+import pytest
 import sys
 
-import pytest
-
-from etk11.foundation.platform_ import Platform, UnknownPlatform
 
 
 #===================================================================================================

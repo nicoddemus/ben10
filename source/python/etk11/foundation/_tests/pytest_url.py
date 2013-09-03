@@ -1,5 +1,6 @@
 from etk11.foundation.platform_ import Platform
-from etk11.foundation.url import IsUrlEqual, HideURLPassword
+from etk11.foundation.url import HideURLPassword, IsUrlEqual
+
 
 
 #=======================================================================================================================

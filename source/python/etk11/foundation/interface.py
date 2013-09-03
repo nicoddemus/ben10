@@ -1,8 +1,5 @@
-import inspect
-import sys
-
 from etk11.foundation import immutable
-from etk11.foundation.decorators import Override, Deprecated
+from etk11.foundation.decorators import Deprecated, Override
 from etk11.foundation.is_frozen import IsFrozen
 from etk11.foundation.klass import IsInstance
 from etk11.foundation.memoize import Memoize
@@ -10,6 +7,9 @@ from etk11.foundation.odict import odict
 from etk11.foundation.reraise import Reraise
 from etk11.foundation.types_ import Null
 from etk11.foundation.weak_ref import WeakMethodRef
+import inspect
+import sys
+
 
 
 #===================================================================================================

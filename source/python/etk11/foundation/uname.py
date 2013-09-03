@@ -1,8 +1,8 @@
+from etk11.foundation.is_frozen import IsFrozen
+from etk11.foundation.platform_ import Platform
 import os
 import sys
 
-from etk11.foundation.is_frozen import IsFrozen
-from etk11.foundation.platform_ import Platform
 
 
 #===================================================================================================

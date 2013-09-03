@@ -1,7 +1,7 @@
+import cProfile as profile
 import pstats
 import sys
 
-import cProfile as profile
 
 
 #=======================================================================================================================

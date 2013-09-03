@@ -1,7 +1,5 @@
 from etk11.foundation.is_frozen import SetIsFrozen
-from etk11.foundation.types_ import CheckType, CheckFormatString, IsBasicType, CheckBasicType, \
-    CheckEnum, _IsNumber, IsNumber, Null, Boolean, CreateDevelopmentCheckType, AsList, Flatten, \
-    MergeDictsRecursively, Intersection, OrderedIntersection, CheckIsNumber
+from etk11.foundation.types_ import AsList, Boolean, CheckBasicType, CheckEnum, CheckFormatString, CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType, IsNumber, MergeDictsRecursively, Null, OrderedIntersection, _IsNumber
 import copy
 import pytest
 

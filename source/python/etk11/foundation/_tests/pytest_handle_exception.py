@@ -1,8 +1,7 @@
+from etk11.foundation import handle_exception
+import pytest
 import sys
 
-import pytest
-
-from etk11.foundation import handle_exception
 
 
 #=======================================================================================================================
@@ -51,7 +50,7 @@ class Test():
         assert capfd.readouterr() == [
             u'',
             u'''Traceback (most recent call last):
-  File "%s", line 46, in testHandleException
+  File "%s", line 45, in testHandleException
     raise RuntimeError()
 RuntimeError
 ''' % __file__,

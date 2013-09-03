@@ -3,8 +3,8 @@ This module contains utility functions for dealing with exceptions that should b
 application.
 '''
 
-from etk11.foundation.callback import Callback
 from etk11.foundation import log
+from etk11.foundation.callback import Callback
 
 
 

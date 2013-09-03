@@ -23,8 +23,10 @@ except:
 #Show log in stderr (for anything logged).
 AddDebugStreamHandler()
 '''
-import logging
 import StringIO
+import logging
+
+
 
 # Levels
 DEBUG = logging.DEBUG

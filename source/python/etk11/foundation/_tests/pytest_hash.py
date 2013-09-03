@@ -1,5 +1,6 @@
 from StringIO import StringIO
-from etk11.foundation.hash import Md5Hex, DumpDirHashToStringIO
+from etk11.foundation.hash import DumpDirHashToStringIO, Md5Hex
+
 
 
 pytest_plugins = ["etk11.fixtures"]

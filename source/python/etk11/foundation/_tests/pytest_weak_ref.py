@@ -1,10 +1,8 @@
-import sys
-
+from etk11.foundation.weak_ref import GetRealObj, GetWeakProxy, GetWeakRef, IsSame, IsWeakProxy, IsWeakRef, WeakList, WeakMethodProxy, WeakMethodRef, WeakSet
 import pytest
-
-from etk11.foundation.weak_ref import GetRealObj, GetWeakProxy, GetWeakRef, IsSame, IsWeakProxy, IsWeakRef, WeakSet, \
-    WeakMethodRef, WeakMethodProxy, WeakList
+import sys
 import weakref
+
 
 
 #=======================================================================================================================

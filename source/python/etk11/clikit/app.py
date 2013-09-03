@@ -1,5 +1,5 @@
 from .command import Command
-from .console import Console, BufferedConsole
+from .console import BufferedConsole, Console
 import ConfigParser
 import argparse
 import inspect

@@ -1,9 +1,9 @@
+from etk11.foundation import is_frozen
+from etk11.foundation.platform_ import Platform
+from etk11.foundation.uname import GetApplicationDir, GetUserHomeDir, IsRunningOn64BitMachine
 import os
 import sys
 
-from etk11.foundation import is_frozen
-from etk11.foundation.platform_ import Platform
-from etk11.foundation.uname import IsRunningOn64BitMachine, GetUserHomeDir, GetApplicationDir
 
 
 #=======================================================================================================================

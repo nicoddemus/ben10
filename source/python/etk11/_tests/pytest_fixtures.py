@@ -14,14 +14,12 @@ PYLINK:
     E:201,1:embed_data: Module 'pytest' has no 'fixture' member
 '''
 from __future__ import with_statement
-
-import os
-
-import pytest
-
 from etk11.fixtures import MultipleFilesNotFound
 from etk11.foundation import is_frozen
 from etk11.foundation.filesystem import CreateFile, StandardizePath
+import os
+import pytest
+
 
 
 pytest_plugins = ["etk11.fixtures"]

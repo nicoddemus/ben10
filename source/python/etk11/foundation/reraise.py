@@ -52,6 +52,8 @@ def Reraise(exception, message):
     '''
     import sys
 
+
+
     # >>> Get the current message
     current_message = str(exception)
     if not current_message.startswith('\n'):

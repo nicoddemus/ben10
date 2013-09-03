@@ -7,6 +7,7 @@ from etk11.foundation.translation import tr
 from etk11.foundation.weak_ref import WeakList
 
 
+
 _TRUE_VALUES = ['TRUE', 'YES', '1']
 _FALSE_VALUES = ['FALSE', 'NO', '0']
 _TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES

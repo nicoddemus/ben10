@@ -1,7 +1,6 @@
-import pytest
-
 from etk11.foundation.memoize import Memoize
 from etk11.foundation.weak_ref import GetWeakRef
+import pytest
 
 
 

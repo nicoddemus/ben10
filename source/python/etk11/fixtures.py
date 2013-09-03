@@ -72,7 +72,7 @@ class _EmbedDataFixture(object):
         :returns:
             Path to created data dir
         '''
-        from etk11.foundation.filesystem import DeleteDirectory, CopyDirectory, IsDir, CreateDirectory
+        from etk11.foundation.filesystem import CopyDirectory, CreateDirectory, DeleteDirectory, IsDir
         from etk11.foundation.is_frozen import IsFrozen
         import os
 
@@ -114,8 +114,8 @@ class _EmbedDataFixture(object):
             self.CreateDataDir()
 
         if absolute:
-            import os
             from etk11.foundation.filesystem import StandardizePath
+            import os
             return StandardizePath(os.path.abspath(self._data_dir))
 
         return self._data_dir
@@ -145,8 +145,8 @@ class _EmbedDataFixture(object):
         result = '/'.join(result)
 
         if 'absolute' in kwargs and kwargs['absolute']:
-            import os
             from etk11.foundation.filesystem import StandardizePath
+            import os
             result = StandardizePath(os.path.abspath(result))
 
         return result

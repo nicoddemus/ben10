@@ -1,9 +1,9 @@
 '''
 Collection of decorator with ONLY standard library dependencies.
 '''
+from etk11.foundation.is_frozen import IsFrozen
 import warnings
 
-from etk11.foundation.is_frozen import IsFrozen
 
 
 #=======================================================================================================================

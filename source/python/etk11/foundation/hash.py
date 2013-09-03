@@ -23,6 +23,9 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
         Pattern to match files to include in the hashing. E.g.: *.zip
     '''
     from path import path
+
+
+
     p = path(directory)
     for f in p.files():
         if include is not None:
