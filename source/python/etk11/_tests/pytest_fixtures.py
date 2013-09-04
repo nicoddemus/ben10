@@ -1,18 +1,3 @@
-'''
-COVERAGE:
-    Name                                                           Stmts   Miss  Cover   Missing
-    --------------------------------------------------------------------------------------------
-    source\python\etk11\_pytest\fixtures                              78      2    97%   87, 92    
-
-PYLINK:
-    ************* Module etk11.fixtures
-    C:  1,0: Missing docstring
-    C:  8,0:MultipleFilesNotFound: Missing docstring
-    W: 10,4:MultipleFilesNotFound.__init__: __init__ method from base class 'RuntimeError' is not called
-    C:179,8:_EmbedDataFixture.AssertEqualFiles.FindFile: Missing docstring
-    C:202,0:embed_data: Invalid name "embed_data" for type function (should match [A-Z_][a-zA-Z0-9_]{2,30}$)
-    E:201,1:embed_data: Module 'pytest' has no 'fixture' member
-'''
 from __future__ import with_statement
 from etk11.fixtures import MultipleFilesNotFound
 from etk11.foundation import is_frozen
@@ -23,7 +8,6 @@ import pytest
 
 
 pytest_plugins = ["etk11.fixtures"]
-
 
 
 #=======================================================================================================================
@@ -99,10 +83,17 @@ class Test(object):
                 'missing.txt'
             )
 
-        assert str(e.value) == 'Files not found: missing.txt,data_fixtures__test_embed_data_AssertEqualFiles/missing.txt'
+        assert (
+            str(e.value)
+            == 'Files not found: '
+            'missing.txt,data_fixtures__test_embed_data_AssertEqualFiles/missing.txt'
+        )
 
 
     def testNotOnFrozen(self, monkeypatch, embed_data):
+        '''
+        We fail to create data directory IF we are inside a generated executable (IsFrozen).
+        '''
         monkeypatch.setattr(is_frozen, 'IsFrozen', lambda:True)
 
         with pytest.raises(RuntimeError) as exception:

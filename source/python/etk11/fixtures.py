@@ -1,3 +1,6 @@
+'''
+Collection of fixtures for pytests.
+'''
 import pytest
 
 
@@ -6,8 +9,12 @@ import pytest
 # MultipleFilesNotFound
 #===================================================================================================
 class MultipleFilesNotFound(RuntimeError):
+    '''
+    Raised when a file is not found, including variations of filename.
+    '''
 
     def __init__(self, filenames):
+        RuntimeError.__init__(self)
         self._filenames = filenames
 
     def __str__(self):
@@ -177,6 +184,11 @@ class _EmbedDataFixture(object):
         import os
 
         def FindFile(filename):
+            '''
+            Searches for the given filename, including variations.
+                * The filename itself
+                * The filename inside embed_data (GetDataFilename) 
+            '''
             r_filename = filename
             if not os.path.isfile(r_filename):
                 r_filename = self.GetDataFilename(r_filename)
@@ -198,8 +210,9 @@ class _EmbedDataFixture(object):
             raise AssertionError(diff)
 
 
-@pytest.fixture
-def embed_data(request):
+
+@pytest.fixture  # pylint: disable=E1101
+def embed_data(request):  # pylint: disable=C0103
     '''
     Create a temporary directory with input data for the test.
     The directory contents is copied from a directory with the same name as the module located in
