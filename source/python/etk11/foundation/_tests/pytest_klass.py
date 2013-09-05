@@ -54,9 +54,6 @@ class Test:
         assert not IsSubclass(_C, ('_A', '_D'))
 
 
-    def assertListEqual(self, p_list_a, p_list_b):
-        assert p_list_a == p_list_b
-
     def test_klass__serial(self):
 
         class A(object):

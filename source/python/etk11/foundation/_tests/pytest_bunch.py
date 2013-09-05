@@ -40,13 +40,11 @@ class Test:
         # Ellapsed Time: 0.31 seconds
         # Memory delta: 17,81 MB (18.673.664 bytes)
         #
-        #
         # Bunch
         # Ellapsed Time: 0.36 seconds
         # Memory delta: 4,43 MB (4.644.864 bytes)
 
         class BarBunch(Bunch):
-
             x = 0.0
             y = 0.0
             width = 1.0

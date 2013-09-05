@@ -4,9 +4,9 @@ import pytest
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # _Countcalls
-#=======================================================================================================================
+#===================================================================================================
 def _Countcalls(counts):
     '''
     Decorator to count calls to a function
@@ -23,9 +23,9 @@ def _Countcalls(counts):
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test:
 
     def testMemoizeAndClassmethod(self):
@@ -136,14 +136,14 @@ class Test:
             number = 999
             Memoize(2)(number)
 
-            assert str(exception) == 'Expecting a function/method/classmethod for Memoize.'
+        assert str(exception.value) == 'Expecting a function/method/classmethod for Memoize.'
 
         with pytest.raises(AssertionError) as exception:
             @Memoize(2, 'INVALID')
             def MyFunction():
                 'Not called!'
 
-            assert str(exception) == 'Memoize prune method not supported: INVALID'
+        assert str(exception.value) == 'Memoize prune method not supported: INVALID'
 
 
     def testMemoizeLRU(self):

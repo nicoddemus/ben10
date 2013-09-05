@@ -46,12 +46,6 @@ def ftpserver(monkeypatch, embed_data, request):
             self._port = self._ftpd.Start()
 
 
-        def _GetAnonymousFTPDir(self, sub_dir):
-            assert self._ftpd is not None, "FTPServer not serving, call ftpserver.Serve method."
-            base_dir = 'ftp://127.0.0.1:%s' % self._port
-            return '/'.join([base_dir, sub_dir])
-
-
         def GetFTPUrl(self, sub_dir):
             assert self._ftpd is not None, "FTPServer not serving, call ftpserver.Serve method."
             base_dir = 'ftp://dev:123@127.0.0.1:%s' % self._port
@@ -833,25 +827,28 @@ class Test:
         assert NormStandardPath('') == '.'
 
 
-    def testCanonicalPath(self):
-        if sys.platform == 'win32':
-            assert CanonicalPath('X:/One/Two/Three') == 'x:\\one\\two\\three'
-            obtained = CanonicalPath('Alpha')
-            expected = os.path.abspath('Alpha').lower()
-            assert obtained == expected
+    @pytest.mark.skipif("sys.platform == 'win32'")
+    def testCanonicalPathLinux(self):
+        assert CanonicalPath('/home/SuperUser/Directory/../Shared') == '/home/SuperUser/Shared'
+        obtained = CanonicalPath('Alpha')
+        expected = os.path.abspath('Alpha')
+        assert obtained == expected
 
-            obtained = CanonicalPath('../other/../Bravo')
-            expected = os.path.abspath('../Bravo').lower()
-            assert obtained == expected
-        else:
-            assert CanonicalPath('/home/SuperUser/Directory/../Shared') == '/home/SuperUser/Shared'
-            obtained = CanonicalPath('Alpha')
-            expected = os.path.abspath('Alpha')
-            assert obtained == expected
+        obtained = CanonicalPath('../other/../Bravo')
+        expected = os.path.abspath('../Bravo')
+        assert obtained == expected
 
-            obtained = CanonicalPath('../other/../Bravo')
-            expected = os.path.abspath('../Bravo')
-            assert obtained == expected
+
+    @pytest.mark.skipif("sys.platform != 'win32'")
+    def testCanonicalPathWindows(self):
+        assert CanonicalPath('X:/One/Two/Three') == 'x:\\one\\two\\three'
+        obtained = CanonicalPath('Alpha')
+        expected = os.path.abspath('Alpha').lower()
+        assert obtained == expected
+
+        obtained = CanonicalPath('../other/../Bravo')
+        expected = os.path.abspath('../Bravo').lower()
+        assert obtained == expected
 
 
     def testCheckIsFile(self, monkeypatch, embed_data, ftpserver):

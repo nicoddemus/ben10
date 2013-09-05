@@ -68,8 +68,8 @@ class AbstractTextOutput(object):
 
     def _HandleVerbose(self, kargs):
         '''
-            Returns wheter to continue or not a print proceses based on the verbose level ('verbose'
-            keyword in the p_kargs)
+        Returns wheter to continue or not a print proceses based on the verbose level ('verbose'
+        keyword in the p_kargs)
         '''
         verbose = kargs.get('verbose', self.default_verbose)
         result = self.TestVerbose(verbose)
@@ -173,56 +173,56 @@ class AbstractTextOutput(object):
         raise NotImplementedError()
 
 
-
-#===================================================================================================
-# HtmlTextOutput
-#===================================================================================================
-class HtmlTextOutput(AbstractTextOutput):
-
-
-    # Hi-level writing methods ---------------------------------------------------------------------
-
-    def LINE(self, p_char, **kargs):
-        self.write('---')
-
-
-    def P(self, *args, **kargs):
-        self.write('<P>' + ' '.join(args) + '</P>\n')
-
-
-    def I(self, *args, **kargs):
-        self.write('<I>' + ' '.join(args) + '</I>\n')
-
-
-    def DT(self, *args, **kargs):
-        self.write('<DT>' + ' '.join(args) + '</DT>\n')
-
-
-    def DD(self, p_caption, p_text, **kargs):
-        self.DT(p_caption)
-        self.write('<DD>' + p_text + '</DD>\n')
-
-
-    def PROCESSING(self, state, text=None, **kargs):
-        self.write(state)
-        if text is not None:
-            self.write(text)
-
-
-    def ERROR(self, p_text, **kargs):
-        return
-
-
-    def HEADER(self, *args, **kargs):
-        return
-
-
-    def EXCEPTION(self, **kargs):
-        return
-
-
-    def TABLE(self, **kwargs):
-        return
+# TODO: Remove this code
+# #===================================================================================================
+# # HtmlTextOutput
+# #===================================================================================================
+# class HtmlTextOutput(AbstractTextOutput):
+#
+#
+#     # Hi-level writing methods ---------------------------------------------------------------------
+#
+#     def LINE(self, p_char, **kargs):
+#         self.write('---')
+#
+#
+#     def P(self, *args, **kargs):
+#         self.write('<P>' + ' '.join(args) + '</P>\n')
+#
+#
+#     def I(self, *args, **kargs):
+#         self.write('<I>' + ' '.join(args) + '</I>\n')
+#
+#
+#     def DT(self, *args, **kargs):
+#         self.write('<DT>' + ' '.join(args) + '</DT>\n')
+#
+#
+#     def DD(self, p_caption, p_text, **kargs):
+#         self.DT(p_caption)
+#         self.write('<DD>' + p_text + '</DD>\n')
+#
+#
+#     def PROCESSING(self, state, text=None, **kargs):
+#         self.write(state)
+#         if text is not None:
+#             self.write(text)
+#
+#
+#     def ERROR(self, p_text, **kargs):
+#         return
+#
+#
+#     def HEADER(self, *args, **kargs):
+#         return
+#
+#
+#     def EXCEPTION(self, **kargs):
+#         return
+#
+#
+#     def TABLE(self, **kwargs):
+#         return
 
 
 #===================================================================================================
@@ -256,7 +256,7 @@ class TextOutput(AbstractTextOutput):
 
     def SetOutputStream(self, stream, force_console=False, verbose=False):
         '''
-            Set the output stream for the given one.
+        Set the output stream for the given one.
         '''
         from etk11.foundation import color_stream
 
@@ -281,10 +281,10 @@ class TextOutput(AbstractTextOutput):
 
     def RegisterKeyword(self, keyword, help_line):
         '''
-            Register a new keyword in the text-output.
-            Keywords are used to filter output for methods that have the "keywords" argument.
-            Methods that do not have the keywords argument are not influencied by the current
-            keywords.
+        Register a new keyword in the text-output.
+        Keywords are used to filter output for methods that have the "keywords" argument.
+        Methods that do not have the keywords argument are not influencied by the current
+        keywords.
         '''
         self._registered_keywords[keyword] = help_line
 
@@ -293,7 +293,7 @@ class TextOutput(AbstractTextOutput):
 
     def ResetIndentation(self, **kargs):
         '''
-            Resets the indentation level.
+        Resets the indentation level.
         '''
         if not self._HandleVerbose(kargs):
             return
@@ -303,9 +303,9 @@ class TextOutput(AbstractTextOutput):
 
     def Indent(self, **kargs):
         '''
-            Adds one to the global indentation level.
-            
-            * The global indentation is used for all method calls without "indent" keyword.
+        Adds one to the global indentation level.
+        
+        * The global indentation is used for all method calls without "indent" keyword.
         '''
         if not self._HandleVerbose(kargs):
             return
@@ -315,9 +315,9 @@ class TextOutput(AbstractTextOutput):
 
     def Dedent(self, **kargs):
         '''
-            Subs one to the global indentation level.
-            
-            * The global indentation is used for all method calls without "indent" keyword.
+        Subs one to the global indentation level.
+        
+        * The global indentation is used for all method calls without "indent" keyword.
         '''
         if not self._HandleVerbose(kargs):
             return
@@ -333,11 +333,11 @@ class TextOutput(AbstractTextOutput):
 
     def _IndentStrings(self, p_indent, p_mark=''):
         '''
-            Returns a pair of strings, one for the first line indentation and the other for the
-            other lines.
-            
-            The first line indentation adds the given 'mark' to it. The other lines indentation,
-            replace the mark for white spaces, making the text aligned.
+        Returns a pair of strings, one for the first line indentation and the other for the
+        other lines.
+        
+        The first line indentation adds the given 'mark' to it. The other lines indentation,
+        replace the mark for white spaces, making the text aligned.
         '''
         r_next = self.__i(p_indent)
         r_first = r_next + p_mark
@@ -349,8 +349,8 @@ class TextOutput(AbstractTextOutput):
 
     def WriteCarriageReturn(self):
         '''
-            Writes a carriage return, considering the "IsConsole" property. For non-console streams,
-            writes '\\r' instead of the carriage return code.
+        Writes a carriage return, considering the "IsConsole" property. For non-console streams,
+        writes '\\r' instead of the carriage return code.
         '''
         if self._oss.IsConsole():
             self._oss.write('\r')
@@ -360,7 +360,7 @@ class TextOutput(AbstractTextOutput):
 
     def ColorWrite(self, p_color, p_text):
         '''
-            Writes in the output stream using the given color.
+        Writes in the output stream using the given color.
         '''
         if p_color is not None and not self.flat_output:
             try:
@@ -374,7 +374,7 @@ class TextOutput(AbstractTextOutput):
 
     def _WrapLines(self, p_text, p_first_indent, p_next_indent, page_width=None):
         '''
-            Wrap the given text, observing the page_width and the given indentations.
+        Wrap the given text, observing the page_width and the given indentations.
         '''
         import textwrap
 
@@ -401,7 +401,7 @@ class TextOutput(AbstractTextOutput):
 
     def _DoPrint(self, p_args, p_first_indent, p_next_indent, color=None, page_width=None):
         '''
-            Prints a text (p_args) observing the page_width, indentations and color.
+        Prints a text (p_args) observing the page_width, indentations and color.
         '''
         text = ' '.join(map(str, p_args))
 
@@ -413,11 +413,11 @@ class TextOutput(AbstractTextOutput):
 
     def _HandleIndent(self, p_kargs):
         '''
-            Handles the 'indent' and 'mark' keywords of the given 'kargs'. Returns the same result
-            as "_IndentStrings".
-            
-            * The default indent is defined by the internal indentation level (see Indent, Dedent)
-            * The mark is used by "Items" methods, by default is an empty string.
+        Handles the 'indent' and 'mark' keywords of the given 'kargs'. Returns the same result
+        as "_IndentStrings".
+        
+        * The default indent is defined by the internal indentation level (see Indent, Dedent)
+        * The mark is used by "Items" methods, by default is an empty string.
         '''
         indent = p_kargs.get('indent')
         mark = p_kargs.get('mark', '')
@@ -447,7 +447,7 @@ class TextOutput(AbstractTextOutput):
 
     def LINE(self, p_char, **kargs):
         '''
-            Draw a line, using the given character, obeserving indentation and page width.
+        Draw a line, using the given character, obeserving indentation and page width.
         '''
         if not self._HandleVerbose(kargs):
             return
@@ -465,14 +465,14 @@ class TextOutput(AbstractTextOutput):
 
     def P(self, *args, **kargs):
         '''
-            Print a paragram, observing the indentation, verbose level and text width.
-            
-            Format:
-            <MESSAGE>
+        Print a paragram, observing the indentation, verbose level and text width.
+        
+        Format:
+        <MESSAGE>
 
-            Keyword Arguments:
-                indent=None
-                verbose=1
+        Keyword Arguments:
+            indent=None
+            verbose=1
         '''
         if not self._HandleVerbose(kargs):
             return IndentContextManager(self)
@@ -494,17 +494,17 @@ class TextOutput(AbstractTextOutput):
 
     def I(self, *args, **kargs):
         '''
-            Print an item, observing the indentation, verbose level and text width.
-            
-            - Can spread to multiple lines, all aligned with the first line text.
-            
-            Format:
-            - <MESSAGE>
+        Print an item, observing the indentation, verbose level and text width.
+        
+        - Can spread to multiple lines, all aligned with the first line text.
+        
+        Format:
+        - <MESSAGE>
 
-            Keyword Arguments:
-                indent=None
-                verbose=1
-                mark='- '
+        Keyword Arguments:
+            indent=None
+            verbose=1
+            mark='- '
         '''
         if not self._HandleVerbose(kargs):
             return IndentContextManager(self)
@@ -524,16 +524,16 @@ class TextOutput(AbstractTextOutput):
 
     def DT(self, *args, **kargs):
         '''
-            Prints a definition title, observing the indentation, verbose level and text width.
-            
-            Format:
-            \n
-            <MESSAGE>:
-            
-            Keyword Arguments:
-                indent=None
-                verbose=1
-                mark=''
+        Prints a definition title, observing the indentation, verbose level and text width.
+        
+        Format:
+        \n
+        <MESSAGE>:
+        
+        Keyword Arguments:
+            indent=None
+            verbose=1
+            mark=''
         '''
         if not args:
             raise RuntimeError('No arguments to DT')
@@ -674,21 +674,21 @@ class TextOutput(AbstractTextOutput):
 
     def EXCEPTION(self, **kargs):
         '''
-            Prints-out the exception being handling.
-            
-            Keywords params:
-                top_margin:
-                bottom_margin:
-                indent:
-                verbose:
-                    IGNORED
-                line_color:
-                    Determines the color of the lines. (default None)
-                line_char:
-                    Determins the character used to draw the 'main' lines (default '*')
-                    - If None, does not print the lines.
-                track_back:
-                    A boolean indicating if we should print the traceback info (default True)
+        Prints-out the exception being handling.
+        
+        Keywords params:
+            top_margin:
+            bottom_margin:
+            indent:
+            verbose:
+                IGNORED
+            line_color:
+                Determines the color of the lines. (default None)
+            line_char:
+                Determins the character used to draw the 'main' lines (default '*')
+                - If None, does not print the lines.
+            track_back:
+                A boolean indicating if we should print the traceback info (default True)
         '''
         def TrackBackFrames(p_track_back):
             '''
@@ -759,23 +759,23 @@ class TextOutput(AbstractTextOutput):
 
     def TABLE(self, widths, labels, values):
         '''
-            Print a table of values, correctly indented.
+        Print a table of values, correctly indented.
+        
+        :param  widths:
+            A list of width, one for each column
+        @type labels:
+            [int]
+        
+        :param  labels:
+            A list of labels, one for each column
+            If None, does not print labels
+        @type labels:
+            [str]
             
-            :param  widths:
-                A list of width, one for each column
-            @type labels:
-                [int]
-            
-            :param  labels:
-                A list of labels, one for each column
-                If None, does not print labels
-            @type labels:
-                [str]
-                
-            :param  values:
-                A list of values, each entry must have a value for each column.
-            @type values:
-                [[str]]
+        :param  values:
+            A list of values, each entry must have a value for each column.
+        @type values:
+            [[str]]
         '''
 
         def Print(message, color=None):

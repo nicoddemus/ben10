@@ -1,8 +1,10 @@
 from StringIO import StringIO
 from UserList import UserList
-from etk11.foundation.profiling import ObtainStats, PrintProfile, PrintProfileMultiple, ProfileMethod
+from etk11.foundation.profiling import ObtainStats, PrintProfile, PrintProfileMultiple, \
+    ProfileMethod
 import os
 import pstats
+import pytest
 import re
 import sys
 
@@ -71,6 +73,11 @@ class Test:
 
                 if not re.search(expected_in, output_stream):
                     assert False, '>>%s<< not found in >>%s<<' % (expected_in, output_stream)
+
+            # Tests CheckOutput failing
+            with pytest.raises(AssertionError) as exception:
+                CheckOutput("MISSING")
+            assert str(exception.value).startswith('>>MISSING<< not found in >>')
 
             CheckOutput("UserList.py:\d+\(append\)")
 

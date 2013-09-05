@@ -3,9 +3,9 @@ from etk11.foundation.url import HideURLPassword, IsUrlEqual
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test:
 
     def testUrlCompare(self, monkeypatch):
@@ -16,10 +16,6 @@ class Test:
             assert IsUrlEqual(protocol + '://HERE', protocol + '://here') == False
             assert IsUrlEqual(protocol + '://here', protocol + '://here') == True
             assert IsUrlEqual(protocol + '://here', protocol + '://nothere') == False
-
-        # Local file protocol under windows
-        def mockPlatformWin32():
-            return 'win32'
 
         protocol = 'file'
         monkeypatch.setattr(Platform, 'GetCurrentFlavour', classmethod(lambda x:'windows'))

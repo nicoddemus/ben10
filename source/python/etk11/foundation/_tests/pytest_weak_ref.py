@@ -10,6 +10,9 @@ import weakref
 #=======================================================================================================================
 class _Stub(object):
 
+    def __hash__(self):
+        return 1
+
     def __eq__(self, o):
         return True  # always equal
 
@@ -20,10 +23,20 @@ class _Stub(object):
         pass
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test():
+
+    def testStub(self):
+        a = _Stub()
+        b = _Stub()
+        assert not a != a
+        assert not a != b
+        assert a == a
+        assert a == b
+        a.Method()
+
 
     def testIsSame(self):
         s1 = _Stub()
@@ -59,50 +72,33 @@ class Test():
 
 
     def testGeneral(self):
-        class Bar(object):
-
-            def m1(self):
-                pass
-
-            def __hash__(self):
-                return 1
-
-            def __eq__(self, o):
-                return True
-
-            def __ne__(self):
-                return False
-
-        b = Bar()
-        r = GetWeakRef(b.m1)
+        b = _Stub()
+        r = GetWeakRef(b.Method)
         assert r() is not None  # should not be a regular weak ref here (but a weak method ref)
 
         assert IsWeakRef(r)
         assert not IsWeakProxy(r)
 
-        r = GetWeakProxy(b.m1)
+        r = GetWeakProxy(b.Method)
         r()
         assert IsWeakProxy(r)
         assert not IsWeakRef(r)
 
         r = weakref.ref(b)
-        b2 = Bar()
+        b2 = _Stub()
         r2 = weakref.ref(b2)
         assert r == r2
         assert hash(r) == hash(r2)
 
-        r = GetWeakRef(b.m1)
-        r2 = GetWeakRef(b.m1)
+        r = GetWeakRef(b.Method)
+        r2 = GetWeakRef(b.Method)
         assert r == r2
         assert hash(r) == hash(r2)
 
 
 
     def testGetRealObj(self):
-        class Bar(object):
-            pass
-
-        b = Bar()
+        b = _Stub()
         r = GetWeakRef(b)
         assert GetRealObj(r) is b
 
@@ -111,10 +107,7 @@ class Test():
 
 
     def testGetWeakProxyFromWeakRef(self):
-        class Bar(object):
-            pass
-
-        b = Bar()
+        b = _Stub()
         r = GetWeakRef(b)
         proxy = GetWeakProxy(r)
         assert IsWeakProxy(proxy)
@@ -129,25 +122,25 @@ class Test():
         assert isinstance(iter(weak_set).next(), _Stub)
 
         assert s1 in weak_set
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
         del s1
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
 #         weak_set.add(s2)
-#         self.AssertEqual(len(weak_set), 1)
+#         self.CustomAssertEqual(len(weak_set), 1)
 #         weak_set.remove(s2)
-#         self.AssertEqual(len(weak_set), 0)
+#         self.CustomAssertEqual(len(weak_set), 0)
 #
 #         weak_set.add(s2)
 #         weak_set.clear()
-#         self.AssertEqual(len(weak_set), 0)
+#         self.CustomAssertEqual(len(weak_set), 0)
 #
 #         weak_set.add(s2)
 #         weak_set.add(s2)
 #         weak_set.add(s2)
-#         self.AssertEqual(len(weak_set), 1)
+#         self.CustomAssertEqual(len(weak_set), 1)
 #         del s2
-#         self.AssertEqual(len(weak_set), 0)
+#         self.CustomAssertEqual(len(weak_set), 0)
 #
 #         # >>> Testing with FUNCTION
 #
@@ -156,7 +149,7 @@ class Test():
 #             pass
 #         weak_set.add(function)
 #         weak_set.add(function)
-#         self.AssertEqual(len(weak_set), 1)
+#         self.CustomAssertEqual(len(weak_set), 1)
 
 
     def testRemove(self):
@@ -164,16 +157,16 @@ class Test():
 
         s1 = _Stub()
 
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
         # Trying remove, raises KeyError
         with pytest.raises(KeyError):
             weak_set.remove(s1)
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
         # Trying discard, no exception raised
         weak_set.discard(s1)
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
 
     def testWeakSet2(self):
@@ -182,16 +175,16 @@ class Test():
         # >>> Removing with DEL
         s1 = _Stub()
         weak_set.add(s1.Method)
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
         del s1
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
         # >>> Removing with REMOVE
         s2 = _Stub()
         weak_set.add(s2.Method)
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
         weak_set.remove(s2.Method)
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
 
     def testWithError(self):
@@ -200,39 +193,39 @@ class Test():
         # Not WITH, everything ok
         s1 = _Stub()
         weak_set.add(s1.Method)
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
         del s1
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
         # Using WITH, s2 is not deleted from weak_set
         s2 = _Stub()
         with pytest.raises(KeyError):
             raise KeyError('key')
-        self.AssertEqual(len(weak_set), 0)
+        self.CustomAssertEqual(len(weak_set), 0)
 
         weak_set.add(s2.Method)
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
         del s2
-        self.AssertEqual(len(weak_set), 1)  # <-- This should be ZERO!
+        self.CustomAssertEqual(len(weak_set), 1)  # <-- This should be ZERO!
 
 
     def testFunction(self):
         weak_set = WeakSet()
 
         def function():
-            pass
+            'Never called'
 
         # Adding twice, having one.
         weak_set.add(function)
         weak_set.add(function)
-        self.AssertEqual(len(weak_set), 1)
+        self.CustomAssertEqual(len(weak_set), 1)
 
         # Removing function
         weak_set.remove(function)
         assert len(weak_set) == 0
 
 
-    def AssertEqual(self, a, b):
+    def CustomAssertEqual(self, a, b):
         '''
         Avoiding using "assert a == b" because it adds another reference to the ref-count.
         '''
@@ -250,7 +243,7 @@ class Test():
 
         class D(object):
             def f(self):
-                pass
+                'Never called'
 
         self.C = C
         self.c = C()
@@ -258,33 +251,29 @@ class Test():
         self.d = D()
 
 
+    def testCustomAssertEqual(self):
+        with pytest.raises(AssertionError) as excinfo:
+            self.CustomAssertEqual(1, 2)
+        assert str(excinfo.value) == '1 != 2'
+
+
     def testRefcount(self):
-
-        def AssertEqual(a, b):
-            '''
-            Avoiding using "assert a == b" because it adds another reference to the ref-count.
-            '''
-            if a == b:
-                pass
-            else:
-                assert False, "%s != %s" % (a, b)
-
         self.SetupTestAttributes()
 
-        AssertEqual(sys.getrefcount(self.c), 2)  # 2: one in self, and one as argument to getrefcount()
+        self.CustomAssertEqual(sys.getrefcount(self.c), 2)  # 2: one in self, and one as argument to getrefcount()
         cf = self.c.f
-        AssertEqual(sys.getrefcount(self.c), 3)  # 3: as above, plus cf
+        self.CustomAssertEqual(sys.getrefcount(self.c), 3)  # 3: as above, plus cf
         rf = WeakMethodRef(self.c.f)
         pf = WeakMethodProxy(self.c.f)
-        AssertEqual(sys.getrefcount(self.c), 3)
+        self.CustomAssertEqual(sys.getrefcount(self.c), 3)
         del cf
-        AssertEqual(sys.getrefcount(self.c), 2)
+        self.CustomAssertEqual(sys.getrefcount(self.c), 2)
         rf2 = WeakMethodRef(self.c.f)
-        AssertEqual(sys.getrefcount(self.c), 2)
+        self.CustomAssertEqual(sys.getrefcount(self.c), 2)
         del rf
         del rf2
         del pf
-        AssertEqual(sys.getrefcount(self.c), 2)
+        self.CustomAssertEqual(sys.getrefcount(self.c), 2)
 
 
     def testDies(self):
@@ -379,7 +368,7 @@ class Test():
         assert str(r)[:33] == '<WeakMethodRef to C.f for object '
 
         def Foo():
-            pass
+            'Never called'
 
         r = WeakMethodRef(Foo)
         assert str(r) == '<WeakMethodRef to Foo>'
@@ -421,7 +410,7 @@ class Test():
         assert 0 == len(weak_list[:])
 
         def m1():
-            pass
+            'Never called'
 
         weak_list.append(m1)
         assert 1 == len(weak_list[:])

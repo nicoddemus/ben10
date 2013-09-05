@@ -120,8 +120,6 @@ class Test:
             self.contents = []
             for item in args:
                 self.contents.append(item)
-        def __len__(self):
-            return len(self.contents)
         def __getitem__(self, index):
             return self.contents[index]
 

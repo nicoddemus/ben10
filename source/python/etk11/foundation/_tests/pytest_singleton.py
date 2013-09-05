@@ -69,11 +69,6 @@ class Test:
             def __init__(self, value):
                 self.value = value
 
-            @classmethod
-            @Override(Singleton.CreateDefaultSingleton)
-            def CreateDefaultSingleton(cls):
-                return MySingleton(value=0)
-
         assert not MySingleton.HasSingleton()
 
         MySingleton.SetSingleton(MySingleton(value=999))
