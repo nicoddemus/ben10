@@ -1,3 +1,4 @@
+from etk11.foundation.types_ import CheckType
 import os
 import sys
 
@@ -795,37 +796,38 @@ class TextOutput(AbstractTextOutput):
 
 
 
-#===================================================================================================
-# TextOutputWrapper
-#===================================================================================================
-class TextOutputWrapper(object):
-
-    def __init__(self, text_output, keywords):
-        self.text_output = text_output
-        self.keywords = keywords
-
-
-    def Indent(self, *args, **kargs):
-        kargs.setdefault('keywords', self.keywords)
-        return self.text_output.Indent(*args, **kargs)
-
-
-    def Dedent(self, *args, **kargs):
-        kargs.setdefault('keywords', self.keywords)
-        return self.text_output.Dedent(*args, **kargs)
-
-
-    def I(self, *args, **kargs):
-        kargs.setdefault('keywords', self.keywords)
-        id_tag = '[%s]' % ','.join(self.keywords)
-        args = list(args)
-        args.append(id_tag)
-        return self.text_output.I(*args, **kargs)
-
-
-    def P(self, *args, **kargs):
-        kargs.setdefault('keywords', self.keywords)
-        args = list(args)
-        args.append('  [%s]' % ','.join(self.keywords))
-        return self.text_output.P(*args, **kargs)
+# TODO: Remove since is not used by Aasimar.
+# #===================================================================================================
+# # TextOutputWrapper
+# #===================================================================================================
+# class TextOutputWrapper(object):
+#
+#     def __init__(self, text_output, keywords):
+#         self.text_output = text_output
+#         self.keywords = keywords
+#
+#
+#     def Indent(self, *args, **kargs):
+#         kargs.setdefault('keywords', self.keywords)
+#         return self.text_output.Indent(*args, **kargs)
+#
+#
+#     def Dedent(self, *args, **kargs):
+#         kargs.setdefault('keywords', self.keywords)
+#         return self.text_output.Dedent(*args, **kargs)
+#
+#
+#     def I(self, *args, **kargs):
+#         kargs.setdefault('keywords', self.keywords)
+#         id_tag = '[%s]' % ','.join(self.keywords)
+#         args = list(args)
+#         args.append(id_tag)
+#         return self.text_output.I(*args, **kargs)
+#
+#
+#     def P(self, *args, **kargs):
+#         kargs.setdefault('keywords', self.keywords)
+#         args = list(args)
+#         args.append('  [%s]' % ','.join(self.keywords))
+#         return self.text_output.P(*args, **kargs)
 

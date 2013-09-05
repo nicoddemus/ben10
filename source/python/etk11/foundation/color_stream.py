@@ -8,11 +8,10 @@ import sys
 class NoColorConsole(object):
 
     def SetColor(self, _foreground, _background=''):
-        pass
-
+        ''
 
     def Reset(self):
-        pass
+        ''
 
 
 
@@ -22,9 +21,11 @@ class NoColorConsole(object):
 class WindowsConsole(object):
 
     def __init__(self):
+
         def GetConst(prefix, name):
             import win32console
             return getattr(win32console, prefix + '_' + name)
+
 
         def FillColorMap(prefix, colors):
             result = { '' : 0 }
@@ -37,6 +38,7 @@ class WindowsConsole(object):
                     value |= GetConst(prefix, i_component)
                 result[i_color_name] = value
             return result
+
 
         def FillColorMaps():
             colors = dict(
@@ -51,6 +53,7 @@ class WindowsConsole(object):
             )
             self.foreground_map = FillColorMap('FOREGROUND', colors)
             self.background_map = FillColorMap('BACKGROUND', colors)
+
 
         def InitConsoleScreenBuffer():
             self._output_handle = win32console.GetStdHandle(win32console.STD_OUTPUT_HANDLE)
@@ -178,6 +181,10 @@ class SafeStreamFilter(object):
             self.stream.write(text)
 
 
+    def writeln(self, text):
+        return self.write(text + '\n')
+
+
 
 #===================================================================================================
 # ColorStream
@@ -188,12 +195,15 @@ class ColorStream(object):
 
     def __init__(self, stream, force_console=False, verbose=False):
         '''
-            force_console:
-                Forces the ColorStream to create a console handle, even if the "IsConsole" function
-                returns False.
+        :param bool force_console:
+            Forces the ColorStream to create a console handle, even if the "IsConsole" function
+            returns False.
 
-            * This is needed once the color_extension of UnitTest uses an wrapper for the StdOut as
-              the stream
+        :param bool verbose:
+            TextConsole option receives the verbose parameter in order to print color codes. 
+
+        * This is needed once the color_extension of UnitTest uses an wrapper for the StdOut as
+          the stream
         '''
         # Use a filter for strange character if the target encoding matches the console.
         stream = SafeStreamFilter(stream)
@@ -224,9 +234,9 @@ class ColorStream(object):
 
     def IsConsole(self):
         '''
-            Returns whether the associated stream is a console stream.
-            
-            * Check if the stream IS "stdout".
+        Returns whether the associated stream is a console stream.
+        
+        * Check if the stream IS "stdout".
         '''
         if isinstance(self._stream, SafeStreamFilter):
             stream = self._stream.stream
@@ -254,7 +264,7 @@ class ColorStream(object):
 
     def Reset(self):
         '''
-            Resets any color attributes with the values stored at the console (__console) creation.
+        Resets any color attributes with the values stored at the console (__console) creation.
         '''
         self.__console.Reset()
 

@@ -40,17 +40,37 @@ Now using with!
     def testPageWidthParameter(self):
         stream = StringIO()
         oss = TextOutput(stream)
-
         oss.P('alpha bravo charlie delta echo foxtrot')
-        oss.P('alpha bravo charlie delta echo foxtrot', page_width=12)
+        assert stream.getvalue() == '''alpha bravo charlie delta echo foxtrot
+'''
 
-        expected_output = '''alpha bravo charlie delta echo foxtrot
-alpha bravo
+        stream = StringIO()
+        oss.SetOutputStream(stream)
+        oss.P('alpha bravo charlie delta echo foxtrot', page_width=12)
+        assert stream.getvalue() == '''alpha bravo
 charlie
 delta echo
 foxtrot
 '''
-        assert stream.getvalue() == expected_output
+
+        stream = StringIO()
+        oss.SetOutputStream(stream)
+        oss.I('alpha')
+        oss.I('bravo')
+        oss.I('charlie')
+        assert stream.getvalue() == '''- alpha
+- bravo
+- charlie
+'''
+
+        stream = StringIO()
+        oss.SetOutputStream(stream)
+        oss.TABLE([7, 8, 9], ['alpha', 'bravo', 'charlie'], [[1, 2, 3], [4, 5, 6]])
+        assert stream.getvalue() == '''      alpha   bravo  charlie
+          1       2        3
+          4       5        6
+'''
+
 
 
     def testPrintEmptyString(self):
