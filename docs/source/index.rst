@@ -12,14 +12,6 @@ Contents:
    :maxdepth: 2
 
    modules.rst
-   etk11.cache.rst
-   etk11.callback.rst
-   etk11.debug.rst
-   etk11.filesystem.rst
-   etk11.hash.rst
-   etk11.log.rst
-   etk11.rst
-   etk11.weak_ref.rst
 
 
 Indices and tables
