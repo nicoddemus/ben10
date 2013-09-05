@@ -84,16 +84,79 @@ class Test:
 
 
     def testNode(self):
-        a = _Node(1, 'one', 1)
-        b = _Node(2, 'two', 2)
+        a = _Node(1, 'one', 1, 999)
+        b = _Node(2, 'two', 2, 999)
         assert a < b
         assert b > a
 
-        c = _Node(3, 'three', 2)
+        c = _Node(3, 'three', 2, 999)
         assert b == c
 
         assert repr(a) == '_Node(time=1)'
 
+
+    def testLRUSizeExceedsOnReplace(self):
+        class Value:
+            def __init__(self, value):
+                self.value = value
+
+        lru = LRU(2, get_size=lambda a:a.value)
+        lru[1] = Value(1)
+        lru[2] = Value(1)
+
+        assert len(lru) == 2
+        lru[2] = Value(2)
+        assert len(lru) == 1
+
+
+    def testLRUSizeExceedsOnReplaceOnSingleEntry(self):
+        class Value:
+            def __init__(self, value):
+                self.value = value
+
+        lru = LRU(2, get_size=lambda a:a.value)
+        lru[1] = Value(1)
+        lru[2] = Value(1)
+
+        assert len(lru) == 2
+        lru[2] = Value(2)
+        assert len(lru) == 1
+
+        lru[2] = Value(4)
+        assert len(lru) == 0
+
+        lru[2] = Value(4)
+        assert len(lru) == 0
+
+
+    def testLRUSizeExceedsOnReplaceOnSingleEntry2(self):
+        class Value:
+            def __init__(self, value):
+                self.value = value
+
+        lru = LRU(4, get_size=lambda a:a.value)
+        lru[1] = Value(1)
+        lru[2] = Value(3)
+        assert len(lru) == 2
+
+        lru[2] = Value(3)
+        assert len(lru) == 2
+
+        lru[2] = Value(1)
+        assert len(lru) == 2
+
+        lru[3] = Value(5)
+        assert len(lru) == 0
+
+        lru[3] = Value(4)
+        assert len(lru) == 1
+
+        lru[4] = Value(4)
+        assert len(lru) == 1
+
+        with pytest.raises(ValueError):
+            lru[1] = Value(0)
+        assert len(lru) == 1
 
 #     def profile(self):
 #         @ProfileMethod('test.prof')

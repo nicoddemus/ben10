@@ -9,11 +9,9 @@ import itertools
 
 DEFAULT_LRU_SIZE = 50
 
-
-
-#=======================================================================================================================
+#===================================================================================================
 # _Node
-#=======================================================================================================================
+#===================================================================================================
 class _Node(object):
     '''
     Node with key, object and the last access time.
@@ -21,7 +19,9 @@ class _Node(object):
     Identity hashable and comparable.
     '''
 
-    def __init__(self, key, obj, node_time):
+    __slots__ = 'key obj node_time size'.split()
+
+    def __init__(self, key, obj, node_time, size):
         '''
         :param object key:
             The key this node is storing
@@ -31,10 +31,14 @@ class _Node(object):
         
         :param int node_time:
             The last time this node changed
+
+        :param int size:
+            The size of this object
         '''
         self.key = key
         self.obj = obj
         self.node_time = node_time
+        self.size = size
 
 
     def __le__(self, other):
@@ -70,19 +74,18 @@ class _Node(object):
         return '_Node(time=%s)' % self.node_time
 
 
-
-#=======================================================================================================================
+#===================================================================================================
 # LRU
-#=======================================================================================================================
+#===================================================================================================
 class LRU(object):
     '''
     Least Recently Used (LRU) cache.
     
-    Based on heapq module (which is used to guarantee that the 1st item in _heap is always the item that has the lowest
-    access time).
+    Based on heapq module (which is used to guarantee that the 1st item in _heap is
+    always the item that has the lowest access time).
     '''
 
-    def __init__(self, size=DEFAULT_LRU_SIZE, internal_dict=None):
+    def __init__(self, size=DEFAULT_LRU_SIZE, internal_dict=None, get_size=lambda x:1):
         '''
         :param int size:
             The maximum size for this cache.
@@ -100,6 +103,8 @@ class LRU(object):
             self._dict = internal_dict
 
         self._maxsize = size
+        self._currsize = 0
+        self._get_size = get_size
         self._next_access = itertools.count(0).next
 
         # If a sort is requested, we need to check for both: heapify and sort
@@ -120,6 +125,7 @@ class LRU(object):
         '''
         del self._heap[:]
         self._dict.clear()
+        self._currsize = 0
         self._heapify_needed = False
         self._sort_needed = False
 
@@ -139,7 +145,6 @@ class LRU(object):
         :returns:
             True if the key is in the cache and False otherwise.
         '''
-        print key, self._dict.keys()
         return key in self._dict
 
 
@@ -161,16 +166,45 @@ class LRU(object):
             If the key is not available
         '''
         node = self._dict_get(key, None)
+        add_size = self._get_size(obj)
+        if add_size <= 0:
+            raise ValueError('Size for object may not be 0. Key: %s' % (key,))
+
+        maxsize = self._maxsize
+        currsize = self._currsize
+
         if node is not None:
+            currsize -= node.size
+
+            need_remove = add_size > node.size and currsize + add_size > maxsize
+
             node.obj = obj
+            node.size = add_size
+            currsize += add_size
             node.node_time = self._next_access()
-            # Changed time: heap invariant may be broken.
-            self._heapify_needed = True
+
+            if need_remove:
+                # Note, if this becomes slow, we could code around other mechanisms (and
+                # not heapq)
+                heapify(self._heap)
+                self._heapify_needed = False
+
+                # Make it smaller before putting the new item.
+                while currsize > maxsize:
+                    lru = heappop(self._heap)
+                    node = self._dict.pop(lru.key)
+                    currsize -= node.size
+            else:
+                # Changed time: heap invariant may be broken.
+                self._heapify_needed = True
 
         else:
+            # Handle special case where we're inserting a value which can not fit in the LRU.
+            if add_size > maxsize:
+                self.clear()
+                return
 
-            curr_len = len(self._heap)
-            if curr_len >= self._maxsize:
+            if currsize + add_size > maxsize:
                 # Before any other heap* operation, we need to heapify for it to stay
                 # ok if it lost the invariant for some reason.
                 # (if we only did heappop, heappush and related heap operations, we
@@ -184,13 +218,14 @@ class LRU(object):
                     self._heapify_needed = False
 
                 # Make it smaller before putting the new item.
-                while curr_len >= self._maxsize:
+                while currsize + add_size > maxsize:
                     lru = heappop(self._heap)
-                    del self._dict[lru.key]
-                    curr_len -= 1
+                    node = self._dict.pop(lru.key)
+                    currsize -= node.size
 
 
-            node = _Node(key, obj, self._next_access())
+            node = _Node(key, obj, self._next_access(), add_size)
+            currsize += add_size
             self._dict[key] = node
             if self._heapify_needed:
                 # No need to heappush, because we'll need to heapify later anyways (so, use faster op)
@@ -198,6 +233,7 @@ class LRU(object):
             else:
                 heappush(self._heap, node)
 
+        self._currsize = currsize
         # After a setitem, we always need to resort if needed
         self._sort_needed = True
 
@@ -258,8 +294,8 @@ class LRU(object):
         :raises KeyError:
             If the key is not available
         '''
-        node = self._dict[key]  # can throw KeyError here
-        del self._dict[key]
+        node = self._dict.pop(key)  # can throw KeyError here
+        self._currsize -= node.size
 
         # Remove without the heap invariant (heapify when needed).
         self._heap.remove(node)
@@ -355,6 +391,11 @@ class _DictWithRemovalMemo(dict):
     def __init__(self):
         dict.__init__(self)
         self.removed_items = []
+
+    def pop(self, key):
+        item = dict.pop(self, key)
+        self.removed_items.append(item.obj)
+        return item
 
     def __delitem__(self, key):
         item = dict.pop(self, key)
