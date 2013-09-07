@@ -1,5 +1,5 @@
 from ben10.foundation import is_frozen
-from ben10.foundation.decorators import Deprecated, Implements, Override
+from ben10.foundation.decorators import Deprecated, Implements, Override, Abstract
 import pytest
 import warnings
 
@@ -158,3 +158,14 @@ class Test():
             is_frozen.SetIsFrozen(old_is_frozen)
 
 
+    def testAbstract(self):
+
+        class Alpha(object):
+
+            @Abstract
+            def Method(self):
+                ''
+
+        alpha = Alpha()
+        with pytest.raises(NotImplementedError):
+            alpha.Method()

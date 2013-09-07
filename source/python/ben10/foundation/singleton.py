@@ -73,14 +73,9 @@ class Singleton(object):
             # Make common case faster.
             return cls.__singleton_singleton_stack__[-1]
         except (AttributeError, IndexError):
+            # Only lock if the 'fast path' did not work.
             with cls.__lock:
-                # Only lock if the 'fast path' did not work.
-                stack = cls._ObtainStack()
-
-                if not stack:  # Faster than doing len(stack) == 0
-                    return cls.SetSingleton(None)
-
-                return stack[-1]
+                return cls.SetSingleton(None)
 
 
     @classmethod
@@ -112,11 +107,8 @@ class Singleton(object):
             instance = cls.CreateDefaultSingleton()
 
         # Set the staok[0] as the singleton
-        if len(stack) == 0:
-            stack.append(instance)
-            cls.__singleton_stack_start_index = 1
-        else:
-            stack[0] = instance
+        stack.append(instance)
+        cls.__singleton_stack_start_index = 1
 
         assert cls.__singleton_stack_start_index == 1
 
@@ -215,7 +207,7 @@ class Singleton(object):
 #             PrintTrace(count=5)
 
         if len(stack) == cls.__singleton_stack_start_index:
-            raise IndexError('PopSingleton called without a pair PushSingleton call')
+            raise PushPopSingletonError('PopSingleton called without a pair PushSingleton call')
 
         return cls._ObtainStack().pop(-1)
 
@@ -239,7 +231,7 @@ class Singleton(object):
 
 
     @classmethod
-    def _GetStackCount(cls):
+    def GetStackCount(cls):
         '''
         @return int:
             The number of elements added int the stack using PushSingleton.

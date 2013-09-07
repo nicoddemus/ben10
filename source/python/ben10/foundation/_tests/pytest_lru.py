@@ -1,4 +1,4 @@
-from ben10.foundation.lru import LRU, LRUWithRemovalMemo, _Node
+from ben10.foundation.lru import LRU, LRUWithRemovalMemo, _Node, _DictWithRemovalMemo
 import pytest
 
 
@@ -81,6 +81,11 @@ class Test:
         assert len(lru) == 1
         lru.clear()
         assert lru.GetAndClearRemovedItems() == []
+
+        dict_ = _DictWithRemovalMemo()
+        dict_[1] = 1
+        with pytest.raises(NotImplementedError):
+            del dict_[1]
 
 
     def testNode(self):

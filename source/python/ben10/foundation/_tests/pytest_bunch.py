@@ -29,52 +29,64 @@ class Test:
         assert p2.Size() == 5
 
 
-    def probeBunchMemory(self):
-        # Slots
-        #
-        # Ellapsed Time: 0.14 seconds
-        # Memory delta: 4,38 MB (4.595.712 bytes)
-        #
-        # NoBunch
-        #
-        # Ellapsed Time: 0.31 seconds
-        # Memory delta: 17,81 MB (18.673.664 bytes)
-        #
-        # Bunch
-        # Ellapsed Time: 0.36 seconds
-        # Memory delta: 4,43 MB (4.644.864 bytes)
+    def testBunchAndTuples(self):
 
-        class BarBunch(Bunch):
-            x = 0.0
-            y = 0.0
-            width = 1.0
-            height = 1.0
+        class Alpha(Bunch):
+            with_value = ('one', 'two')
+            without_value = ()
 
-        class BarNoBunch(object):
+        alpha = Alpha()
+        assert alpha.with_value == ('one', 'two')
+        assert alpha.without_value == ()
 
-            def __init__(self):
-                self.x = 0.0
-                self.y = 0.0
-                self.width = 1.0
-                self.height = 1.0
 
-        class BarSlots(object):
-
-            __slots__ = ['x', 'y', 'width', 'height']
-
-            def __init__(self):
-                self.x = 0.0
-                self.y = 0.0
-                self.width = 1.0
-                self.height = 1.0
-
-        Bar = BarNoBunch  # @UnusedVariable
-        Bar = BarSlots  # @UnusedVariable
-        Bar = BarBunch
-
-        memory_probe = MemoryProbe()
-        bunches = [Bar() for x in xrange(100000)]  # @UnusedVariable
-        memory_probe.PrintMemory()
+# TODO: Not executed on tests, might as well be commented. Create a test for it.
+#     def probeBunchMemory(self):
+#         # Slots
+#         #
+#         # Ellapsed Time: 0.14 seconds
+#         # Memory delta: 4,38 MB (4.595.712 bytes)
+#         #
+#         # NoBunch
+#         #
+#         # Ellapsed Time: 0.31 seconds
+#         # Memory delta: 17,81 MB (18.673.664 bytes)
+#         #
+#         # Bunch
+#         # Ellapsed Time: 0.36 seconds
+#         # Memory delta: 4,43 MB (4.644.864 bytes)
+#
+#         class BarBunch(Bunch):
+#             x = 0.0
+#             y = 0.0
+#             width = 1.0
+#             height = 1.0
+#
+#         class BarNoBunch(object):
+#
+#             def __init__(self):
+#                 self.x = 0.0
+#                 self.y = 0.0
+#                 self.width = 1.0
+#                 self.height = 1.0
+#
+#         class BarSlots(object):
+#
+#             __slots__ = ['x', 'y', 'width', 'height']
+#
+#             def __init__(self):
+#                 self.x = 0.0
+#                 self.y = 0.0
+#                 self.width = 1.0
+#                 self.height = 1.0
+#
+#         Bar = BarNoBunch  # @UnusedVariable
+#         Bar = BarSlots  # @UnusedVariable
+#         Bar = BarBunch
+#
+#         memory_probe = MemoryProbe()
+#         bunches = [Bar() for x in xrange(100000)]  # @UnusedVariable
+#         memory_probe.PrintMemory()
 
 
     def testBunchSubclassing(self):
@@ -191,6 +203,8 @@ class Test:
             foo = 'bar'
 
         bunch_1 = DummyBunch1()
+
+        assert repr(bunch_1) == "DummyBunch1(dict_of_lists={'foo': [], 'bar': []}, foo='bar')"
 
         obtained_dict_1 = ConvertToDict(bunch_1)
         expected_dict_1 = {

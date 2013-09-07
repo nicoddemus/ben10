@@ -1,14 +1,15 @@
 from ben10.foundation import is_frozen
 from ben10.foundation.platform_ import Platform
+from ben10.foundation.pushpop import PushPop
 from ben10.foundation.uname import GetApplicationDir, GetUserHomeDir, IsRunningOn64BitMachine
 import os
 import sys
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test():
 
     def testIsRunningOn64BitMachine(self, monkeypatch):
@@ -22,7 +23,10 @@ class Test():
 
 
     def testGetUserHomeDir(self):
-        assert GetUserHomeDir() == '%(HOMEDRIVE)s%(HOMEPATH)s' % os.environ
+        with PushPop(sys, 'platform', 'win32'):
+            assert GetUserHomeDir() == '%(HOMEDRIVE)s%(HOMEPATH)s' % os.environ
+        with PushPop(sys, 'platform', 'linux2'):
+            assert GetUserHomeDir() == '%(HOME)s' % os.environ
 
 
     def testGetApplicationDir(self):

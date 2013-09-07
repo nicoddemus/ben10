@@ -37,7 +37,7 @@ class Test:
 
         class Dummy2:
 
-            @ProfileMethod(None)
+            @ProfileMethod(None, sort=('cumul',))
             def SlowMethod(self, start):
                 reals = UserList()
                 for x in range(start, 30000):

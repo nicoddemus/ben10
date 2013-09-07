@@ -310,10 +310,8 @@ class Test:
             CopyFiles(embed_data.GetDataFilename('source'), 'ERROR://target')
 
 
+    @pytest.mark.skipif("sys.platform == 'win32'")
     def testCopyFileSymlink(self, embed_data):
-        if sys.platform.startswith('win'):
-            return
-
         # Create a file
         original = embed_data.GetDataFilename('original_file.txt')
         CreateFile(original, contents='original')

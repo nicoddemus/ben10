@@ -1,13 +1,14 @@
 from ben10.foundation.callback import After
 from ben10.foundation.decorators import Override
-from ben10.foundation.singleton import PushPopSingletonError, Singleton, SingletonAlreadySetError, SingletonNotSetError
+from ben10.foundation.singleton import PushPopSingletonError, Singleton, SingletonAlreadySetError, \
+    SingletonNotSetError
 import pytest
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test:
 
     def _TestCurrentSingleton(self, singleton_class, value):
@@ -58,7 +59,7 @@ class Test:
 
         # The singleton set with "SetSingleton" or created automatically by "GetSingleton" is not
         # part of the stack
-        with pytest.raises(IndexError):
+        with pytest.raises(PushPopSingletonError):
             MySingleton.PopSingleton()
 
 
@@ -66,7 +67,7 @@ class Test:
 
         class MySingleton(Singleton):
 
-            def __init__(self, value):
+            def __init__(self, value=None):
                 self.value = value
 
         assert not MySingleton.HasSingleton()
@@ -83,6 +84,33 @@ class Test:
 
         with pytest.raises(SingletonNotSetError):
             MySingleton.ClearSingleton()
+
+
+    def testPushPop(self):
+
+        class MySingleton(Singleton):
+
+            def __init__(self, value=None):
+                self.value = value
+
+        MySingleton.PushSingleton()
+
+        assert MySingleton.GetStackCount() == 1
+
+        with pytest.raises(PushPopSingletonError):
+            MySingleton.ClearSingleton()
+
+        MySingleton.PushSingleton()
+        assert MySingleton.GetStackCount() == 2
+
+        MySingleton.PopSingleton()
+        assert MySingleton.GetStackCount() == 1
+
+        MySingleton.PopSingleton()
+        assert MySingleton.GetStackCount() == 0
+
+        with pytest.raises(PushPopSingletonError):
+            MySingleton.PopSingleton()
 
 
     def testSingletonOptimization(self):

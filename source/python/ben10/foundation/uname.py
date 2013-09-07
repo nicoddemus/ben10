@@ -18,11 +18,13 @@ def IsRunningOn64BitMachine():
         executable was compiled).
     '''
     platform_short_name = str(Platform.GetCurrentPlatform())
-    if platform_short_name == 'win64':
-        return True  # If python is compiled on 64 bits and running, this is a 64 bit machine.
 
+    # If python is compiled on 64 bits and running, this is a 64 bit machine.
+    if platform_short_name == 'win64':
+        return True
+
+    # Otherwise,
     elif platform_short_name == 'win32':
-        # Otherwise,
         import ctypes
         i = ctypes.c_int()
         process = ctypes.windll.kernel32.GetCurrentProcess()
@@ -30,8 +32,9 @@ def IsRunningOn64BitMachine():
         is64bit = (i.value != 0)
         return is64bit
 
+    # If python is compiled on 64 bits and running, this is a 64 bit machine.
     elif platform_short_name == 'redhat64':
-        return True  # If python is compiled on 64 bits and running, this is a 64 bit machine.
+        return True
 
     else:
         raise AssertionError('Unsupported for: %s' % (platform_short_name,))

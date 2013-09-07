@@ -4,7 +4,7 @@
         fabioz@esss.com.br
 '''
 
-#Custom cache for optimization purposes.
+# Custom cache for optimization purposes.
 __bases_cache = {}
 __hierarchy_cache = {}
 
@@ -42,7 +42,7 @@ def IsInstance(p_object, p_class_name):
     try:
         # obtain the type of the class; using only type() is not enough, because some built-in
         # types don't respond to type() correctly (vtk objects for instance always return the
-        # same type object)  
+        # same type object)
         class_ = p_object.__class__
     except AttributeError:
         # some built-in objects don't have a __class__ attribute, but return its type correctly
@@ -56,9 +56,9 @@ def IsInstance(p_object, p_class_name):
 #===================================================================================================
 def IsSubclass(p_class, p_class_name):
     '''
-        Like the built-in issubclass, but also accepts a class name as parameter.        
+    Like the built-in issubclass, but also accepts a class name as parameter.        
     '''
-    isins = isinstance #put it in locals
+    isins = isinstance  # put it in locals
 
     if isins(p_class_name, str):
         if p_class_name == p_class.__name__:

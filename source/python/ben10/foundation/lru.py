@@ -398,8 +398,10 @@ class _DictWithRemovalMemo(dict):
         return item
 
     def __delitem__(self, key):
-        item = dict.pop(self, key)
-        self.removed_items.append(item.obj)
+        '''
+        This method is never used since lru always use "pop" to perform removals.
+        '''
+        raise NotImplementedError()
 
 
 #===================================================================================================

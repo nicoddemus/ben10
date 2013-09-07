@@ -47,11 +47,13 @@ class Test:
 
 
     def testIsSubclass(self):
+        assert IsSubclass(_C, ('_C',))
         assert IsSubclass(_C, '_B')
         assert IsSubclass(_C, ('_B',))
         assert not IsSubclass(_C, ('_A',))
         assert IsSubclass(_C, ('_A', '_B'))
         assert not IsSubclass(_C, ('_A', '_D'))
+        assert not IsSubclass(_A, ('_C',))
 
 
     def test_klass__serial(self):
@@ -103,39 +105,40 @@ class Test:
         assert not IsInstance(B(), 'C')
 
 
-    def profileIsInstance(self):
-        '''
-            Results obtained (after optimizing):
-                Unnamed Timer: IsInstance str 0.131 secs
-                Unnamed Timer: IsInstance tuple 0.244 secs
-                Unnamed Timer: isinstance 0.041 secs
-                
-                With timeit implementation
-                IsInstance str 1.28110317487
-                IsInstance tuple 2.4118422541
-                isinstance 0.376544210033
-                
-                Changes: using IsSubclass
-                IsInstance str 1.52469482232
-                IsInstance tuple 2.62789000656
-                IsInstance classs 2.18690264229
-                isinstance 0.402243563057
-        '''
-        import timeit
-
-        setup = 'from __main__ import A, B, C, D, E;from coilib50.basic.klass import IsInstance'
-
-        timer = timeit.Timer(stmt='IsInstance(C(), "B")', setup=setup)
-        print 'IsInstance str', timer.timeit()
-
-        timer = timeit.Timer(stmt='IsInstance(C(), ("B", ))', setup=setup)
-        print 'IsInstance tuple', timer.timeit()
-
-        timer = timeit.Timer(stmt='IsInstance(C(), B)', setup=setup)
-        print 'IsInstance class', timer.timeit()
-
-        timer = timeit.Timer(stmt='isinstance(C(), B)', setup=setup)
-        print 'isinstance', timer.timeit()
+# TODO: Not executed on tests... might as well be commented. Create a test for it.
+#     def profileIsInstance(self):
+#         '''
+#             Results obtained (after optimizing):
+#                 Unnamed Timer: IsInstance str 0.131 secs
+#                 Unnamed Timer: IsInstance tuple 0.244 secs
+#                 Unnamed Timer: isinstance 0.041 secs
+#
+#                 With timeit implementation
+#                 IsInstance str 1.28110317487
+#                 IsInstance tuple 2.4118422541
+#                 isinstance 0.376544210033
+#
+#                 Changes: using IsSubclass
+#                 IsInstance str 1.52469482232
+#                 IsInstance tuple 2.62789000656
+#                 IsInstance classs 2.18690264229
+#                 isinstance 0.402243563057
+#         '''
+#         import timeit
+#
+#         setup = 'from __main__ import A, B, C, D, E;from coilib50.basic.klass import IsInstance'
+#
+#         timer = timeit.Timer(stmt='IsInstance(C(), "B")', setup=setup)
+#         print 'IsInstance str', timer.timeit()
+#
+#         timer = timeit.Timer(stmt='IsInstance(C(), ("B", ))', setup=setup)
+#         print 'IsInstance tuple', timer.timeit()
+#
+#         timer = timeit.Timer(stmt='IsInstance(C(), B)', setup=setup)
+#         print 'IsInstance class', timer.timeit()
+#
+#         timer = timeit.Timer(stmt='isinstance(C(), B)', setup=setup)
+#         print 'isinstance', timer.timeit()
 
 
     def testIsInstanceWithDateTime(self):
