@@ -1,5 +1,5 @@
-from copy import copy, deepcopy
 from ben10.foundation.immutable import AsImmutable
+from copy import copy, deepcopy
 import pytest
 
 

@@ -1,4 +1,4 @@
-from ben10.foundation.lru import LRU, LRUWithRemovalMemo, _Node, _DictWithRemovalMemo
+from ben10.foundation.lru import LRU, LRUWithRemovalMemo, _DictWithRemovalMemo, _Node
 import pytest
 
 

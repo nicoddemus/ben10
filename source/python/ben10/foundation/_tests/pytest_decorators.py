@@ -1,5 +1,5 @@
 from ben10.foundation import is_frozen
-from ben10.foundation.decorators import Deprecated, Implements, Override, Abstract
+from ben10.foundation.decorators import Abstract, Deprecated, Implements, Override
 import pytest
 import warnings
 

@@ -1,4 +1,5 @@
-from ben10.foundation.weak_ref import GetRealObj, GetWeakProxy, GetWeakRef, IsSame, IsWeakProxy, IsWeakRef, WeakList, WeakMethodProxy, WeakMethodRef, WeakSet
+from ben10.foundation.weak_ref import (GetRealObj, GetWeakProxy, GetWeakRef, IsSame, IsWeakProxy,
+    IsWeakRef, WeakList, WeakMethodProxy, WeakMethodRef, WeakSet)
 import pytest
 import sys
 import weakref

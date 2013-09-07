@@ -1,13 +1,15 @@
 from ben10.foundation.is_frozen import SetIsFrozen
-from ben10.foundation.types_ import AsList, Boolean, CheckBasicType, CheckEnum, CheckFormatString, CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType, IsNumber, MergeDictsRecursively, Null, OrderedIntersection, _IsNumber
+from ben10.foundation.types_ import (AsList, Boolean, CheckBasicType, CheckEnum, CheckFormatString,
+    CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType,
+    IsNumber, MergeDictsRecursively, Null, OrderedIntersection, _IsNumber)
 import copy
 import pytest
 
 
 
-#=======================================================================================================================
+#===================================================================================================
 # Test
-#=======================================================================================================================
+#===================================================================================================
 class Test:
 
     def testBoolean(self):

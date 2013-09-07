@@ -1,6 +1,8 @@
 from ben10.foundation import callback, interface
 from ben10.foundation.decorators import Implements
-from ben10.foundation.interface import AssertImplementsFullChecking, AttributeBasedCachedMethod, BadImplementationError, CachedMethod, IAdaptable, InterfaceError, InterfaceImplementorStub, LastResultCachedMethod, Method
+from ben10.foundation.interface import (AssertImplementsFullChecking, AttributeBasedCachedMethod,
+    BadImplementationError, CachedMethod, IAdaptable, InterfaceError, InterfaceImplementorStub,
+    LastResultCachedMethod, Method)
 from ben10.foundation.types_ import Null
 import pytest
 
