@@ -70,6 +70,10 @@ class Test:
 
 
     def testBasicType(self):
+
+        class NonBasic(object):
+            ''
+
         assert IsBasicType(1)
         assert IsBasicType(1L)
         assert not IsBasicType([1])
@@ -77,6 +81,13 @@ class Test:
         assert IsBasicType({1: [1]}, accept_compound=True)
         assert IsBasicType({1: set([1])}, accept_compound=True)
         assert IsBasicType(frozenset([1L, 2]), accept_compound=True)
+        assert IsBasicType([1, [2, [3]]], accept_compound=True)
+
+        assert IsBasicType(NonBasic(), accept_compound=True) == False
+        assert IsBasicType([NonBasic()], accept_compound=True) == False
+        assert IsBasicType([1, [NonBasic()]], accept_compound=True) == False
+
+        assert CheckBasicType(0) == True
         with pytest.raises(TypeError):
             CheckBasicType([0])
 
@@ -293,6 +304,8 @@ class Test:
         bravo = [2, 3, 4]
         assert Intersection(alpha, bravo) == set([2, 3])
 
+        assert Intersection() == set()
+
 
     def testOrderedIntersection(self):
         alpha = [1, 2, 3]
@@ -302,6 +315,10 @@ class Test:
         alpha = [3, 1, 2]
         bravo = [2, 3, 4]
         assert OrderedIntersection(alpha, bravo) == [3, 2]
+
+        alpha = [1, 2, 3]
+        bravo = [4, 5, 6]
+        assert OrderedIntersection(alpha, bravo) == []
 
 
     def testNull(self):

@@ -13,7 +13,6 @@ _FALSE_VALUES = ['FALSE', 'NO', '0']
 _TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES
 
 
-
 #=======================================================================================================================
 # Boolean
 #=======================================================================================================================
@@ -101,27 +100,27 @@ def CheckType(object_, type_, message=None):
     return result
 
 
-
-#=======================================================================================================================
-# Used for debugging who is calling CheckType too much.
-#=======================================================================================================================
-DEBUG_CALLS = False
-if DEBUG_CALLS:
-    _OriginalCheckType = CheckType
-    _called_from = {}
-
-    def CheckType(*args, **kwargs):  # @DuplicatedSignature
-        import sys
-        frame = sys._getframe()
-        code = frame.f_back.f_code
-        key = (code.co_filename, code.co_name)
-        v = _called_from.setdefault(key, 0)
-        _called_from[key] = v + 1
-        return _OriginalCheckType(*args, **kwargs)
-
-    def PrintCheckTypeStatistics():
-        for value, key in sorted((value, key) for key, value in _called_from.iteritems()):
-            print '%s: %s' % (value, key)
+# Either testit or removeit
+# #=======================================================================================================================
+# # Used for debugging who is calling CheckType too much.
+# #=======================================================================================================================
+# DEBUG_CALLS = False
+# if DEBUG_CALLS:
+#     _OriginalCheckType = CheckType
+#     _called_from = {}
+#
+#     def CheckType(*args, **kwargs):  # @DuplicatedSignature
+#         import sys
+#         frame = sys._getframe()
+#         code = frame.f_back.f_code
+#         key = (code.co_filename, code.co_name)
+#         v = _called_from.setdefault(key, 0)
+#         _called_from[key] = v + 1
+#         return _OriginalCheckType(*args, **kwargs)
+#
+#     def PrintCheckTypeStatistics():
+#         for value, key in sorted((value, key) for key, value in _called_from.iteritems()):
+#             print '%s: %s' % (value, key)
 
 
 
