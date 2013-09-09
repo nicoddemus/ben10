@@ -1,4 +1,5 @@
 from ben10.foundation.module_finder import ModuleFinder
+import pytest
 
 
 
@@ -15,31 +16,40 @@ class Test:
 
         # Basic test
         module_name = m.ModuleName(
-            'x:/coilib50/source/python/coilib50/something/file.py',
-            ['x:.coilib50.source.python']
+            'x:/ben10/source/python/ben10/something/file.py',
+            ['x:.ben10.source.python']
         )
-        assert module_name == 'coilib50.something.file'
+        assert module_name == 'ben10.something.file'
 
         # Test main
         module_name = m.ModuleName(
-            'x:/coilib50/source/python/main.py',
-            ['x:.coilib50.source.python']
+            'x:/ben10/source/python/main.py',
+            ['x:.ben10.source.python']
         )
         assert module_name == 'main'
 
         # Test with other stuff in path
         module_name = m.ModuleName(
-            'x:/coilib50/source/python/coilib50/something/file.py',
-            ['x:.coilib50.source.python', 'x:.project.source.python']
+            'x:/ben10/source/python/ben10/something/file.py',
+            ['x:.ben10.source.python', 'x:.project.source.python']
         )
-        assert module_name == 'coilib50.something.file'
+        assert module_name == 'ben10.something.file'
 
-        # Test with x:.coilib50 also in path (we should ignore paths that are not python packages)
+        # Test with x:.ben10 also in path (we should ignore paths that are not python packages)
         module_name = m.ModuleName(
-            'x:/coilib50/source/python/coilib50/something/file.py',
-            ['x:.coilib50', 'x:.coilib50.source.python']
+            'x:/ben10/source/python/ben10/something/file.py',
+            ['x:.ben10', 'x:.ben10.source.python']
         )
-        assert module_name == 'coilib50.something.file'
+        assert module_name == 'ben10.something.file'
+
+        m = ModuleFinder(python_path='/home/alpha;/home/bravo')
+        assert m.ModuleName('/home/alpha/file.py') == 'file'
+
+        with pytest.raises(RuntimeError):
+            module_name = m.ModuleName(
+                'x:/alpha/python/file.py',
+                ['x:.ben10.source.python']
+            )
 
 
     def testGetImports(self, embed_data):
@@ -57,3 +67,25 @@ class Test:
             'os',
             'sys'
         ]
+
+
+    def testSystemPath(self):
+        m_finder = ModuleFinder(python_path='/home/python/path;x:/project10/source/python')
+        assert m_finder.SystemPath() == [
+            '.home.python.path',
+            'x:.project10.source.python'
+            ]
+        assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
+            '.home.python.path',
+            'x:.project10.source.python'
+            ]
+
+        m_finder = ModuleFinder(
+            extend_sys_path=True,
+            python_path='/home/python/path;x:/project10/source/python'
+        )
+        assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
+            'x:.other10.source.python',
+            '.home.python.path',
+            'x:.project10.source.python',
+            ]

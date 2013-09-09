@@ -79,7 +79,7 @@ class ModuleFinder(object):
             return len(p_path_b) - len(p_path_a)
 
         if python_paths is None:
-            python_paths = self.SystemPath(self.python_path)
+            python_paths = self.SystemPath()
 
         result = self._FormatAsModuleName(os.path.splitext(filename)[0])
 
@@ -124,66 +124,74 @@ class ModuleFinder(object):
         return sorted(finder.modules.keys() + finder.badmodules.keys())
 
 
-    @classmethod
-    def GetEsssImports(cls, path):
+# TODO: This is no longer necessary on ben10 since it was used to check dependencies and we now
+#       use snakefood and aa project.module_deps.
+#     @classmethod
+#     def GetEsssImports(cls, path):
+#         '''
+#         List ESSS project python imports found in a path.
+#
+#         :param str path:
+#             A path to be searched recursively for imports
+#
+#         :rtype: set(str)
+#         :returns:
+#             A set containing project names for all ESSS imports found in the given path
+#
+#             e.g. set(['coilib50', 'sharedscripts10'])
+#
+#
+#         TODO: 0034731: Move GetEsssImports from coilib50 to sharedscripts10
+#         '''
+#
+#         def IsEsssProject(module_path):
+#             '''
+#             Identifies if the given module_path represents a ESSS project (or application).
+#
+#             Modules are recognized as ESSS projects if they match the regular expression
+#                 [a-zA-Z]+\d\d
+#
+#                 Which means a sequence of letters followed by two numbers.
+#
+#             :param str module_path:
+#                 A module path in import format.
+#                 Ex.:
+#                   coilib50.basic
+#
+#             :rtype: str | None
+#             :returns:
+#                 Returns the first part of the module if it is a esss module and None otherwise.
+#             '''
+#             import re
+#             m = re.match('([a-zA-Z]+\d\d)\.', module_path)
+#             if m is None:
+#                 return None
+#             return m.group(1)
+#
+#         python_dir = path[:path.find('python') + len('python')]
+#
+#         # List all modules imported in coilib50's python dir
+#         all_modules = cls.GetImports(python_dir, out_filters=[])
+#
+#         # Filter modules that are ESSS projects
+#         result = set()
+#         for module in all_modules:
+#             m = IsEsssProject(module)
+#             if m is not None:
+#                 result.add(m)
+#         return result
+
+
+    def SystemPath(self, directories=()):
         '''
-        List ESSS project python imports found in a path.
+        Returns the $PYTHONPATH in "module_name" format.
         
-        :param str path:
-            A path to be searched recursively for imports
-        
-        :rtype: set(str)
-        :returns:
-            A set containing project names for all ESSS imports found in the given path
-            
-            e.g. set(['coilib50', 'sharedscripts10'])
-            
-            
-        TODO: 0034731: Move GetEsssImports from coilib50 to sharedscripts10
-        '''
+        Actually, returns the values found self.python_path, that may, or may not be $PYTHONPATH
+        depending on how this class was constructed.
 
-        def IsEsssProject(module_path):
-            '''
-            Identifies if the given module_path represents a ESSS project (or application).
-            
-            Modules are recognized as ESSS projects if they match the regular expression
-                [a-zA-Z]+\d\d
-                
-                Which means a sequence of letters followed by two numbers.
-            
-            :param str module_path:
-                A module path in import format.
-                Ex.:
-                  coilib50.basic
-            
-            :rtype: str | None
-            :returns:
-                Returns the first part of the module if it is a esss module and None otherwise.
-            '''
-            import re
-            m = re.match('([a-zA-Z]+\d\d)\.', module_path)
-            if m is None:
-                return None
-            return m.group(1)
-
-        python_dir = path[:path.find('python') + len('python')]
-
-        # List all modules imported in coilib50's python dir
-        all_modules = cls.GetImports(python_dir, out_filters=[])
-
-        # Filter modules that are ESSS projects
-        result = set()
-        for module in all_modules:
-            m = IsEsssProject(module)
-            if m is not None:
-                result.add(m)
-        return result
-
-
-    def SystemPath(self, directories):
-        '''
-        Returns the system path in "module_name" format.
-        * Includes directories if extend_sys_path option is set (which is not the default).
+        :param list(str) directories:
+            Included in the result IF self.extend_sys_path option is set (which is not the
+            default).
         '''
         result = [self._FormatAsModuleName(i, True) for i in self.python_path]
         if self.extend_sys_path:
