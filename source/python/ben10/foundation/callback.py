@@ -293,8 +293,6 @@ class Callback(object):
             else:
                 return f == func_func
 
-        raise AssertionError('Should not get here!')
-
 
     def Unregister(self, func):
         '''
@@ -442,9 +440,11 @@ class _CallbackWrapper(object):
 
     def __call__(self, sender, *args, **kwargs):
         c = self.weak_method_callback()
-        if c is None:
-            raise ReferenceError('This should never happen: The sender already died, so, '\
-                                 'how can this method still be called?')
+
+        assert c is not None, (
+            'This should never happen: '
+            'The sender already died, so, how can this method still be called?'
+        )
         c(sender(), *args, **kwargs)
 
 
@@ -511,16 +511,12 @@ def _CreateBeforeOrAfter(method, callback, sender_as_parameter, before=True):
     extra_args = []
 
     if sender_as_parameter:
-        try:
-            im_self = original_method.im_self
-        except AttributeError:
-            pass
-        else:
-            extra_args.append(weakref.ref(im_self))
+        im_self = original_method.im_self
+        extra_args.append(weakref.ref(im_self))
 
-            # this is not garbage collected directly when added to the wrapper (which will create a WeakMethodRef to it)
-            # because it's not a real method, so, WeakMethodRef will actually maintain a strong reference to it.
-            callback = _CallbackWrapper(WeakMethodRef(callback))
+        # this is not garbage collected directly when added to the wrapper (which will create a WeakMethodRef to it)
+        # because it's not a real method, so, WeakMethodRef will actually maintain a strong reference to it.
+        callback = _CallbackWrapper(WeakMethodRef(callback))
 
     if before:
         wrapper.AppendBefore(callback, extra_args)
@@ -572,25 +568,20 @@ class _MethodWrapper(Method):  # It needs to be a subclass of Method for interfa
 
         return result
 
-    def AppendBefore(self, callback, extra_args=None, handle_errors=True):
+    def AppendBefore(self, callback, extra_args, handle_errors=True):
         '''
             Append the given callbacks in the list of callback to be executed BEFORE the method.
         '''
-        if extra_args is None:
-            extra_args = []
-
         assert isinstance(extra_args, list)
         if self._before is None:
             self._before = Callback(handle_errors=handle_errors)
         self._before.Register(callback, extra_args)
 
 
-    def AppendAfter(self, callback, extra_args=None, handle_errors=True):
+    def AppendAfter(self, callback, extra_args, handle_errors=True):
         '''
-            Append the given callbacks in the list of callback to be executed AFTER the method.
+        Append the given callbacks in the list of callback to be executed AFTER the method.
         '''
-        if extra_args is None:
-            extra_args = []
 
         assert isinstance(extra_args, list)
         if self._after is None:
@@ -600,7 +591,7 @@ class _MethodWrapper(Method):  # It needs to be a subclass of Method for interfa
 
     def Remove(self, callback):
         '''
-            Remove the given callback from both the BEFORE and AFTER callbacks lists.
+        Remove the given callback from both the BEFORE and AFTER callbacks lists.
         '''
         result = False
 
@@ -635,8 +626,9 @@ def _GetWrapped(method):
 # WrapForCallback
 #===================================================================================================
 def WrapForCallback(method):
-    '''Generates a wrapper for the given method, or returns the method itself
-    if it is already a wrapper.
+    '''
+    Generates a wrapper for the given method, or returns the method itself if it is already a
+    wrapper.
     '''
     wrapped = _GetWrapped(method)
     if wrapped is not None:
@@ -652,7 +644,6 @@ def WrapForCallback(method):
         if method.im_self is None:
             if wrapped._method._obj is None:
                 return wrapped
-
 
     wrapper = _MethodWrapper(method)
     if method.im_self is None:

@@ -1,6 +1,6 @@
 from ben10.foundation import callback, handle_exception
-from ben10.foundation.callback import (After, Callbacks, ErrorNotHandledInCallback,
-    PriorityCallback, Remove, _CallbackWrapper)
+from ben10.foundation.callback import After, Callbacks, ErrorNotHandledInCallback, PriorityCallback, \
+    Remove, _CallbackWrapper, Before
 from ben10.foundation.types_ import Null
 from ben10.foundation.weak_ref import WeakMethodRef
 import pytest
@@ -247,25 +247,57 @@ class Test(object):
         def f2(*args):
             'Never called!'
 
+        my_callback = callback.Callback()
+        assert len(my_callback) == 0
+        my_callback.Register(f1)
+        assert len(my_callback) == 1
 
-        c = callback.Callback()
-        c.Register(f1)
-
-        c(1, 2)
+        my_callback(1, 2)
 
         assert self.args[0] == (1, 2)
 
-        c.Unregister(f1)
+        my_callback.Unregister(f1)
         self.args[0] = None
-        c(10, 20)
+        my_callback(10, 20)
         assert self.args[0] is None
 
         def foo(): pass
-        # self.assertNotRaises(FunctionNotRegisteredError
-        c.Unregister(foo)
+        my_callback.Unregister(foo)  # Not raises
 
 
-    def test_extra_args(self):
+    def testBeforeAfter(self):
+
+        callback_args = []
+
+        def AfterCallback():
+            callback_args.append('after')
+
+        def BeforeCallback():
+            callback_args.append('before')
+
+        class MyClass:
+
+            def Hooked(self):
+                callback_args.append('hooked')
+
+        my_obj = MyClass()
+
+        callback_args = []
+        my_obj.Hooked()
+        assert callback_args == ['hooked']
+
+        callback_args = []
+        After(my_obj.Hooked, AfterCallback)
+        my_obj.Hooked()
+        assert callback_args == ['hooked', 'after']
+
+        callback_args = []
+        Before(my_obj.Hooked, BeforeCallback)
+        my_obj.Hooked()
+        assert callback_args == ['before', 'hooked', 'after']
+
+
+    def testExtraArgs(self):
         '''
             Tests the extra-args parameter in Callback.Register method.
         '''
@@ -295,7 +327,7 @@ class Test(object):
         assert self.zulu_calls == [(1, 2, 'a'), (1, 2, 'a', 'b', 'c'), (1, 2, 'a'), (9, 'a'), ]
 
 
-    def test_sender_as_parameter(self):
+    def testSenderAsParameter(self):
         self.zulu_calls = []
 
         def zulu_one(*args):
@@ -333,7 +365,6 @@ class Test(object):
         assert self.zulu_calls == []
         self.a.foo(0)
         assert self.zulu_calls == [(1, (self.a, 0)), (2, (0,))]
-
 
 
     def testContains(self):
@@ -486,19 +517,25 @@ class Test(object):
 
 
     def testCallbacks(self):
-        self.called = 0
+        self.called = []
         def bar(*args):
-            self.called += 1
+            self.called.append(args)
 
         callbacks = Callbacks()
         callbacks.Before(self.a.foo, bar)
         callbacks.After(self.a.foo, bar)
 
         self.a.foo(1)
-        assert 2 == self.called
+        assert self.called == [
+            (1,),
+            (1,),
+        ]
         callbacks.RemoveAll()
         self.a.foo(1)
-        assert 2 == self.called
+        assert self.called == [
+            (1,),
+            (1,),
+        ]
 
 
     def testAfterRemove(self):
@@ -714,11 +751,16 @@ class Test(object):
         callback.Before(c.Method, BeforeMethod)
         callback.After(c.Method, AfterMethod)
 
-        handled_errors = []
-        def HandleErrorOnCallback(func, *args, **kwargs):
-            handled_errors.append(func)
+        # handled_errors = []
+        # def HandleErrorOnCallback(func, *args, **kwargs):
+        #    handled_errors.append(func)
+#
+        # monkeypatch.setattr(callback, 'HandleErrorOnCallback', HandleErrorOnCallback)
 
-        monkeypatch.setattr(callback, 'HandleErrorOnCallback', HandleErrorOnCallback)
+        handled_errors = []
+        def HandleException(func, *args, **kwargs):
+            handled_errors.append(func)
+        monkeypatch.setattr(handle_exception, 'HandleException', HandleException)
 
         assert c.Method(10) == 20
         assert self.before_called == 1
@@ -729,6 +771,14 @@ class Test(object):
         assert self.before_called == 2
         assert self.after_called == 2
         assert len(handled_errors) == 4
+
+        # Testing with a non-function.
+        class Alpha:
+            pass
+
+        callback.After(c.Method, Alpha())
+        assert c.Method(20) == 40
+        assert len(handled_errors) == 7
 
 
     # TODO:
@@ -858,6 +908,19 @@ class Test(object):
         assert vals == [('call_instance', True), ('call_class', True)]
 
 
+    def testRemove(self):
+
+        class Stub(object):
+            def Method(self, *args, **kwargs):
+                pass
+
+        def Callback(instance, val):
+            ''
+
+        s = Stub()
+        assert Remove(s.Method, Callback) == False
+
+
     def testOnClassAndOnInstance2(self):
 
         class Stub(object):
@@ -882,8 +945,8 @@ class Test(object):
         After(Stub.Method, OnCallClass)  # (2)
         s.Method(1)
         assert vals == [('call_instance', 1), ]
-        Remove(s.Method, OnCallInstance)
-        Remove(Stub.Method, OnCallClass)
+        assert Remove(s.Method, OnCallInstance) == True
+        assert Remove(Stub.Method, OnCallClass) == True
 
         vals = []
         s = Stub()
@@ -963,8 +1026,8 @@ class Test(object):
 
         called = []
 
-        def OnCall1():
-            called.append(1)
+        def OnCall1(a, b, c):
+            called.append((a, b, c))
 
         def OnCall2():
             called.append(2)
@@ -978,11 +1041,11 @@ class Test(object):
         def OnCall5():
             called.append(5)
 
-        priority_callback.Register(OnCall1, priority=2)
+        priority_callback.Register(OnCall1, (11, 12, 13), priority=2)
         priority_callback.Register(OnCall2, priority=2)
         priority_callback.Register(OnCall3, priority=1)
         priority_callback.Register(OnCall4, priority=3)
         priority_callback.Register(OnCall5, priority=2)
 
         priority_callback()
-        assert called == [3, 1, 2, 5, 4]
+        assert called == [3, (11, 12, 13), 2, 5, 4]
