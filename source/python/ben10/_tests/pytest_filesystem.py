@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from ben10.foundation.filesystem import (AppendToFile, CanonicalPath, CheckForUpdate, CheckIsDir,
+from ben10.filesystem import (AppendToFile, CanonicalPath, CheckForUpdate, CheckIsDir,
     CheckIsFile, CopyDirectory, CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile,
     CreateMD5, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError, DirectoryNotFoundError,
     EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError,

@@ -1,9 +1,9 @@
-from ben10.foundation import callback, interface
-from ben10.foundation.decorators import Implements
-from ben10.foundation.interface import (AssertImplementsFullChecking, AttributeBasedCachedMethod,
-    BadImplementationError, CachedMethod, IAdaptable, InterfaceError, InterfaceImplementorStub,
-    LastResultCachedMethod, Method)
+from ben10.foundation import callback, decorators
 from ben10.foundation.types_ import Null
+from ben10.interface import (AssertImplementsFullChecking, AttributeBasedCachedMethod,
+    BadImplementationError, CachedMethod, IAdaptable, InterfaceError, InterfaceImplementorStub,
+    LastResultCachedMethod, Method, Interface, IsImplementationFullChecking, GetImplementedInterfaces,
+    Attribute, IsInterfaceDeclared, AssertDeclaresInterface, ReadOnlyAttribute, Implements)
 import pytest
 
 
@@ -11,15 +11,15 @@ import pytest
 #===================================================================================================
 # Test Classes
 #===================================================================================================
-class _InterfM1(interface.Interface):
+class _InterfM1(Interface):
     def m1(self):
         ''
 
-class _InterfM2(interface.Interface):
+class _InterfM2(Interface):
     def m2(self):
         ''
 
-class _InterfM3(interface.Interface):
+class _InterfM3(Interface):
     def m3(self, arg1, arg2):
         ''
 
@@ -66,7 +66,7 @@ def _cached_obj():
 class Test:
 
     def testBasics(self):
-        class I(interface.Interface):
+        class I(Interface):
 
             def foo(self, a, b=None):
                 ''
@@ -75,7 +75,7 @@ class Test:
                 ''
 
         class C(object):
-            interface.Implements(I)
+            Implements(I)
 
             def foo(self, a, b=None):
                 ''
@@ -96,22 +96,22 @@ class Test:
         class D(object):
             pass
 
-        assert interface.IsImplementationFullChecking(I(C()), I)  # OK
+        assert IsImplementationFullChecking(I(C()), I)  # OK
 
-        assert interface.IsImplementationFullChecking(C, I)  # OK
-        assert interface.IsImplementationFullChecking(C2, I)  # OK
-        assert not interface.IsImplementationFullChecking(D, I)  # nope
+        assert IsImplementationFullChecking(C, I)  # OK
+        assert IsImplementationFullChecking(C2, I)  # OK
+        assert not IsImplementationFullChecking(D, I)  # nope
 
         assert I(C) is C
         assert I(C2) is C2
-        with pytest.raises(interface.InterfaceError):
+        with pytest.raises(InterfaceError):
             I()
-        with pytest.raises(interface.BadImplementationError):
+        with pytest.raises(BadImplementationError):
             I(D)
 
 
     def testMissingMethod(self):
-        class I(interface.Interface):
+        class I(Interface):
 
             def foo(self, a, b=None):
                 ''
@@ -119,53 +119,53 @@ class Test:
 
         def TestMissingMethod():
             class C(object):
-                interface.Implements(I)
+                Implements(I)
 
         with pytest.raises(BadImplementationError):
             TestMissingMethod()
 
         def TestMissingSignature():
             class C(object):
-                interface.Implements(I)
+                Implements(I)
 
                 def foo(self, a):
                     ''
 
 
-        with pytest.raises(interface.BadImplementationError):
+        with pytest.raises(BadImplementationError):
             TestMissingSignature()
 
         def TestMissingSignatureOptional():
             class C(object):
-                interface.Implements(I)
+                Implements(I)
 
                 def foo(self, a, b):
                     ''
 
 
-        with pytest.raises(interface.BadImplementationError):
+        with pytest.raises(BadImplementationError):
             TestMissingSignatureOptional()
 
 
         def TestWrongParameterName():
             class C(object):
-                interface.Implements(I)
+                Implements(I)
 
                 def foo(self, a, c):
                     ''
 
-        with pytest.raises(interface.BadImplementationError):
+        with pytest.raises(BadImplementationError):
             TestWrongParameterName()
 
 
     def testSubclasses(self):
-        class I(interface.Interface):
+        class I(Interface):
 
             def foo(self, a, b=None):
                 ''
 
         class C(object):
-            interface.Implements(I)
+            Implements(I)
             def foo(self, a, b=None):
                 ''
 
@@ -174,35 +174,35 @@ class Test:
 
 
     def testSubclasses2(self):
-        class I(interface.Interface):
+        class I(Interface):
             def foo(self):
                 ''
 
-        class I2(interface.Interface):
+        class I2(Interface):
             def bar(self):
                 ''
 
         class C(object):
-            interface.Implements(I)
+            Implements(I)
             def foo(self):
                 ''
 
         class D(C):
-            interface.Implements(I2)
+            Implements(I2)
             def bar(self):
                 ''
 
         class E(D):
             pass
 
-        assert interface.GetImplementedInterfaces(C) == set([I])
-        assert interface.GetImplementedInterfaces(D) == set([I2, I])
-        assert interface.GetImplementedInterfaces(E) == set([I2, I])
+        assert GetImplementedInterfaces(C) == set([I])
+        assert GetImplementedInterfaces(D) == set([I2, I])
+        assert GetImplementedInterfaces(E) == set([I2, I])
 
 
 
     def testNoName(self):
-        class I(interface.Interface):
+        class I(Interface):
             def MyMethod(self, foo):
                 ''
 
@@ -211,26 +211,26 @@ class Test:
                 ''
 
         with pytest.raises(BadImplementationError):
-            interface.AssertImplementsFullChecking(C(), I)
+            AssertImplementsFullChecking(C(), I)
 
     def testAttributes(self):
 
-        class IZoo(interface.Interface):
-            zoo = interface.Attribute(int)
+        class IZoo(Interface):
+            zoo = Attribute(int)
 
-        class I(interface.Interface):
+        class I(Interface):
 
-            foo = interface.Attribute(int)
-            bar = interface.Attribute(str)
-            foobar = interface.Attribute(int, None)
-            a_zoo = interface.Attribute(IZoo)
+            foo = Attribute(int)
+            bar = Attribute(str)
+            foobar = Attribute(int, None)
+            a_zoo = Attribute(IZoo)
 
 
         class Zoo(object):
-            interface.Implements(IZoo)
+            Implements(IZoo)
 
         class C(object):
-            interface.Implements(I)
+            Implements(I)
 
         c1 = C()
         c1.foo = 10
@@ -243,58 +243,58 @@ class Test:
 
         c2 = C()
 
-        assert not interface.IsImplementationFullChecking(C, I)  # only works with instances
-        assert interface.IsImplementationFullChecking(c1, I)  # OK, has attributes
-        assert not interface.IsImplementationFullChecking(c2, I)  # not all the attributes necessary
+        assert not IsImplementationFullChecking(C, I)  # only works with instances
+        assert IsImplementationFullChecking(c1, I)  # OK, has attributes
+        assert not IsImplementationFullChecking(c2, I)  # not all the attributes necessary
 
         # must not be true if including an object that doesn't implement IZoo interface expected for
         # a_zoo attribute
         c1.a_zoo = 'wrong'
-        assert not interface.IsImplementationFullChecking(c1, I)  # failed, invalid attr type
+        assert not IsImplementationFullChecking(c1, I)  # failed, invalid attr type
         c1.a_zoo = a_zoo
 
         # test if we can set foobar to None
         c1.foobar = None
-        assert interface.IsImplementationFullChecking(c1, I)  # OK
+        assert IsImplementationFullChecking(c1, I)  # OK
 
         c1.foobar = 'hello'
-        assert not interface.IsImplementationFullChecking(c1, I)  # failed, invalid attr type
+        assert not IsImplementationFullChecking(c1, I)  # failed, invalid attr type
 
 
 
 
     def testPassNoneInAssertImplementsFullChecking(self):
         with pytest.raises(BadImplementationError):
-            interface.AssertImplementsFullChecking(None, _InterfM1)
+            AssertImplementsFullChecking(None, _InterfM1)
         with pytest.raises(BadImplementationError):
-            interface.AssertImplementsFullChecking(10, _InterfM1)
+            AssertImplementsFullChecking(10, _InterfM1)
 
     def testOldStyle(self):
         class Old:
-            interface.Implements(_InterfM1, old_style=True)
+            Implements(_InterfM1, old_style=True)
 
             def m1(self):
                 ''
 
         class Old2:
-            interface.Implements(_InterfM1, old_style=True)
+            Implements(_InterfM1, old_style=True)
 
 
         # self.assertNotRaises(BadImplementationError,
-        interface.AssertImplementsFullChecking(Old, _InterfM1)
+        AssertImplementsFullChecking(Old, _InterfM1)
         with pytest.raises(BadImplementationError):
-            interface.AssertImplementsFullChecking(Old2, _InterfM1)
+            AssertImplementsFullChecking(Old2, _InterfM1)
 
 
 
     def testNoInitCheck(self):
         class NoCheck(object):
-            interface.Implements(_InterfM1, no_init_check=True)
+            Implements(_InterfM1, no_init_check=True)
 
 
         no_check = NoCheck()
         with pytest.raises(BadImplementationError):
-            interface.AssertImplementsFullChecking(no_check, _InterfM1)
+            AssertImplementsFullChecking(no_check, _InterfM1)
 
 
     def testCallbackAndInterfaces(self):
@@ -302,7 +302,7 @@ class Test:
             Tests if the interface "AssertImplements" works with "callbacked" methods.
         '''
         class My(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
 
             def m1(self):
                 ''
@@ -311,19 +311,19 @@ class Test:
             ''
 
         o = My()
-        interface.AssertImplementsFullChecking(o, _InterfM1)
+        AssertImplementsFullChecking(o, _InterfM1)
 
         callback.After(o.m1, MyCallback)
 
-        interface.AssertImplementsFullChecking(o, _InterfM1)
+        AssertImplementsFullChecking(o, _InterfM1)
 
-        # self.assertNotRaises( interface.BadImplementationError,
-        interface.AssertImplementsFullChecking(o, _InterfM1)
+        # self.assertNotRaises( BadImplementationError,
+        AssertImplementsFullChecking(o, _InterfM1)
 
 
     def testInterfaceStub(self):
         class My(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
 
             def m1(self):
                 return 'm1'
@@ -338,13 +338,13 @@ class Test:
         with pytest.raises(AttributeError):
             getattr(m1, 'm2')
 
-        # self.assertNotRaises(interface.BadImplementationError,
+        # self.assertNotRaises(BadImplementationError,
         _InterfM1(m1)
 
 
     def testHasDeclaredInterface(self):
         class My(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
 
             def m1(self):
                 ''
@@ -356,21 +356,21 @@ class Test:
 
         m1 = My()
         m2 = My2()
-        assert interface.IsImplementationFullChecking(m1, _InterfM1)
-        assert interface.IsImplementationFullChecking(m2, _InterfM1)
+        assert IsImplementationFullChecking(m1, _InterfM1)
+        assert IsImplementationFullChecking(m2, _InterfM1)
 
-        assert interface.IsInterfaceDeclared(My, _InterfM1)
-        assert interface.IsInterfaceDeclared(m1, _InterfM1)
-        assert not interface.IsInterfaceDeclared(m2, _InterfM1)
+        assert IsInterfaceDeclared(My, _InterfM1)
+        assert IsInterfaceDeclared(m1, _InterfM1)
+        assert not IsInterfaceDeclared(m2, _InterfM1)
 
 
         m1Stub = _InterfM1(m1)
-        assert interface.IsInterfaceDeclared(m1Stub, _InterfM1)
+        assert IsInterfaceDeclared(m1Stub, _InterfM1)
         m1Stub2 = _InterfM1(_InterfM1(m1Stub))
-        assert interface.IsInterfaceDeclared(m1Stub2, _InterfM1)
+        assert IsInterfaceDeclared(m1Stub2, _InterfM1)
 
-        assert interface.IsInterfaceDeclared(m1Stub2, set([_InterfM1, _InterfM2]))
-        assert not interface.IsInterfaceDeclared(m1Stub2, set([_InterfM2]))
+        assert IsInterfaceDeclared(m1Stub2, set([_InterfM1, _InterfM2]))
+        assert not IsInterfaceDeclared(m1Stub2, set([_InterfM2]))
 
 
     def testIsInterfaceDeclaredWithSubclasses(self):
@@ -382,19 +382,19 @@ class Test:
         '''
 
         class My2(object):
-            interface.Implements(_InterfM2)
+            Implements(_InterfM2)
 
             def m2(self):
                 ''
 
         class My3(object):
-            interface.Implements(_InterfM3)
+            Implements(_InterfM3)
 
             def m3(self, arg1, arg2):
                 ''
 
         class My4(object):
-            interface.Implements(_InterfM4)
+            Implements(_InterfM4)
 
             def m3(self, arg1, arg2):
                 ''
@@ -407,46 +407,46 @@ class Test:
         m4 = My4()
 
         # My2
-        assert not interface.IsInterfaceDeclared(m2, _InterfM3)
+        assert not IsInterfaceDeclared(m2, _InterfM3)
 
         # My3
-        assert interface.IsInterfaceDeclared(m3, _InterfM3)
-        assert not interface.IsInterfaceDeclared(m3, _InterfM4)
+        assert IsInterfaceDeclared(m3, _InterfM3)
+        assert not IsInterfaceDeclared(m3, _InterfM4)
 
         # My4
-        assert interface.IsInterfaceDeclared(m4, _InterfM4)
-        assert interface.IsInterfaceDeclared(m4, _InterfM3)
-        assert interface.IsInterfaceDeclared(m4, [_InterfM3, _InterfM4])
+        assert IsInterfaceDeclared(m4, _InterfM4)
+        assert IsInterfaceDeclared(m4, _InterfM3)
+        assert IsInterfaceDeclared(m4, [_InterfM3, _InterfM4])
 
         # If any of the given interfaces is an accepted subclass, return True
-        assert interface.IsInterfaceDeclared(m4, [_InterfM3, _InterfM2])
+        assert IsInterfaceDeclared(m4, [_InterfM3, _InterfM2])
 
         # When wrapped in an m4 interface it should still accept m3 as a declared interface
         wrapped_intef_m4 = _InterfM4(m4)
-        assert interface.IsInterfaceDeclared(wrapped_intef_m4, _InterfM4)
-        assert interface.IsInterfaceDeclared(wrapped_intef_m4, _InterfM3)
+        assert IsInterfaceDeclared(wrapped_intef_m4, _InterfM4)
+        assert IsInterfaceDeclared(wrapped_intef_m4, _InterfM3)
 
 
     def testIsInterfaceDeclaredWithBuiltInObjects(self):
         my_number = 10
-        assert not interface.IsInterfaceDeclared(my_number, _InterfM1)
+        assert not IsInterfaceDeclared(my_number, _InterfM1)
 
 
     def testClassImplementMethod(self):
         '''
             Tests replacing a method that implements an interface with a class.
             
-            The class must be derived from "interface.Method" in order to be accepted as a valid
+            The class must be derived from "Method" in order to be accepted as a valid
             implementation.
         '''
 
         class My(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
 
             def m1(self):
                 ''
 
-        class MyRightMethod(interface.Method):
+        class MyRightMethod(Method):
 
             def __call__(self):
                 ''
@@ -458,52 +458,52 @@ class Test:
 
         m = My()
         m.m1 = MyWrongMethod()
-        assert not interface.IsImplementationFullChecking(m, _InterfM1)
+        assert not IsImplementationFullChecking(m, _InterfM1)
 
         m.m1 = MyRightMethod()
-        assert interface.IsImplementationFullChecking(m, _InterfM1)
+        assert IsImplementationFullChecking(m, _InterfM1)
 
     def testGetImplementedInterfaces(self):
 
         class A(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
             def m1(self):
                 ''
 
         class B(A):
             pass
 
-        assert len(interface.GetImplementedInterfaces(B())) == 1
+        assert len(GetImplementedInterfaces(B())) == 1
 
     def testGetImplementedInterfaces2(self):
 
         class A(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
             def m1(self):
                 ''
 
         class B(A):
-            interface.Implements(_InterfM2)
+            Implements(_InterfM2)
             def m2(self):
                 ''
 
-        assert len(interface.GetImplementedInterfaces(B())) == 2
+        assert len(GetImplementedInterfaces(B())) == 2
         with pytest.raises(AssertionError):
-            interface.AssertDeclaresInterface(A(), _InterfM2)
-        interface.AssertDeclaresInterface(B(), _InterfM2)
+            AssertDeclaresInterface(A(), _InterfM2)
+        AssertDeclaresInterface(B(), _InterfM2)
 
 
     def testAdaptableInterface(self):
 
         class A(object):
-            interface.Implements(IAdaptable)
+            Implements(IAdaptable)
 
             def GetAdapter(self, interface_class):
                 if interface_class == _InterfM1:
                     return B()
 
         class B(object):
-            interface.Implements(_InterfM1)
+            Implements(_InterfM1)
 
             def m1(self):
                 pass
@@ -519,12 +519,12 @@ class Test:
 
     def testNull(self):
         # assert not raises
-        interface.AssertImplementsFullChecking(Null(), _InterfM2)
+        AssertImplementsFullChecking(Null(), _InterfM2)
 
 
     def testSetItem(self):
 
-        class InterfSetItem(interface.Interface):
+        class InterfSetItem(Interface):
             def __setitem__(self, id, subject):
                 ''
 
@@ -532,7 +532,7 @@ class Test:
                 ''
 
         class A(object):
-            interface.Implements(InterfSetItem)
+            Implements(InterfSetItem)
 
             def __setitem__(self, id, subject):
                 self.set = (id, subject)
@@ -560,7 +560,7 @@ class Test:
 
         m1 = M1()
         m1.m1()
-        interface.AssertImplementsFullChecking(m1, _InterfM1)
+        AssertImplementsFullChecking(m1, _InterfM1)
 
     def testImplementorWithAny(self):
 
@@ -580,16 +580,16 @@ class Test:
         with pytest.raises(InterfaceError):
             AssertImplementsFullChecking(M3(), M3)
         with pytest.raises(InterfaceError):
-            interface.IsInterfaceDeclared(M3(), M3)
+            IsInterfaceDeclared(M3(), M3)
 
 
     def testReadOnlyAttribute(self):
-        class IZoo(interface.Interface):
-            zoo = interface.ReadOnlyAttribute(int)
+        class IZoo(Interface):
+            zoo = ReadOnlyAttribute(int)
 
 
         class Zoo(object):
-            interface.Implements(IZoo)
+            Implements(IZoo)
 
             def __init__(self, value):
                 self.zoo = value
@@ -607,12 +607,12 @@ class Test:
         This caused missing read-only attributes to go unnoticed and sometimes false positives, 
         recognizing objects as valid implementations when in fact they weren't.
         '''
-        class IZoo(interface.Interface):
-            zoo = interface.ReadOnlyAttribute(int)
+        class IZoo(Interface):
+            zoo = ReadOnlyAttribute(int)
 
         # Doesn't have necessary 'zoo' attribute, should raise a bad implementation error
         class FlawedZoo(object):
-            interface.Implements(IZoo)
+            Implements(IZoo)
 
             def __init__(self, value):
                 pass
@@ -626,14 +626,14 @@ class Test:
 #     def testScalarAttribute(self):
 #         from coilib50.units import Scalar
 #
-#         class IFluid(interface.Interface):
-#             plastic_viscosity = interface.ScalarAttribute('dynamic viscosity')
-#             yield_point = interface.ScalarAttribute('pressure')
-#             density = interface.ScalarAttribute('density')
+#         class IFluid(Interface):
+#             plastic_viscosity = ScalarAttribute('dynamic viscosity')
+#             yield_point = ScalarAttribute('pressure')
+#             density = ScalarAttribute('density')
 #
 #
 #         class MyFluid(object):
-#             interface.Implements(IFluid)
+#             Implements(IFluid)
 #
 #             def __init__(self, plastic_viscosity, yield_point, density):
 #                 self.plastic_viscosity = Scalar('dynamic viscosity', *plastic_viscosity)
@@ -649,7 +649,7 @@ class Test:
 #         AssertImplementsFullChecking(fluid, IFluid)
 #
 #         class OtherFluid(object):
-#             interface.Implements(IFluid)
+#             Implements(IFluid)
 #
 #             def __init__(self, plastic_viscosity, yield_point, density):
 #                 self.plastic_viscosity = Scalar('kinematic viscosity', *plastic_viscosity)  # Oops
@@ -680,14 +680,14 @@ class Test:
 #         from coilib50.subject import BaseSubject
 #         from coilib50.basic.xfield import XFactory
 #
-#         class IFluid(interface.Interface):
-#             plastic_viscosity = interface.ScalarAttribute('dynamic viscosity')
-#             yield_point = interface.ScalarAttribute('pressure')
-#             density = interface.ScalarAttribute('density')
+#         class IFluid(Interface):
+#             plastic_viscosity = ScalarAttribute('dynamic viscosity')
+#             yield_point = ScalarAttribute('pressure')
+#             density = ScalarAttribute('density')
 #
 #
 #         class MyFluid(BaseSubject):
-#             interface.Implements(IFluid)
+#             Implements(IFluid)
 #
 #             BaseSubject.Properties(
 #                 plastic_viscosity=XFactory(Scalar, category='dynamic viscosity'),
@@ -711,19 +711,19 @@ class Test:
 
 
     def testImplementsTwice(self):
-        class I1(interface.Interface):
+        class I1(Interface):
             def Method1(self):
                 ''
 
-        class I2(interface.Interface):
+        class I2(Interface):
             def Method2(self):
                 ''
 
         def Create():
 
             class Foo(object):
-                interface.Implements(I1)
-                interface.Implements(I2)
+                Implements(I1)
+                Implements(I2)
 
                 def Method2(self):
                     ''
@@ -741,13 +741,13 @@ class Test:
         If a stub for a interface not declared as callable is tried to be executed as callable it 
         raises an error. 
         '''
-        # ok, calling a stub for a callable interface.
-        class IFoo(interface.Interface):
+        # ok, calling a stub for a callable
+        class IFoo(Interface):
             def __call__(self, bar):
                 ''
 
         class Foo(object):
-            interface.Implements(IFoo)
+            Implements(IFoo)
 
             def __call__(self, bar):
                 ''
@@ -757,13 +757,13 @@ class Test:
         # self.assertNotRaises(TypeError
         stub(bar=None)
 
-        # wrong, calling a stub for a non-callable interface.
-        class IBar(interface.Interface):
+        # wrong, calling a stub for a non-callable
+        class IBar(Interface):
             def something(self, stuff):
                 ''
 
         class Bar(object):
-            interface.Implements(IBar)
+            Implements(IBar)
 
             def something(self, stuff):
                 ''
@@ -779,7 +779,7 @@ class Test:
             self.CreateClass()
 
 
-        class IFoo(interface.Interface):
+        class IFoo(Interface):
             def Foo(self):
                 '''
                 docstring
@@ -787,7 +787,7 @@ class Test:
 
         class Impl(object):
 
-            @Implements(IFoo.Foo)
+            @decorators.Implements(IFoo.Foo)
             def Foo(self):
                 pass
 
@@ -797,14 +797,14 @@ class Test:
 
     def CreateClass(self):
 
-        class IFoo(interface.Interface):
+        class IFoo(Interface):
 
             def DoIt(self):
                 ''
 
         class Implementation(object):
 
-            @Implements(IFoo.DoIt)
+            @decorators.Implements(IFoo.DoIt)
             def DoNotDoIt(self):
                 ''
 

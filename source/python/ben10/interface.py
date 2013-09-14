@@ -1,4 +1,5 @@
 from ben10.foundation import immutable
+from ben10.foundation.callback import CallbackMethodWrapper
 from ben10.foundation.decorators import Deprecated, Override
 from ben10.foundation.is_frozen import IsFrozen
 from ben10.foundation.klass import IsInstance
@@ -267,6 +268,14 @@ def _IsMethod(member, include_functions):
     if include_functions and inspect.isfunction(member):
         return True
     elif inspect.ismethod(member):
+        return True
+    elif member.__class__ in [
+            CallbackMethodWrapper,
+            CachedMethod,
+            LastResultCachedMethod,
+            ImmutableParamsCachedMethod,
+            AttributeBasedCachedMethod,
+        ]:
         return True
     elif isinstance(member, Method):
         return True

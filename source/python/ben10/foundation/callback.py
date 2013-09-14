@@ -1,5 +1,4 @@
 from ben10.foundation.decorators import Override
-from ben10.foundation.interface import Method
 from ben10.foundation.odict import odict
 from ben10.foundation.reraise import Reraise
 from ben10.foundation.weak_ref import WeakMethodRef
@@ -528,9 +527,9 @@ def _CreateBeforeOrAfter(method, callback, sender_as_parameter, before=True):
 
 
 #===================================================================================================
-# _MethodWrapper
+# CallbackMethodWrapper
 #===================================================================================================
-class _MethodWrapper(Method):  # It needs to be a subclass of Method for interface checks.
+class CallbackMethodWrapper:  # It needs to be a subclass of Method for interface checks.
 
     __slots__ = [
         '_before',
@@ -613,7 +612,7 @@ def _GetWrapped(method):
     '''
         Returns true if the given method is already wrapped.
     '''
-    if isinstance(method, _MethodWrapper):
+    if isinstance(method, CallbackMethodWrapper):
         return method
     try:
         return method._wrapped_instance
@@ -645,7 +644,7 @@ def WrapForCallback(method):
             if wrapped._method._obj is None:
                 return wrapped
 
-    wrapper = _MethodWrapper(method)
+    wrapper = CallbackMethodWrapper(method)
     if method.im_self is None:
         # override the class method
 

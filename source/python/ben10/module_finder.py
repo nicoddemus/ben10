@@ -114,7 +114,7 @@ class ModuleFinder(object):
         :returns:
             List of module imported by python
         '''
-        from ben10.foundation.filesystem import FindFiles
+        from ben10.filesystem import FindFiles
         from modulefinder import ModuleFinder as Finder
 
         finder = Finder(directory)

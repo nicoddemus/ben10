@@ -79,8 +79,7 @@ class _EmbedDataFixture(object):
         :returns:
             Path to created data dir
         '''
-        from ben10.foundation.filesystem import (CopyDirectory, CreateDirectory, DeleteDirectory,
-            IsDir)
+        from ben10.filesystem import (CopyDirectory, CreateDirectory, DeleteDirectory, IsDir)
         from ben10.foundation.is_frozen import IsFrozen
         import os
 
@@ -122,7 +121,7 @@ class _EmbedDataFixture(object):
             self.CreateDataDir()
 
         if absolute:
-            from ben10.foundation.filesystem import StandardizePath
+            from ben10.filesystem import StandardizePath
             import os
             return StandardizePath(os.path.abspath(self._data_dir))
 
@@ -153,7 +152,7 @@ class _EmbedDataFixture(object):
         result = '/'.join(result)
 
         if 'absolute' in kwargs and kwargs['absolute']:
-            from ben10.foundation.filesystem import StandardizePath
+            from ben10.filesystem import StandardizePath
             import os
             result = StandardizePath(os.path.abspath(result))
 
@@ -164,7 +163,7 @@ class _EmbedDataFixture(object):
         '''
         Deletes the data-directory upon finalizing (see FixtureRequest.addfinalizer)
         '''
-        from ben10.foundation.filesystem import DeleteDirectory
+        from ben10.filesystem import DeleteDirectory
 
         if self.delete_dir:
             DeleteDirectory(self._data_dir, skip_on_error=True)
@@ -181,7 +180,7 @@ class _EmbedDataFixture(object):
 
         @filename2: str
         '''
-        from ben10.foundation.filesystem import GetFileLines
+        from ben10.filesystem import GetFileLines
         import os
 
         def FindFile(filename):

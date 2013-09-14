@@ -13,7 +13,7 @@ Right now, all functions that require a FTP connection are ALWAYS creating and c
 Keep in mind that this process can be slow if you perform many of such operations in sequence. 
 '''
 from ben10.foundation.reraise import Reraise
-from ftputil.ftp_error import FTPIOError, PermanentError
+from ftputil.ftp_error import FTPIOError, PermanentError, FTPOSError
 import os
 import re
 import sys
@@ -1419,17 +1419,31 @@ class RemoteImpl:
         from functools import partial
         create_host = partial(ftputil_host, url.hostname, url.username, url.password, port=url.port)
 
-        # Try to create active ftp host
-        host = create_host(session_factory=ActiveFTP)
-
-        # Check if a simple operation fails in active ftp, if it does, switch to default (passive) ftp
         try:
-            host.stat('~')
-        except Exception, e:
-            if e.errno == 425:  # Errno raised when trying to a server without active ftp
-                host = create_host(session_factory=DefaultFTP)
+            # Try to create active ftp host
+            host = create_host(session_factory=ActiveFTP)
 
-        return host
+            # Check if a simple operation fails in active ftp, if it does, switch to default (passive) ftp
+            try:
+                host.stat('~')
+            except Exception, e:
+                if e.errno in [425, 500]:
+                    # 425 = Errno raised when trying to a server without active ftp
+                    # 500 = Illegal PORT command. In this case we also want to try passive mode.
+                    host = create_host(session_factory=DefaultFTP)
+
+            return host
+        except FTPOSError, e:
+            if e.args[0] in [11004, -3]:
+                Reraise(
+                    e,
+                    'Could not connect to host "%s"\n'
+                    'Make sure that:\n'
+                    '- You have a working network connection\n'
+                    '- This hostname is valid\n'
+                    '- This hostname is not being blocked by a firewall\n' % url.hostname,
+                )
+            raise
 
 
     @classmethod

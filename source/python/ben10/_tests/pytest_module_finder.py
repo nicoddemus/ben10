@@ -1,4 +1,4 @@
-from ben10.foundation.module_finder import ModuleFinder
+from ben10.module_finder import ModuleFinder
 import pytest
 
 
@@ -62,8 +62,8 @@ class Test:
             modules.remove('__main__')
 
         assert modules == [
-            'ben10.foundation._tests.pytest_module_finder.module2',
-            'ben10.foundation._tests.pytest_module_finder.submodule.module3',
+            'ben10._tests.pytest_module_finder.module2',
+            'ben10._tests.pytest_module_finder.submodule.module3',
             'os',
             'sys'
         ]
