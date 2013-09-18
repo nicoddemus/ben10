@@ -1,4 +1,4 @@
-BEN10 Foundation
+ben10.foundation
 ===========
 
 The foundation package collects utilities that expand the Python language in some way.
