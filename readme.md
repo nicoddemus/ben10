@@ -6,6 +6,7 @@ About
 
 This is an experimental library that will serve as a showcase of library good practices including:
 
+* consistent organization
 * pytests
 * coverage 100%
 * code format (pylint)
