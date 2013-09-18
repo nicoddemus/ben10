@@ -256,18 +256,18 @@ cache_interface_attrs = CacheInterfaceAttrs()
 #===================================================================================================
 # _IsMethod
 #===================================================================================================
-def _IsMethod(member, include_functions):
+def _IsMethod(member, include_functions=False, include_methods=True):
     '''
     Consider method the following:
-        1) Methods
-        2) Functions (if include_functions is True)
-        3) instances of Method (should it be implementors of "IMethod"?)
+        1) Functions (if include_functions is True)
+        2) Methods (if include_methods is True)
+        3) Instances of Method (should it be implementors of "IMethod"?)
         
     USER: cache mechanism for coilib50.basic.process
     '''
     if include_functions and inspect.isfunction(member):
         return True
-    elif inspect.ismethod(member):
+    elif include_methods and inspect.ismethod(member):
         return True
     elif member.__class__ in [
             CallbackMethodWrapper,
@@ -362,7 +362,7 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
             
             USER: cache mechanism for coilib50.basic.process
         '''
-        if isinstance(method, Method):
+        if _IsMethod(method, False, False):
             return inspect.getargspec(method.__call__)
         else:
             return inspect.getargspec(method)
