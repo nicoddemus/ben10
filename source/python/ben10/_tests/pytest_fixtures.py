@@ -1,7 +1,7 @@
 from __future__ import with_statement
+from ben10.filesystem import CreateFile, StandardizePath
 from ben10.fixtures import MultipleFilesNotFound
 from ben10.foundation import is_frozen
-from ben10.foundation.filesystem import CreateFile, StandardizePath
 import os
 import pytest
 

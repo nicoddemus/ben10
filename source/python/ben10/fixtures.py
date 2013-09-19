@@ -79,7 +79,7 @@ class _EmbedDataFixture(object):
         :returns:
             Path to created data dir
         '''
-        from ben10.filesystem import (CopyDirectory, CreateDirectory, DeleteDirectory, IsDir)
+        from ben10.filesystem import CopyDirectory, CreateDirectory, DeleteDirectory, IsDir
         from ben10.foundation.is_frozen import IsFrozen
         import os
 

@@ -1,7 +1,7 @@
 from __future__ import with_statement
-from ben10.filesystem import (AppendToFile, CanonicalPath, CheckForUpdate, CheckIsDir,
-    CheckIsFile, CopyDirectory, CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile,
-    CreateMD5, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError, DirectoryNotFoundError,
+from ben10.filesystem import (AppendToFile, CanonicalPath, CheckForUpdate, CheckIsDir, CheckIsFile,
+    CopyDirectory, CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5,
+    DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError, DirectoryNotFoundError,
     EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError,
     FileError, FileNotFoundError, FileOnlyActionError, FindFiles, GetFileContents, GetFileLines,
     GetMTime, IsDir, IsFile, ListFiles, ListMappedNetworkDrives, MD5_SKIP, MatchMasks,

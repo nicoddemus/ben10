@@ -1,6 +1,6 @@
 from ben10.foundation import callback, handle_exception
-from ben10.foundation.callback import After, Callbacks, ErrorNotHandledInCallback, PriorityCallback, \
-    Remove, _CallbackWrapper, Before
+from ben10.foundation.callback import (After, Before, Callbacks, ErrorNotHandledInCallback,
+    PriorityCallback, Remove, _CallbackWrapper)
 from ben10.foundation.types_ import Null
 from ben10.foundation.weak_ref import WeakMethodRef
 import pytest
@@ -912,7 +912,7 @@ class Test(object):
 
         class Stub(object):
             def Method(self, *args, **kwargs):
-                pass
+                'Never called'
 
         def Callback(instance, val):
             ''

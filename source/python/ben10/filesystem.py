@@ -13,7 +13,7 @@ Right now, all functions that require a FTP connection are ALWAYS creating and c
 Keep in mind that this process can be slow if you perform many of such operations in sequence. 
 '''
 from ben10.foundation.reraise import Reraise
-from ftputil.ftp_error import FTPIOError, PermanentError, FTPOSError
+from ftputil.ftp_error import FTPIOError, FTPOSError, PermanentError
 import os
 import re
 import sys
