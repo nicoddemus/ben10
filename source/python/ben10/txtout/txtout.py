@@ -258,7 +258,7 @@ class TextOutput(AbstractTextOutput):
         '''
         Set the output stream for the given one.
         '''
-        from ben10.foundation import color_stream
+        import color_stream
 
         if stream is None:
             stream = sys.stdout

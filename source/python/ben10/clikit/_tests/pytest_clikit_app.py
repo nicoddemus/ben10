@@ -137,8 +137,6 @@ Options:
         '''
         Tests App usage and features.
         '''
-        import pytest
-
         # NOTE: Must use color=False on tests because of colorama incompatibility with py.test
         app = App('test', color=False, buffered_console=True)
 

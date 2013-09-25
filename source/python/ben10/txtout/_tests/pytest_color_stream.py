@@ -1,4 +1,4 @@
-from ben10.foundation.color_stream import ColorStream, UnixConsole
+from ben10.txtout.color_stream import ColorStream, UnixConsole
 import cStringIO
 
 

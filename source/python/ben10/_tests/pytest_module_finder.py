@@ -1,5 +1,7 @@
-from ben10.module_finder import ModuleFinder
+from ben10.foundation.callback import Callback
+from ben10.module_finder import ModuleFinder, ImportToken
 import pytest
+import sys
 
 
 
@@ -89,3 +91,24 @@ class Test:
             '.home.python.path',
             'x:.project10.source.python',
             ]
+
+
+    def testImportToken(self):
+        csv_token = 'ben10.foundation.callback.Callback.INFO_POS_FUNC_CLASS'
+        loaded_token = ImportToken(csv_token)
+        assert loaded_token == Callback.INFO_POS_FUNC_CLASS
+
+        # Testing for a token that does not exist
+        error_token = 'ben10.foundation.callback.Callback.INVALID'
+        with pytest.raises(ImportError):
+            ImportToken(error_token)
+
+
+
+#===================================================================================================
+# Entry Point
+#===================================================================================================
+if __name__ == '__main__':
+    # Executes with specific coverage.
+    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.module_finder', __file__])
+    sys.exit(retcode)

@@ -1,4 +1,4 @@
-from ben10.txtout import TextOutput
+from ben10.txtout.txtout import TextOutput
 from cStringIO import StringIO
 
 
