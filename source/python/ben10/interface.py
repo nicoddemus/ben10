@@ -79,13 +79,16 @@ class InterfaceImplementorStub(object):
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, '__getitem__'))
         return self.__wrapped.__getitem__(*args, **kwargs)
 
+
     def __setitem__(self, *args, **kwargs):
         if '__setitem__' not in self.__interface_methods:
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, '__setitem__'))
         return self.__wrapped.__setitem__(*args, **kwargs)
 
+
     def __repr__(self):
         return '<InterfaceImplementorStub %s>' % self.__wrapped
+
 
     def __call__(self, *args, **kwargs):
         if '__call__' not in self.__interface_methods:

@@ -3,9 +3,9 @@ from ben10.foundation.types_ import Null
 from ben10.interface import (AssertDeclaresInterface, AssertImplementsFullChecking, Attribute,
     AttributeBasedCachedMethod, BadImplementationError, CachedMethod, GetImplementedInterfaces,
     IAdaptable, Implements, Interface, InterfaceError, InterfaceImplementorStub,
-    IsImplementationFullChecking, IsInterfaceDeclared, LastResultCachedMethod, Method,
-    ReadOnlyAttribute)
+    IsImplementationFullChecking, IsInterfaceDeclared, LastResultCachedMethod, Method, ReadOnlyAttribute)
 import pytest
+import sys
 
 
 
@@ -937,3 +937,13 @@ class Test:
         alpha.Foo('test3')
         assert alpha.n_calls == 4
         assert len(alpha.Foo._results) == 3
+
+
+
+#===================================================================================================
+# Entry Point
+#===================================================================================================
+if __name__ == '__main__':
+    # Executes with specific coverage.
+    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.interface', __file__])
+    sys.exit(retcode)
