@@ -16,7 +16,6 @@ class Test:
         reg = RegistryDict()
         try:
             value = reg[key]
-            assert len(value.keys()) == 23
 
             assert value['CurrentVersion'] == u'6.1'
             assert reg.has_key(key) == True
