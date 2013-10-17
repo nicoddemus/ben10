@@ -277,22 +277,31 @@ class Console(object):
         self.Print(message, newlines=0)
 
 
-    def ProgressOk(self, message='OK'):
+    def ProgressOk(self, message='OK', format_='<green>%s</>'):
         '''
         Ends a progress "successfully" with a message
         
         :param str message: Message to finish the progress. Default to "OK"
         '''
-        self.Print(message)
+        self.Print(format_ % message)
 
 
-    def ProgressError(self, message):
+    def ProgressError(self, message, format_='<red>%s</>'):
         '''
-        Ends a progress "with failure" with a message
+        Ends a progress "with failure" message
         
         :param str message: (Error) message to finish the progress.
         '''
-        self.Print(message)
+        self.Print('<red>%s</>' % message)
+
+
+    def ProgressWarning(self, message, format_='<yellow>%s</>'):
+        '''
+        Ends a progress "with a warning" message
+        
+        :param str message: (Warning) message to finish the progress.
+        '''
+        self.Print(format_ % message)
 
 
 

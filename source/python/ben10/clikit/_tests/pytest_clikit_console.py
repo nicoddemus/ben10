@@ -70,6 +70,13 @@ class Test:
         console.ProgressError('Failed!')
         assert oss.getvalue() == '''Doing...Failed!\n'''
 
+        oss = StringIO()
+        console = Console(verbosity=2, stdout=oss)
+        console.Progress('Doing...')
+        assert oss.getvalue() == '''Doing...'''
+        console.ProgressWarning('Skiped!')
+        assert oss.getvalue() == '''Doing...Skiped!\n'''
+
         # Test Ask methods
         iss = StringIO()
         iss.write('alpha\n')
