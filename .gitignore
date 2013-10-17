@@ -1,4 +1,7 @@
-docs/build/
-.coverage
-__pycache__
 *.pyc
+.coverage
+/docs/build/
+__pycache__
+coverage.xml
+pylint.out
+pytest.xml
