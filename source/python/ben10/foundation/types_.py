@@ -440,6 +440,18 @@ def MergeDictsRecursively(original_dict, merging_dict):
     return original_dict
 
 
+
+#===================================================================================================
+# Method
+#===================================================================================================
+class Method(object):
+    '''
+        This class is an 'organization' class, so that subclasses are considered as methods
+        (and its __call__ method is checked for the parameters)
+    '''
+
+
+
 #===================================================================================================
 # Null
 #===================================================================================================
@@ -560,3 +572,4 @@ class Null(object):
 
 
 NULL = Null()  # Create a default instance to be used.
+

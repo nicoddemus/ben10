@@ -1,15 +1,13 @@
-from ben10.foundation import immutable
-from ben10.foundation.callback import CallbackMethodWrapper
 from ben10.foundation.decorators import Deprecated, Override
 from ben10.foundation.is_frozen import IsFrozen
 from ben10.foundation.klass import IsInstance
-from ben10.foundation.memoize import Memoize
-from ben10.foundation.odict import odict
 from ben10.foundation.reraise import Reraise
-from ben10.foundation.types_ import Null
-from ben10.foundation.weak_ref import WeakMethodRef
+from ben10.foundation.singleton import Singleton
+from ben10.foundation.types_ import Method
+from new import classobj
 import inspect
 import sys
+import warnings
 
 
 
@@ -37,7 +35,8 @@ class InterfaceImplementationMetaClass(type):
         C = type.__new__(cls, name, bases, dct)
         if not IsFrozen():  # Only doing check in dev mode.
             for I in dct.get('__implements__', []):
-                AssertImplementsFullChecking(C, I, check_attr=False)
+                # Will do full checking this first time, and also cache the results
+                AssertImplements(C, I)
         return C
 
 
@@ -47,10 +46,10 @@ class InterfaceImplementationMetaClass(type):
 #===================================================================================================
 class InterfaceImplementorStub(object):
     '''
-    A helper for acting as a stub for some object (in this way, we're only able to access
-    attributes declared directly in the interface.
-
-    It forwards the calls to the actual implementor (the wrapped object)
+        A helper for acting as a stub for some object (in this way, we're only able to access
+        attributes declared directly in the interface.
+    
+        It forwards the calls to the actual implementor (the wrapped object)
     '''
 
     def __init__(self, wrapped, implemented_interface):
@@ -63,32 +62,27 @@ class InterfaceImplementorStub(object):
 
     def GetWrappedFromImplementorStub(self):
         '''
-        Really big and awkward name because we don't want name-clashes
+            Really big and awkward name because we don't want name-clashes
         '''
         return self.__wrapped
-
 
     def __getattr__(self, attr):
         if attr not in self.__attrs and attr not in self.__interface_methods:
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, attr))
         return getattr(self.__wrapped, attr)
 
-
     def __getitem__(self, *args, **kwargs):
         if '__getitem__' not in self.__interface_methods:
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, '__getitem__'))
         return self.__wrapped.__getitem__(*args, **kwargs)
-
 
     def __setitem__(self, *args, **kwargs):
         if '__setitem__' not in self.__interface_methods:
             raise AttributeError("Error. The interface %s does not have the attribute '%s' declared." % (self.__implemented_interface, '__setitem__'))
         return self.__wrapped.__setitem__(*args, **kwargs)
 
-
     def __repr__(self):
         return '<InterfaceImplementorStub %s>' % self.__wrapped
-
 
     def __call__(self, *args, **kwargs):
         if '__call__' not in self.__interface_methods:
@@ -112,13 +106,14 @@ class Interface(object):
     def __new__(cls, class_=_SENTINEL):
         # if no class is given, raise InterfaceError('trying to instantiate interface')
         # check if class_or_object implements this interface
+        from _adaptable_interface import IAdaptable
 
         if class_ is cls._SENTINEL:
             raise InterfaceError('Can\'t instantiate Interface.')
         else:
             if isinstance(class_, type):
                 # We're doing something as Interface(InterfaceImpl) -- not instancing
-                AssertImplementsFullChecking(class_, cls, check_attr=False)
+                _AssertImplementsFullChecking(class_, cls, check_attr=False)
                 return class_
             elif isinstance(class_, InterfaceImplementorStub):
                 return class_
@@ -134,57 +129,234 @@ class Interface(object):
                         return InterfaceImplementorStub(adapter, cls)
 
                 # We're doing something as Interface(InterfaceImpl()) -- instancing
-                AssertImplementsFullChecking(class_, cls, check_attr=True)
+                _AssertImplementsFullChecking(class_, cls, check_attr=True)
                 return InterfaceImplementorStub(class_, cls)
 
 
 
 #===================================================================================================
-# IAdaptable
+# _GetClassForInterfaceChecking
 #===================================================================================================
-class IAdaptable(Interface):
-    '''
-        An interface for an object that is adaptable.
-        
-        Adaptable objects can be queried about interfaces they adapt to (to which they
-        may respond or not).
-        
-        For example:
-        
-        a = [some IAdaptable];
-        x = a.GetAdapter(IFoo);
-        if x is not None:
-            [do IFoo things with x]
-    '''
+def _GetClassForInterfaceChecking(class_or_instance):
+    if isinstance(class_or_instance, (type, classobj)):
+        return class_or_instance  # is class
+    elif isinstance(class_or_instance, InterfaceImplementorStub):
+        return _GetClassForInterfaceChecking(class_or_instance.GetWrappedFromImplementorStub())
 
-    def GetAdapter(self, interface_class):
-        '''
-            :type interface_class: this is the interface for which an adaptation is required
-            :param interface_class:
-            :rtype: an object implementing the required interface or None if this object cannot
-            adapt to that interface.
-        '''
+    return class_or_instance.__class__  # is instance
 
 
 
 #===================================================================================================
 # IsImplementation
 #===================================================================================================
-@Deprecated('IsImplementationFullChecking')
 def IsImplementation(class_or_instance, interface):
+    '''    
+    :type class_or_instance: type or classobj or object
+
+    :type interface: Interface
+
+    :rtype: bool
+
+    :see: :py:func:`.AssertImplements`
     '''
-    Deprecated: 44547: Remove AssertImplements and IsImplementation
+    try:
+        is_interface = issubclass(interface, Interface)
+    except TypeError, e:
+        Reraise(e, "interface=%s (type %s)" % (interface, type(interface)))
+
+    if not is_interface:
+        raise InterfaceError(
+            'To check against an interface, an interface is required (received: %s -- mro:%s)' %
+            (interface, interface.__mro__)
+        )
+
+    class_ = _GetClassForInterfaceChecking(class_or_instance)
+
+    is_implementation, _reason = _CheckIfClassImplements(class_, interface)
+#    # DEBUG CODE (will be removed after refactory)
+#
+#    print 'class:', class_
+#    print 'interface:', interface
+#    print 'is_implementation:', is_implementation
+#    if _reason:
+#        print 'reason:', _reason
+#    print
+#
+#    # END OF DEBUG CODE
+    if is_implementation:
+        return True
+
+    return False
+
+
+
+#===================================================================================================
+# IsImplementationOfAny
+#===================================================================================================
+def IsImplementationOfAny(class_or_instance, interfaces):
     '''
-    return IsImplementationFullChecking(class_or_instance, interface)
+    Check if the class or instance implements any of the given interfaces
+     
+    :type class_or_instance: type or classobj or object
+    
+    :type interfaces: list(Interface)
+    
+    :rtype: bool
+    
+    :see: :py:func:`.IsImplementation`
+    '''
+    for interface in interfaces:
+        if IsImplementation(class_or_instance, interface):
+            return True
+
+    return False
+
+
+
+#===================================================================================================
+# AssertImplements
+#===================================================================================================
+def AssertImplements(class_or_instance, interface):
+    '''
+    If given a class, will try to match the class against a given interface. If given an object
+    (instance), will try to match the class of the given object.
+    
+    NOTE: The Interface must have been explicitly declared through :py:func:`interface.Implements`.
+
+    :type class_or_instance: type or classobj or object
+
+    :type interface: Interface
+    
+    :raises BadImplementationError:
+        If the object's class does not implement the given :arg interface:.
+        
+    :raises InterfaceError:
+        In case the :arg interface: object is not really an interface.
+
+    .. attention:: Caching
+        Will do a full checking only once, and then cache the result for the given class.
+
+    .. attention:: Runtime modifications
+        Runtime modifications in the instances (appending methods or attributed) won't affect
+        implementation checking (after the first check), because what is really being tested is the
+        class.
+    '''
+    class_ = _GetClassForInterfaceChecking(class_or_instance)
+
+    is_implementation, reason = _CheckIfClassImplements(class_, interface)
+
+    if not is_implementation:
+        raise AssertionError(reason)
+
+
+
+#===================================================================================================
+# __ResultsCache
+#===================================================================================================
+class __ResultsCache(object):
+
+    def __init__(self):
+        self._cache = {}
+
+    def SetResult(self, args, result):
+        self._cache[args] = result
+
+    def GetResult(self, args):
+        return self._cache.get(args, None)
+
+    def ForgetResult(self, args):
+        self._cache.pop(args, None)
+
+
+
+#===================================================================================================
+# __ImplementsCache
+#===================================================================================================
+class __ImplementsCache(__ResultsCache, Singleton):
+    pass
+
+
+
+#===================================================================================================
+# __ImplementedInterfacesCache
+#===================================================================================================
+class __ImplementedInterfacesCache(__ResultsCache, Singleton):
+    pass
+
+
+
+#===================================================================================================
+# _CheckIfClassImplements
+#===================================================================================================
+def _CheckIfClassImplements(class_, interface):
+    '''
+    :type class_: type or classobj
+    :param class_: 
+        A class type (NOT an instance of the class).
+        
+    :type interface: Interface
+    
+    :rtype: (bool, str) or (bool, None)
+    :returns:
+        (is_implementation, reason)
+        If the class doesn't implement the given interface, will return False, and a message stating
+        the reason (missing methods, etc.). The message may be None.
+    '''
+    assert isinstance(class_, (type, classobj))
+
+    # Using explicit memoization, because we need to forget some values at some times
+    cache = __ImplementsCache().GetSingleton()
+
+    cached_result = cache.GetResult((class_, interface))
+    if cached_result is not None:
+        return cached_result
+
+    is_implementation = True
+    reason = None
+
+    # Exception: Null implements every Interface (useful for Null Object Pattern and for testing)
+    from ben10.foundation.types_ import Null
+
+    if not issubclass(class_, Null):
+        if _IsInterfaceDeclared(class_, interface):
+            # It is required to explicitly declare that the class implements the interface.
+
+            # Since this will only run *once*, a full check is also done here to ensure it is really
+            # implementing.
+            try:
+                _AssertImplementsFullChecking(class_, interface, check_attr=False)
+            except BadImplementationError, e:
+                is_implementation = False
+                reason = e.message
+        else:
+            is_implementation = False
+            reason = 'The class %s does not declare that it implements the interface %s.' % (
+                class_, interface)
+
+    result = (is_implementation, reason)
+    cache.SetResult((class_, interface), result)
+    return result
+
 
 
 #===================================================================================================
 # IsImplementationFullChecking
 #===================================================================================================
+@Deprecated(IsImplementation)
 def IsImplementationFullChecking(class_or_instance, interface):
+    return IsImplementation(class_or_instance, interface)
+
+
+
+#===================================================================================================
+# _IsImplementationFullChecking
+#===================================================================================================
+def _IsImplementationFullChecking(class_or_instance, interface):
     '''
-    Returns True if the given object or class implements the given interface.
+    Used internally by Attribute.
     
+    :see: :py:func:`._AssertImplementsFullChecking`
     :type class_or_instance: type or instance
     :param class_or_instance:
         Class or instance to check
@@ -197,7 +369,7 @@ def IsImplementationFullChecking(class_or_instance, interface):
         If it implements the interface
     '''
     try:
-        AssertImplementsFullChecking(class_or_instance, interface)
+        _AssertImplementsFullChecking(class_or_instance, interface)
     except BadImplementationError:
         return False
     else:
@@ -210,7 +382,7 @@ def IsImplementationFullChecking(class_or_instance, interface):
 #===================================================================================================
 class CacheInterfaceAttrs(object):
     '''
-        Cache for holding the attrs for a given interface (separated by attrs and methods).
+    Cache for holding the attrs for a given interface (separated by attrs and methods).
     '''
 
     def __GetInterfaceMethodsAndAttrs(self, interface):
@@ -248,6 +420,7 @@ class CacheInterfaceAttrs(object):
             cache = self.cache
         except AttributeError:
             # create it on the 1st access
+            from _cached_method import ImmutableParamsCachedMethod
             cache = self.cache = ImmutableParamsCachedMethod(self.__GetInterfaceMethodsAndAttrs)
         return cache(interface)
 
@@ -256,29 +429,22 @@ class CacheInterfaceAttrs(object):
 # cache for the interface attrs (for Methods and Attrs).
 cache_interface_attrs = CacheInterfaceAttrs()
 
+
 #===================================================================================================
 # _IsMethod
 #===================================================================================================
-def _IsMethod(member, include_functions=False, include_methods=True):
+def _IsMethod(member, include_functions):
     '''
-    Consider method the following:
-        1) Functions (if include_functions is True)
-        2) Methods (if include_methods is True)
-        3) Instances of Method (should it be implementors of "IMethod"?)
-        
-    USER: cache mechanism for coilib50.basic.process
+        Consider method the following:
+            1) Methods
+            2) Functions (if include_functions is True)
+            3) instances of Method (should it be implementors of "IMethod"?)
+            
+        USER: cache mechanism for coilib50.basic.process
     '''
     if include_functions and inspect.isfunction(member):
         return True
-    elif include_methods and inspect.ismethod(member):
-        return True
-    elif member.__class__ in [
-            CallbackMethodWrapper,
-            CachedMethod,
-            LastResultCachedMethod,
-            ImmutableParamsCachedMethod,
-            AttributeBasedCachedMethod,
-        ]:
+    elif inspect.ismethod(member):
         return True
     elif isinstance(member, Method):
         return True
@@ -287,36 +453,34 @@ def _IsMethod(member, include_functions=False, include_methods=True):
 
 
 #===================================================================================================
-# AssertImplements
-#===================================================================================================
-@Deprecated('AssertImplementsFullChecking')
-def AssertImplements(class_or_instance, interface, check_attr=True):
-    '''
-    Deprecated: 44547: Remove AssertImplements and IsImplementation
-    '''
-    return AssertImplementsFullChecking(class_or_instance, interface, check_attr=check_attr)
-
-
-#===================================================================================================
 # AssertImplementsFullChecking
 #===================================================================================================
+@Deprecated(AssertImplements)
 def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
+    return AssertImplements(class_or_instance, interface)
+
+
+
+#===================================================================================================
+# _AssertImplementsFullChecking
+#===================================================================================================
+def _AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
     '''
-    Make sure the object or class implements the given interface. 
+    Used internally.
     
     This method will check each member of the given instance (or class) comparing them against the
     ones declared in the interface, making sure that it actually implements it even if it does not
     declare it so using interface.Implements.
     
-    .. note:: this method is *slow*, so make sure to never use it in hot-spots. Usually you should
-           use AssertDeclaresInterface, which is much faster. 
+    .. note:: Slow
+        This method is *slow*, so make sure to never use it in hot-spots.
     
-    @raise: BadImplementationError class_or_instance doesn't implement this interface.
-    
-    :type chk_attr: bool, verify attributes in instance or not
-    :param chk_attr:
+    :raises BadImplementationError:
+        If :arg class_or_instance: doesn't implement this interface.
     '''
     # Moved from the file to avoid cyclic import:
+    from ben10.foundation.types_ import Null
+
     try:
         is_interface = issubclass(interface, Interface)
     except TypeError, e:
@@ -338,7 +502,7 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
 
 
     if classname == 'InterfaceImplementorStub':
-        return AssertImplementsFullChecking(class_or_instance.GetWrappedFromImplementorStub(), interface, check_attr)
+        return _AssertImplementsFullChecking(class_or_instance.GetWrappedFromImplementorStub(), interface, check_attr)
 
     interface_methods, interface_attrs = cache_interface_attrs.GetInterfaceMethodsAndAttrs(interface)
     if check_attr:
@@ -365,7 +529,7 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
             
             USER: cache mechanism for coilib50.basic.process
         '''
-        if _IsMethod(method, False, False):
+        if isinstance(method, Method):
             return inspect.getargspec(method.__call__)
         else:
             return inspect.getargspec(method)
@@ -418,35 +582,12 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
 
 
 
-# #===================================================================================================
-# # PROFILING FOR ASSERT IMPLEMENTS -- it can be quite slow, so, this is useful for seeing where exactly
-# # it is being slow
-# #===================================================================================================
-# PROFILE_ASSERT_IMPLEMENTS = False
-# if PROFILE_ASSERT_IMPLEMENTS:
-#     __original_assert_implements = AssertImplements
-#     __cache = {}
-#     def AssertImplementsWithCount(class_or_instance, interface_, check_attr=True):
-#         try:
-#             classname = class_or_instance.__name__
-#         except:
-#             classname = class_or_instance.__class__.__name__
-#
-#         cache_key = (classname, interface_)
-#         v = __cache.setdefault(cache_key, 0)
-#         __cache[cache_key] = v + 1
-#
-#         __original_assert_implements(class_or_instance, interface_, check_attr)
-#
-#     AssertImplements = AssertImplementsWithCount
-#
-#     def PrintAssertImplementsCount():
-#         p = []
-#         for key, value in __cache.iteritems():
-#             p.append((value, key))
-#
-#         for value, key in sorted(p):
-#             print '%s: %s' % (value, key)
+#===================================================================================================
+# PROFILING FOR ASSERT IMPLEMENTS
+
+# NOTE: There was code here for profiling AssertImplements in revisions prior to 2013-03-19.
+#       That code can be useful for seeing where exactly it is being slow.
+#===================================================================================================
 
 
 
@@ -454,7 +595,8 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
 # Implements
 #===================================================================================================
 def Implements(*interfaces, **kwargs):
-    '''Make sure a class implements the given interfaces. Must be used in the class scope during class
+    '''
+    Make sure a class implements the given interfaces. Must be used in the class scope during class
     creation:
         
         class Foo(object):
@@ -469,7 +611,6 @@ def Implements(*interfaces, **kwargs):
         
         class Foo(object): 
             Implements(IFoo, no_init_check=True)
-
     '''
     # Just get the previous frame
     frame = sys._getframe().f_back
@@ -481,12 +622,20 @@ def Implements(*interfaces, **kwargs):
         else:
             namespace['__implements__'] = interfaces
 
-        # only put the metaclass on new-style classes (which want to be checked)
-        if not kwargs.get('old_style', False) and not kwargs.get('no_init_check', False):
-            namespace['__metaclass__'] = InterfaceImplementationMetaClass
+        old_style = kwargs.pop('old_style', False)
+        no_init_check = kwargs.pop('no_init_check', False)
 
-        kwargs.pop('old_style', None)
-        kwargs.pop('no_init_check', None)
+        # only put the metaclass on new-style classes (which want to be checked)
+        if not old_style and not no_init_check:
+            namespace['__metaclass__'] = InterfaceImplementationMetaClass
+        else:
+            if old_style:
+                if kwargs.get('old_style', False):
+                    warnings.warn(
+                        'DEPRECATED: Interface is deprecated for old-style classes. Use new style.',
+                        stacklevel=1,
+                    )
+
         assert len(kwargs) == 0, \
             'Expected only no_init_check or old_style as kwargs. Found: %s' % (kwargs,)
 
@@ -496,31 +645,129 @@ def Implements(*interfaces, **kwargs):
 
 
 #===================================================================================================
-# GetClassImplementedInterfaces
+# DeclareClassImplements
 #===================================================================================================
-@Memoize(10000)  # Really big cache
+def DeclareClassImplements(class_, *interfaces):
+    '''
+    This is a way to tell, from outside of the class, that a given :arg class_: implements the
+    given :arg interfaces:.
+    
+    .. attention:: Use Implements whenever possible
+        This method should be used only when you can't use :py:func:`Implements`, or when you can't
+        change the code of the class being declared, i.e., when you:
+        * Can't add metaclass because the class already has one
+        * Class can't depend on the library where the interface is defined
+        * Class is defined from bindings
+        * Class is defined in an external library
+        * Class is defined by generated code
+        
+    :type interfaces: list(Interface)
+    :type class_: type
+    
+    :raises BadImplementationError:
+        If, after checking the methods, :arg class_: doesn't really implement the :arg interface:.
+        
+    .. note:: Inheritance
+        When you use this method to declare that a base class implements a given interface, you
+        should *also* use this in the derived classes, it does not propagate automatically to
+        the derived classes. See testDeclareClassImplements.
+    '''
+    assert isinstance(class_, (type, classobj))
+
+    from itertools import chain
+
+    old_implements = getattr(class_, '__implements__', [])
+    class_.__implements__ = list(chain(old_implements, interfaces))
+
+    # This check must be done *after* adding the interfaces to __implements__, because it will
+    # also check that the interfaces are declared there.
+    try:
+        for interface in interfaces:
+            # Forget any previous checks
+            __ImplementsCache().GetSingleton().ForgetResult((class_, interface))
+            __ImplementedInterfacesCache.GetSingleton().ForgetResult(class_)
+
+            AssertImplements(class_, interface)
+    except:
+        # Roll back...
+        class_.__implements__ = old_implements
+        raise
+
+
+
+#===================================================================================================
+# _GetMROForOldStyleClass
+#===================================================================================================
+def _GetMROForOldStyleClass(class_):
+    '''
+    :type class_: classobj
+    :param class_:
+        An old-style class
+        
+    :rtype: list(classobj)
+    :return:
+        A list with all the bases in the older MRO (method resolution order)
+    '''
+    def _CalculateMro(class_, mro):
+        for base in class_.__bases__:
+            if base not in mro:
+                mro.append(base)
+                _CalculateMro(base, mro)
+
+    mro = [class_]
+    _CalculateMro(class_, mro)
+    return mro
+
+
+
+#===================================================================================================
+# _GetMROForClass
+#===================================================================================================
+def _GetMROForClass(class_):
+    '''
+    :param classobj class_:
+        A class
+        
+    :rtype: list(classobj)
+    :return:
+        A list with all the bases in the older MRO (method resolution order)
+    '''
+    if hasattr(class_, '__mro__'):
+        mro = class_.__mro__
+    else:
+        mro = _GetMROForOldStyleClass(class_)
+    return mro
+
+
+
+#===================================================================================================
+# _GetClassImplementedInterfaces
+#===================================================================================================
 def _GetClassImplementedInterfaces(class_):
+    cache = __ImplementedInterfacesCache.GetSingleton()
+    result = cache.GetResult(class_)
+    if result is not None:
+        return result
+
     result = set()
 
-    for c in class_.__mro__:
-        result.update(getattr(c, '__implements__', ()))
+    mro = _GetMROForClass(class_)
 
-    # If an element declares that in implements a given interface, then it also implements all
-    # superclasses of that interface
-    interface_superclasses = set()
+    for c in mro:
+        interfaces = getattr(c, '__implements__', ())
+        for interface in interfaces:
+            interface_mro = _GetMROForClass(interface)
 
-    for declared_interface in result:
-        interface_superclasses.update(declared_interface.__mro__)
+            for interface_type in interface_mro:
+                if interface_type in [Interface, object]:
+                    # Ignore basic types
+                    continue
+                result.add(interface_type)
 
-    # Discarding object (it will always be returned in the mro collection)
-    interface_superclasses.discard(object)
+    result = frozenset(result)
 
-    # Also discarding the Interface module (that will be returned in the mro but is not a real
-    # interface to be implemented
-    interface_superclasses.discard(Interface)
-
-    result = result.union(interface_superclasses)
-    return frozenset(result)
+    cache.SetResult(class_, result)
+    return result
 
 
 
@@ -529,13 +776,10 @@ def _GetClassImplementedInterfaces(class_):
 #===================================================================================================
 def GetImplementedInterfaces(class_or_object):
     '''
-       :rtype: frozenset([interfaces]) with the interfaces implemented by the object or class passed.
+   :rtype: frozenset([interfaces]) 
+       The interfaces implemented by the object or class passed.
     '''
-
-    if not hasattr(class_or_object, '__mro__'):
-        class_ = class_or_object.__class__
-    else:
-        class_ = class_or_object
+    class_ = _GetClassForInterfaceChecking(class_or_object)
 
     # we have to build the cache attribute given the name of the class, otherwise setting in a base
     # class before a subclass may give errors.
@@ -546,7 +790,25 @@ def GetImplementedInterfaces(class_or_object):
 #===================================================================================================
 # IsInterfaceDeclared
 #===================================================================================================
-def IsInterfaceDeclared(class_or_instance, interface):
+@Deprecated('IsImplementation')
+def IsInterfaceDeclared(class_or_instance, interface_or_interfaces):
+    if isinstance(interface_or_interfaces, (set, list, tuple)):
+        interfaces = interface_or_interfaces
+    else:
+        interfaces = [interface_or_interfaces]
+
+    for interface in interfaces:
+        if IsImplementation(class_or_instance, interface):
+            return True
+
+    return False
+
+
+
+#===================================================================================================
+# _IsInterfaceDeclared
+#===================================================================================================
+def _IsInterfaceDeclared(class_, interface):
     '''
         :type interface: Interface or iterable(Interface)
         :param interface:
@@ -558,7 +820,7 @@ def IsInterfaceDeclared(class_or_instance, interface):
         
             >>> interface.Implements(Class) 
     '''
-    if class_or_instance is None:
+    if class_ is None:
         return False
 
     is_collection = False
@@ -572,57 +834,38 @@ def IsInterfaceDeclared(class_or_instance, interface):
         raise InterfaceError('To check against an interface, an interface is required (received: %s -- mro:%s)' %
                              (interface, interface.__mro__))
 
-    if class_or_instance.__class__ == InterfaceImplementorStub:
-        class_or_instance = class_or_instance.GetWrappedFromImplementorStub()
+    declared_interfaces = GetImplementedInterfaces(class_)
 
-    declared_interfaces = GetImplementedInterfaces(class_or_instance)
+    # This set will include all interfaces (and its subclasses) declared for the given objec
+    declared_and_subclasses = set()
+    for implemented in declared_interfaces:
+        declared_and_subclasses.update(implemented.__mro__)
+
+    # Discarding object (it will always be returned in the mro collection)
+    declared_and_subclasses.discard(object)
+
     if not is_collection:
-        return interface in declared_interfaces
+        return interface in declared_and_subclasses
     else:
-        return bool(set(interface).intersection(declared_interfaces))
+        return bool(set(interface).intersection(declared_and_subclasses))
 
 
 
-# #===================================================================================================
-# # PROFILING FOR IsInterfaceDeclared -- it can be somewhat slow, so, this is useful for seeing
-# # where exactly it is being called
-# #===================================================================================================
-# PROFILE_IS_INTERFACE_DECLARED = False
-# if PROFILE_IS_INTERFACE_DECLARED:
-#     _count_calls = CountCalls()
-#     _original_is_interface_declared = IsInterfaceDeclared
-#     _cache_is_interface_declared = {}
-#
-#     def IsInterfaceDeclaredWithCount(class_or_instance, interface_):
-#         try:
-#             classname = class_or_instance.__name__
-#         except:
-#             classname = class_or_instance.__class__.__name__
-#
-#         cache_key = (classname, interface_)
-#         v = _cache_is_interface_declared.setdefault(cache_key, 0)
-#         _cache_is_interface_declared[cache_key] = v + 1
-#         _count_calls.AddCallerToCount()
-#         return _original_is_interface_declared(class_or_instance, interface_)
-#
-#     IsInterfaceDeclared = IsInterfaceDeclaredWithCount
-#
-#     def PrintIsInterfaceDeclaredCount():
-#         for value, key in sorted((value, key) for key, value in _cache_is_interface_declared.iteritems()):
-#             print '%s: %s' % (value, key)
-#         _count_calls.PrintStatistics()
+#===================================================================================================
+# PROFILING FOR IsInterfaceDeclared
+
+# NOTE: There was code here for profiling IsInterfaceDeclared in revisions prior to 2013-03-19.
+#       That code can be useful for seeing where exactly it is being called.
+#===================================================================================================
 
 
 
 #===================================================================================================
 # AssertDeclaresInterface
 #===================================================================================================
+@Deprecated(AssertImplements)
 def AssertDeclaresInterface(class_or_instance, interface):
-    if not IsInterfaceDeclared(class_or_instance, interface):
-        raise AssertionError(
-            'The class %s does not implement the interface %s'
-            % (class_or_instance, interface)
-        )
+    return AssertImplements(class_or_instance, interface)
 
 
 
@@ -630,7 +873,8 @@ def AssertDeclaresInterface(class_or_instance, interface):
 # Attribute
 #===================================================================================================
 class Attribute(object):
-
+    '''
+    '''
     _do_not_check_instance = object()
 
     def __init__(self, attribute_type, instance=_do_not_check_instance):
@@ -674,7 +918,7 @@ class Attribute(object):
                 )
 
         try:
-            if IsImplementationFullChecking(attribute, self.attribute_type):
+            if _IsImplementationFullChecking(attribute, self.attribute_type):
                 return (True, msg)
         except InterfaceError, exception_msg:
             # Necessary because whenever a value is compared to an interface it does not inherits
@@ -698,19 +942,11 @@ class ReadOnlyAttribute(Attribute):
 
 
 #===================================================================================================
-# Method
-#===================================================================================================
-class Method(object):
-    '''
-    This class is an 'organization' class, so that subclasses are considered as methods (and its
-    __call__ method is checked for the parameters)
-    '''
-
-
-#===================================================================================================
 # ScalarAttribute
 #===================================================================================================
 class ScalarAttribute(Attribute):
+    '''
+    '''
 
     def __init__(self, category):
         '''
@@ -732,216 +968,3 @@ class ScalarAttribute(Attribute):
             )
 
         return (True, None)
-
-
-
-#===================================================================================================
-#===================================================================================================
-# CACHED METHOD
-#===================================================================================================
-#===================================================================================================
-
-
-
-#===================================================================================================
-# AbstractCachedMethod
-#===================================================================================================
-class AbstractCachedMethod(Method):
-    '''
-    Base class for cache-manager.
-    The abstract class does not implement the storage of results.
-    '''
-
-    def __init__(self, cached_method=None):
-        # REMARKS: Use WeakMethodRef to avoid cyclic reference.
-        self._method = WeakMethodRef(cached_method)
-        self.enabled = True
-        self.ResetCounters()
-
-
-    def __call__(self, *args, **kwargs):
-        key = self.GetCacheKey(*args, **kwargs)
-        result = None
-
-        if self.enabled and self._HasResult(key):
-            self.hit_count += 1
-            result = self._GetCacheResult(key, result)
-        else:
-            self.miss_count += 1
-            result = self._CallMethod(*args, **kwargs)
-            self._AddCacheResult(key, result)
-
-        self.call_count += 1
-        return result
-
-
-    def _CallMethod(self, *args, **kwargs):
-        return self._method()(*args, **kwargs)
-
-
-    def GetCacheKey(self, *args, **kwargs):
-        '''
-            Use the arguments to build the cache-key.
-        '''
-        if args:
-            if kwargs:
-                return immutable.AsImmutable(args), immutable.AsImmutable(kwargs)
-
-            return immutable.AsImmutable(args)
-
-        if kwargs:
-            return immutable.AsImmutable(kwargs)
-
-
-    def _HasResult(self, key):
-        raise NotImplementedError()
-
-
-    def _AddCacheResult(self, key, result):
-        raise NotImplementedError()
-
-
-    def DoClear(self):
-        raise NotImplementedError()
-
-
-    def Clear(self):
-        self.DoClear()
-        self.ResetCounters()
-
-
-    def ResetCounters(self):
-        self.call_count = 0
-        self.hit_count = 0
-        self.miss_count = 0
-
-
-    def _GetCacheResult(self, key, result):
-        raise NotImplementedError()
-
-
-
-#===================================================================================================
-# CachedMethod
-#===================================================================================================
-class CachedMethod(AbstractCachedMethod):
-    '''
-    Stores ALL the different results and never delete them.
-    '''
-
-    def __init__(self, cached_method=None):
-        super(CachedMethod, self).__init__(cached_method)
-        self._results = {}
-
-
-    def _HasResult(self, key):
-        return key in self._results
-
-
-    def _AddCacheResult(self, key, result):
-        self._results[key] = result
-
-
-    def DoClear(self):
-        self._results.clear()
-
-
-    def _GetCacheResult(self, key, result):
-        return self._results[key]
-
-
-
-#===================================================================================================
-# ImmutableParamsCachedMethod
-#===================================================================================================
-class ImmutableParamsCachedMethod(CachedMethod):
-    '''
-    Expects all parameters to already be immutable
-    Considers only the positional parameters of key, ignoring the keyword arguments 
-    '''
-
-    def GetCacheKey(self, *args, **kwargs):
-        '''
-        Use the arguments to build the cache-key.
-        '''
-        return args
-
-
-
-#===================================================================================================
-# LastResultCachedMethod
-#===================================================================================================
-class LastResultCachedMethod(AbstractCachedMethod):
-    '''
-        A cache that stores only the last result.
-    '''
-
-    def __init__(self, cached_method=None):
-        super(LastResultCachedMethod, self).__init__(cached_method)
-        self._key = None
-        self._result = None
-
-
-    def _HasResult(self, key):
-        return self._key == key
-
-
-    def _AddCacheResult(self, key, result):
-        self._key = key
-        self._result = result
-
-
-    def DoClear(self):
-        self._key = None
-        self._result = None
-
-
-    def _GetCacheResult(self, key, result):
-        return self._result
-
-
-
-#===================================================================================================
-# AttributeBasedCachedMethod
-#===================================================================================================
-class AttributeBasedCachedMethod(CachedMethod):
-    '''
-    This cached method consider changes in object attributes
-    '''
-
-
-    def __init__(self, cached_method, attr_name_list, cache_size=1, results=None):
-        '''
-        :type cached_method: bound method to be cached
-        :param cached_method:
-        :type attr_name_list: attr names in a C{str} separated by spaces OR in a sequence of C{str}
-        :param attr_name_list:
-        :type cache_size: the cache size
-        :param cache_size:
-        :type results: an optional ref. to an C{odict} for keep cache results
-        :param results:
-        '''
-        CachedMethod.__init__(self, cached_method)
-        if isinstance(attr_name_list, str):
-            self._attr_name_list = attr_name_list.split()
-        else:
-            self._attr_name_list = attr_name_list
-        self._cache_size = cache_size
-        if results is None:
-            self._results = odict()
-        else:
-            self._results = results
-
-
-    def GetCacheKey(self, *args, **kwargs):
-        object = self._method().im_self
-        for attr_name in self._attr_name_list:
-            kwargs['_object_%s' % attr_name] = getattr(object, attr_name)
-        return AbstractCachedMethod.GetCacheKey(self, *args, **kwargs)
-
-
-    def _AddCacheResult(self, key, result):
-        CachedMethod._AddCacheResult(self, key, result)
-        if len(self._results) > self._cache_size:
-            key0 = self._results.keys()[0]
-            del self._results[key0]
