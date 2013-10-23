@@ -164,49 +164,49 @@ class Callback(object):
                     Reraise(e, 'Error while trying to call %r' % func)
 
 
-#     def _CalculateToCall(self):
-#         '''
-#         Copy of the code above so that subclasses can use it (we don't want the overhead in the
-#         call above).
-#         '''
-#         try:
-#             callbacks = self._callbacks
-#         except AttributeError:
-#             return []  # No callbacks registered
-#
-#         to_call = []
-#
-#         for id, info_and_extra_args in callbacks.items():  # iterate in a copy
-#
-#             info = info_and_extra_args[0]
-#             func_obj = info[self.INFO_POS_FUNC_OBJ]
-#             if func_obj is not None:
-#                 # Ok, we have a self.
-#                 func_obj = func_obj()
-#                 if func_obj is None:
-#                     # self is dead
-#                     del callbacks[id]
-#                 else:
-#                     func_func = info[self.INFO_POS_FUNC_FUNC]
-#                     to_call.append(
-#                         (
-#                             new.instancemethod(func_func, func_obj, info[self.INFO_POS_FUNC_CLASS]),
-#                             info_and_extra_args[1]
-#                         )
-#                     )
-#             else:
-#                 func_func = info[self.INFO_POS_FUNC_FUNC]
-#                 if func_func.__class__ == _CallbackWrapper:
-#                     # The instance of the _CallbackWrapper already died! (func_obj is None)
-#                     original_method = func_func.OriginalMethod()
-#                     if original_method is None:
-#                         del callbacks[id]
-#                         continue
-#
-#                 # No self: either classmethod or just callable
-#                 to_call.append((func_func, info_and_extra_args[1]))
-#
-#         return to_call
+    def _CalculateToCall(self):
+        '''
+        Copy of the code above so that subclasses can use it (we don't want the overhead in the
+        call above).
+        '''
+        try:
+            callbacks = self._callbacks
+        except AttributeError:
+            return []  # No callbacks registered
+
+        to_call = []
+
+        for id, info_and_extra_args in callbacks.items():  # iterate in a copy
+
+            info = info_and_extra_args[0]
+            func_obj = info[self.INFO_POS_FUNC_OBJ]
+            if func_obj is not None:
+                # Ok, we have a self.
+                func_obj = func_obj()
+                if func_obj is None:
+                    # self is dead
+                    del callbacks[id]
+                else:
+                    func_func = info[self.INFO_POS_FUNC_FUNC]
+                    to_call.append(
+                        (
+                            new.instancemethod(func_func, func_obj, info[self.INFO_POS_FUNC_CLASS]),
+                            info_and_extra_args[1]
+                        )
+                    )
+            else:
+                func_func = info[self.INFO_POS_FUNC_FUNC]
+                if func_func.__class__ == _CallbackWrapper:
+                    # The instance of the _CallbackWrapper already died! (func_obj is None)
+                    original_method = func_func.OriginalMethod()
+                    if original_method is None:
+                        del callbacks[id]
+                        continue
+
+                # No self: either classmethod or just callable
+                to_call.append((func_func, info_and_extra_args[1]))
+
+        return to_call
 
 
     # Should be OK using a mutable object here as it'll only be accessed internally and

@@ -185,6 +185,10 @@ class SafeStreamFilter(object):
         return self.write(text + '\n')
 
 
+    def flush(self):
+        self.stream.flush()
+
+
 
 #===================================================================================================
 # ColorStream

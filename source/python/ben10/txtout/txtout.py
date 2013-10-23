@@ -119,6 +119,13 @@ class AbstractTextOutput(object):
         self._oss.write(p_text)
 
 
+    def flush(self):
+        '''
+        Emulating file interface (flush method) as expected on coilib50's unittest framekwork.
+        '''
+        self._oss.flush()
+
+
     # Indent ---------------------------------------------------------------------------------------
 
     def ResetIndentation(self, **kargs):

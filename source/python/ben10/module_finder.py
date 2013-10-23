@@ -218,7 +218,7 @@ def ImportModule(p_import_path):
             result = getattr(result, i)
         return result
     except ImportError, e:
-        from _reraise import Reraise
+        from ben10.foundation.reraise import Reraise
         Reraise(
             e,
             'Error importing module %s' % p_import_path)

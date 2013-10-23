@@ -643,6 +643,10 @@ def Implements(*interfaces, **kwargs):
         del frame
 
 
+# TODO: Replace by ImplementsInterface permanently.
+ImplementsInterface = Implements
+
+
 
 #===================================================================================================
 # DeclareClassImplements
