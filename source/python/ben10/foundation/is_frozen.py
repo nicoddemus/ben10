@@ -35,3 +35,32 @@ def SetIsFrozen(is_frozen):
         return _is_frozen
     finally:
         _is_frozen = is_frozen
+
+
+
+#===================================================================================================
+# IsDevelopment
+# The is-development global flag signs we are working in a development environment. This flag is
+# used to enable/disable expansive checks during the development and testing phases.
+# Since we perform the application checks in the executable we can't use IsFrozen.
+# The following checks are tied to this flag:
+# - DevelopmentCheckType
+# - Interface class check (TODO)
+#===================================================================================================
+def IsDevelopment():
+    '''
+    :rtype: bool
+    :returns:
+        Returns whether we are working in a development (True) or release (False) environment.
+    '''
+    return not _is_frozen
+
+
+def SetIsDevelopment(is_development):
+    '''
+    Set the is-development global value.
+    
+    :param bool is_development:
+        The new is-development value
+    '''
+    SetIsFrozen(not is_development)

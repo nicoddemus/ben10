@@ -108,11 +108,12 @@ def Deprecated(name=None):
     :param str name:
         The name of the method that substitutes this one, if any.
     '''
-
     if IsFrozen():
         # Optimization: we don't want deprecated to add overhead in release mode.
+
         def DeprecatedDecorator(func):
             return func
+
     else:
         def DeprecatedDecorator(func):
             '''
