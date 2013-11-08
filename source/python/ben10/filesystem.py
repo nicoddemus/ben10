@@ -1022,10 +1022,8 @@ def CreateDirectory(directory):
 
     # Handle local
     if _UrlIsLocal(directory_url):
-        from path import path
-        target = path(directory)
-        if not target.exists():
-            target.makedirs()
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     # Handle FTP
     elif directory_url.scheme == 'ftp':
