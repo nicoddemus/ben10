@@ -12,6 +12,7 @@ class Ben10(EsssProject):
         'ftputil',
         'ordereddict',
         'path_py',
+        'pyftpdlib',
         'pytest',
         'pytest_cov',
         'pytest_localserver',

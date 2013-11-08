@@ -1,3 +1,4 @@
+from ben10.fixtures import SkipIfImportError
 from ben10.foundation.klass import AllBasesNames, GetClassHierarchy, IsInstance, IsSubclass
 
 
@@ -141,6 +142,7 @@ class Test:
 #         print 'isinstance', timer.timeit()
 
 
+    @SkipIfImportError('mx.DateTime')
     def testIsInstanceWithDateTime(self):
         '''
         Make sure IsInstance works with DateTime objects.
