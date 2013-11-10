@@ -1,4 +1,6 @@
 from ben10.foundation.string import Dedent
+import pytest
+import sys
 
 
 
@@ -71,11 +73,49 @@ class Test:
         '''
         Test a string that has an 'empty line' with 4 spaces above indent level
         '''
+        # Using a trick to avoid auto-format to remove the empty spaces.
         string = Dedent(
             '''
             line
-                
+            %s
             other_line
-            '''
+            ''' % '    '
         )
         assert string == 'line\n    \nother_line'
+
+
+    def testDedent8(self):
+        '''
+        Test not the first line in the right indent.
+        '''
+        string = Dedent(
+            '''
+                alpha
+              bravo
+            charlie
+            '''
+        )
+        assert string == '    alpha\n  bravo\ncharlie'
+
+
+    def testDedent9(self):
+        '''
+        Test not the first line in the right indent.
+        '''
+        string = Dedent(
+            '''
+                alpha
+bravo
+            '''
+        )
+        assert string == '    alpha\n  bravo\ncharlie'
+
+
+
+#===================================================================================================
+# Entry Point
+#===================================================================================================
+if __name__ == '__main__':
+    # Executes with specific coverage.
+    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.foundation.string', __file__])
+    sys.exit(retcode)

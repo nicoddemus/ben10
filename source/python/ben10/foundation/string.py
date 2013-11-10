@@ -8,14 +8,14 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
     Heavily inspired by textwrap.dedent, with a few changes (as of python 2.7)
         - No longer transforming all-whitespace lines into ''
         - Options to ignore first and last linebreaks of `text`.
-        
+
     The last option is particularly useful because of ESSS coding standards.
     For example, using the default textwrap.dedent to create a 3-line string would look like this:
         textwrap.dedent('''    line1
             line2
             line3'''
         )
-        
+
     With these options, you can create a better looking code with:
         Dedent(
             '''
@@ -24,23 +24,23 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
             line3
             '''
         )
-        
+
     :param str text:
         Text to be dedented (see examples above)
-    
+
     :param bool ignore_first_linebreak:
         If True, everything up to the first '\n' is ignored
-        
+
     :param bool ignore_last_linebreak:
         If True, everything after the last '\n' is ignored
-    
-    
+
+
     Original docs:
         Remove any common leading whitespace from every line in `text`.
-    
+
         This can be used to make triple-quoted strings line up with the left edge of the display,
         while still presenting them in the source code in indented form.
-    
+
         Note that tabs and spaces are both treated as whitespace, but they are not equal: the lines
         "  hello" and "\thello" are  considered to have no common leading whitespace.  (This
         behaviour is new in Python 2.5; older versions of this module incorrectly expanded tabs
@@ -75,6 +75,7 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
         # Current line and previous winner have no common whitespace:
         # there is no margin.
         else:
+            # TODO: Can't find a way to cover this? Is this coverable?
             margin = ""
             break
 
