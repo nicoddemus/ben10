@@ -100,15 +100,17 @@ class Test:
 
     def testDedent9(self):
         '''
-        Test not the first line in the right indent.
+        Coverage 100%
+
+        TODO: Strange behavior when mixing tabs and spaces.
         '''
         string = Dedent(
             '''
                 alpha
-bravo
+            \tbravo
             '''
         )
-        assert string == '    alpha\n  bravo\ncharlie'
+        assert string == '                alpha\n            \tbravo'
 
 
 
@@ -116,6 +118,5 @@ bravo
 # Entry Point
 #===================================================================================================
 if __name__ == '__main__':
-    # Executes with specific coverage.
     retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.foundation.string', __file__])
     sys.exit(retcode)
