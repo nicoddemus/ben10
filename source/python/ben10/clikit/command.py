@@ -51,14 +51,17 @@ class Command:
         
         I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside @argparse@ to print help message.
         '''
-        def __init__(self, name, default=None):
+        NO_DEFAULT = object()
+        def __init__(self, name, default=NO_DEFAULT):
             self.name = name
             self.default = default
             self.description = '(no description)'
 
         def __str__(self):
-            if self.default in (None, True, False):
+            if any(map(lambda x: self.default is x, (Command.Arg.NO_DEFAULT, True, False))):
                 return self.name
+            elif self.default is None:
+                return '%s=VALUE' % self.name
             else:
                 return '%s=%s' % (self.name, self.default)
 
@@ -68,7 +71,7 @@ class Command:
             
             :param parser: argparse.ArgumentParser
             '''
-            if self.default is None:
+            if self.default is Command.Arg.NO_DEFAULT:
                 parser.add_argument(self.name)
             elif self.default is True:
                 parser.add_argument('--%s' % self.name, action='store_true')
@@ -168,8 +171,8 @@ class Command:
         '''
         console = BufferedConsole()
         console.Print('Usage:')
-        positionals = [i for i in self.args.values() if i.default is None]
-        optionals = [i for i in self.args.values() if i.default is not None]
+        positionals = [i for i in self.args.values() if i.default is Command.Arg.NO_DEFAULT]
+        optionals = [i for i in self.args.values() if i.default is not Command.Arg.NO_DEFAULT]
         console.Print('%s %s %s' % (
             ','.join(self.names),
             ','.join(['<%s>' % i for i in positionals]),
@@ -181,7 +184,7 @@ class Command:
         console.Print()
         console.Print('Options:')
         for i in optionals:
-            if i.default in (True, False):
+            if i.default in (None, True, False):
                 console.Print('--%s   %s' % (i.name, i.description), indent=1)
             else:
                 console.Print('--%s   %s [default: %s]' % (i.name, i.description, i.default), indent=1)
@@ -219,7 +222,7 @@ class Command:
             raise InvalidFixture(str(exception))
 
         # Default values
-        kwargs.update(dict([(i.name, i.default) for i in self.args.values() if i.default is not None]))
+        kwargs.update(dict([(i.name, i.default) for i in self.args.values() if i.default is not Command.Arg.NO_DEFAULT]))
 
         # Passed arguments (argd)
         kwargs.update(dict([i for i in argd.iteritems() if i[0] in self.args]))
