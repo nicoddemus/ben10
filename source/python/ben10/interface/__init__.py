@@ -16,12 +16,13 @@
     If Foo doesn't implement some method from IFoo, an exception is raised at class creation time.
 '''
 from _adaptable_interface import IAdaptable
-from _cached_method import CachedMethod, LastResultCachedMethod, AttributeBasedCachedMethod
+from _cached_method import AttributeBasedCachedMethod, CachedMethod, LastResultCachedMethod
 from _interface import (AssertDeclaresInterface, AssertImplements, AssertImplementsFullChecking,
     Attribute, BadImplementationError, CacheInterfaceAttrs, DeclareClassImplements,
     GetImplementedInterfaces, Implements, ImplementsInterface, Interface, InterfaceError,
-    InterfaceImplementationMetaClass, InterfaceImplementorStub, IsImplementation, IsImplementationOfAny,
-    IsImplementationFullChecking, IsInterfaceDeclared, ReadOnlyAttribute, ScalarAttribute)
+    InterfaceImplementationMetaClass, InterfaceImplementorStub, IsImplementation,
+    IsImplementationFullChecking, IsImplementationOfAny, IsInterfaceDeclared, ReadOnlyAttribute,
+    ScalarAttribute)
 
 __all__ = [
     'AssertDeclaresInterface',

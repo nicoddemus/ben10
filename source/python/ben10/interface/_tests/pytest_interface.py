@@ -1,7 +1,7 @@
-from ben10.foundation.types_ import Null, Method
-from ben10.interface import (Interface, Implements, IsImplementation, InterfaceError,
-    BadImplementationError, DeclareClassImplements, GetImplementedInterfaces, AssertImplements,
-    Attribute, IAdaptable, InterfaceImplementorStub, ReadOnlyAttribute)
+from ben10.foundation.types_ import Method, Null
+from ben10.interface import (AssertImplements, Attribute, BadImplementationError,
+    DeclareClassImplements, GetImplementedInterfaces, IAdaptable, Implements, Interface,
+    InterfaceError, InterfaceImplementorStub, IsImplementation, ReadOnlyAttribute)
 import pytest
 import sys
 
