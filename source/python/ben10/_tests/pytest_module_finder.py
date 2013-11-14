@@ -1,5 +1,5 @@
 from ben10.foundation.callback import Callback
-from ben10.module_finder import ModuleFinder, ImportToken
+from ben10.module_finder import ImportToken, ModuleFinder
 import pytest
 import sys
 

@@ -1,8 +1,8 @@
 '''
 Slightly magical Win32api Registry -> Dictionary-like-object wrapper
 '''
-import cPickle
 import _winreg
+import cPickle
 
 
 

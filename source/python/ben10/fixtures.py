@@ -28,12 +28,12 @@ class MultipleFilesNotFound(RuntimeError):
 def SkipIfImportError(module_name):
     '''
     Used as a decorator on tests that should be skipped if a given module cannot be imported.
-    
+
     e.g.
         @SkipIfImportError(numpy)
         def testThatRequiresNumpy():
             ...
-            
+
     :param str module_name:
         Name of module being checked
     '''
@@ -48,12 +48,13 @@ def SkipIfImportError(module_name):
 #===================================================================================================
 # embed_data
 #===================================================================================================
+
 class _EmbedDataFixture(object):
     '''
     This fixture create a temporary data directory for the test.
     The contents of the directory is a copy of a 'data-directory' with the same name of the module
     (without the .py extension).
-    
+
     :ivar boolean delete_dir:
         Determines if the data-directory is deleted at finalization. Default to True.
         This may be used for debugging purposes to examine the data-directory as left by the test.
@@ -96,7 +97,7 @@ class _EmbedDataFixture(object):
     def CreateDataDir(self):
         '''
         Creates the data-directory as a copy of the source directory.
-        
+
         :rtype: str
         :returns:
             Path to created data dir
@@ -131,13 +132,13 @@ class _EmbedDataFixture(object):
 
         :param bool create_dir:
             If True (default) creates the data directory.
-            
+
         :rtype: str
         :returns:
             Returns the data-directory name.
 
         @remarks:
-            This method triggers the data-directory creation. 
+            This method triggers the data-directory creation.
         '''
         if create_dir:
             self.CreateDataDir()
@@ -153,19 +154,19 @@ class _EmbedDataFixture(object):
     def GetDataFilename(self, *parts, **kwargs):
         '''
         Returns a full filename in the data-directory.
-        
+
         @params parts: list(str)
             Path parts. Each part is joined to form a path.
-            
+
         :keyword bool absolute:
             If True, returns the filename as an abspath
-            
+
         :rtype: str
         :returns:
             The full path prefixed with the data-directory.
 
         @remarks:
-            This method triggers the data-directory creation. 
+            This method triggers the data-directory creation.
         '''
         # Make sure the data-dir exists.
         self.CreateDataDir()
@@ -180,37 +181,39 @@ class _EmbedDataFixture(object):
 
         return result
 
+    def __getitem__(self, index):
+        return self.GetDataFilename(index)
+
 
     def Finalizer(self):
         '''
         Deletes the data-directory upon finalizing (see FixtureRequest.addfinalizer)
         '''
-        from ben10.filesystem import DeleteDirectory
+        from ben10.filesystem._filesystem import DeleteDirectory
 
         if self.delete_dir:
             DeleteDirectory(self._data_dir, skip_on_error=True)
         self._finalized = True
 
 
-    def AssertEqualFiles(self, filename1, filename2):
+    def AssertEqualFiles(self, filename1, filename2, fix_callback=lambda x:x):
         '''
         Compare two files contents, showing a nice diff view if the files differs.
-        
-        Searches for the filenames both outside or inside the data directory.
-        
-        @filename1: str
 
-        @filename2: str
+        Searches for the filenames both outside or inside the data directory.
+
+        :param str filename1:
+        :param str filename2:
+        :param callable fix_callback:
+            A callback to "fix" the contents of the obtained (first) file.
+            This callback receives a list of strings (lines) and must also return a list of lines,
+            changed as needed.
+            The resulting lines will be used to compare with the contents of filename2.
         '''
         from ben10.filesystem import GetFileLines
         import os
 
         def FindFile(filename):
-            '''
-            Searches for the given filename, including variations.
-                * The filename itself
-                * The filename inside embed_data (GetDataFilename) 
-            '''
             r_filename = filename
             if not os.path.isfile(r_filename):
                 r_filename = self.GetDataFilename(r_filename)
@@ -221,7 +224,7 @@ class _EmbedDataFixture(object):
         filename1 = FindFile(filename1)
         filename2 = FindFile(filename2)
 
-        obtained = GetFileLines(filename1)
+        obtained = fix_callback(GetFileLines(filename1))
         expected = GetFileLines(filename2)
 
         if obtained != expected:
@@ -230,7 +233,6 @@ class _EmbedDataFixture(object):
             diff += [i for i in difflib.context_diff(obtained, expected)]
             diff = '\n'.join(diff)
             raise AssertionError(diff)
-
 
 
 @pytest.fixture  # pylint: disable=E1101

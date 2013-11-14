@@ -5,117 +5,21 @@ Some sort of wrapper for common builtin 'os' operations with a nicer interface.
 
 These functions abstract file location, most of them work for either local, ftp or http protocols
 
-FTP LIMITATIONS:
-================
 
-Right now, all functions that require a FTP connection are ALWAYS creating and closing a FTP Host.
-    
-Keep in mind that this process can be slow if you perform many of such operations in sequence. 
+#===================================================================================================
+# FTP LIMITATIONS:
+#===================================================================================================
+    Right now, all functions that require a FTP connection are ALWAYS creating and closing a FTP
+    Host.
+
+    Keep in mind that this process can be slow if you perform many of such operations in sequence.
 '''
-from ben10.foundation.reraise import Reraise
-from ftputil.ftp_error import FTPIOError, FTPOSError, PermanentError
+from __future__ import with_statement
+from ._filesystem_exceptions import UnknownPlatformError
+import contextlib
 import os
 import re
 import sys
-
-
-
-#===================================================================================================
-# Exceptions
-#===================================================================================================
-#---------------------------------------------------------------------------------------------------
-# UnknownPlatformError
-#---------------------------------------------------------------------------------------------------
-class UnknownPlatformError(RuntimeError):
-
-    def __init__(self, platform):
-        self.platform = platform
-        RuntimeError.__init__(self, 'Unknown platform "%s".' % platform)
-
-
-#---------------------------------------------------------------------------------------------------
-# NotImplementedProtocol
-#---------------------------------------------------------------------------------------------------
-class NotImplementedProtocol(RuntimeError):
-    def __init__(self, protocol):
-        RuntimeError.__init__(self, "Function can't handle protocol '%s'." % protocol)
-        self.protocol = protocol
-
-
-#---------------------------------------------------------------------------------------------------
-# NotImplementedForRemotePathError
-#---------------------------------------------------------------------------------------------------
-class NotImplementedForRemotePathError(NotImplementedError):
-    def __init__(self):
-        NotImplementedError.__init__(self, 'Function not implemented remote paths.')
-
-
-#---------------------------------------------------------------------------------------------------
-# FileError
-#---------------------------------------------------------------------------------------------------
-class FileError(RuntimeError):
-    def __init__(self, filename):
-        self.filename = filename
-        RuntimeError.__init__(self, self.GetMessage(filename))
-
-    def GetMessage(self, filename):
-        raise NotImplementedError()
-
-
-#---------------------------------------------------------------------------------------------------
-# FileNotFoundError
-#---------------------------------------------------------------------------------------------------
-class FileNotFoundError(FileError):
-    def GetMessage(self, filename):
-        return 'File "%s" not found.' % filename
-
-
-#---------------------------------------------------------------------------------------------------
-# CantOpenFileThroughProxyError
-#---------------------------------------------------------------------------------------------------
-class CantOpenFileThroughProxyError(FileError):
-    def GetMessage(self, filename):
-        return 'Can\'t open file "%s" through a proxy.' % filename
-
-
-#---------------------------------------------------------------------------------------------------
-# DirectoryNotFoundError
-#---------------------------------------------------------------------------------------------------
-class DirectoryNotFoundError(FileError):
-    def GetMessage(self, directory):
-        return 'Directory "%s" not found.' % directory
-
-
-#---------------------------------------------------------------------------------------------------
-# DirectoryAlreadyExistsError
-#---------------------------------------------------------------------------------------------------
-class DirectoryAlreadyExistsError(FileError):
-    def GetMessage(self, directory):
-        return 'Directory "%s" already exists.' % directory
-
-
-#---------------------------------------------------------------------------------------------------
-# ServerTimeoutError
-#---------------------------------------------------------------------------------------------------
-class ServerTimeoutError(FileError):
-    def GetMessage(self, filename):
-        return 'Server timeout while accessing file "%s"' % filename
-
-
-#---------------------------------------------------------------------------------------------------
-# FileAlreadyExistsError
-#---------------------------------------------------------------------------------------------------
-class FileAlreadyExistsError(FileError):
-    def GetMessage(self, filename):
-        return 'File "%s" already exists.' % filename
-
-
-#---------------------------------------------------------------------------------------------------
-# FileOnlyActionError
-#---------------------------------------------------------------------------------------------------
-class FileOnlyActionError(FileError):
-    def GetMessage(self, filename):
-        return 'Action performed over "%s" only possible with a file.' % filename
 
 
 
@@ -147,20 +51,47 @@ EOL_STYLE_NATIVE = _GetNativeEolStyle()
 
 
 #===================================================================================================
+# Cwd
+#===================================================================================================
+@contextlib.contextmanager
+def Cwd(directory):
+    '''
+    Context manager for current directory (uses with_statement)
+
+    e.g.:
+        # working on some directory
+        with Cwd('/home/new_dir'):
+            # working on new_dir
+
+        # working on some directory again
+
+    :param str directory:
+        Target directory to enter
+    '''
+    old_directory = os.getcwd()
+    os.chdir(directory)
+    try:
+        yield directory
+    finally:
+        os.chdir(old_directory)
+
+
+
+#===================================================================================================
 # NormalizePath
 #===================================================================================================
 def NormalizePath(path):
     '''
     Normalizes a path maintaining the final slashes.
-    
+
     Some environment variables need the final slash in order to work.
-    
+
     Ex. The SOURCES_DIR set by subversion must end with a slash because of the way it is used
     in the Visual Studio projects.
-     
+
     :param str path:
         The path to normalize.
-        
+
     :rtype: str
     :returns:
         Normalized path
@@ -180,8 +111,8 @@ def CanonicalPath(path):
     Returns a version of a path that is unique.
 
     Given two paths path1 and path2:
-        CanonicalPath(path1) == CanonicalPath(path2) if and only if they represent the same file on the host OS. 
-        Takes account of case, slashes and relative paths.
+        CanonicalPath(path1) == CanonicalPath(path2) if and only if they represent the same file on
+        the host OS. Takes account of case, slashes and relative paths.
 
     :param str path:
         The original path.
@@ -203,11 +134,11 @@ def CanonicalPath(path):
 def StandardizePath(path, strip=False):
     '''
     Replaces all slashes and backslashes with the target separator
-    
+
     StandardPath:
         We are defining that the standard-path is the one with only back-slashes in it, either
         on Windows or any other platform.
-        
+
     :param bool strip:
         If True, removes additional slashes from the end of the path.
     '''
@@ -223,14 +154,14 @@ def StandardizePath(path, strip=False):
 #===================================================================================================
 def NormStandardPath(path):
     '''
-    Normalizes a standard path (posixpath.normpath) maintaining any slashes at the end of the path. 
+    Normalizes a standard path (posixpath.normpath) maintaining any slashes at the end of the path.
 
     Normalize:
         Removes any local references in the path "/../"
 
     StandardPath:
         We are defining that the standard-path is the one with only back-slashes in it, either
-        on Windows or any other platform. 
+        on Windows or any other platform.
     '''
     import posixpath
     if path.endswith('/'):
@@ -247,22 +178,32 @@ def NormStandardPath(path):
 def CreateMD5(source_filename, target_filename=None):
     '''
     Creates a md5 file from a source file (contents are the md5 hash of source file)
-    
+
     :param str source_filename:
         Path to source file
-        
+
     :type target_filename: str or None
     :param target_filename:
         Name of the target file with the md5 contents
-        
+
         If None, defaults to source_filename + '.md5'
     '''
+    from ben10.foundation.hash import Md5Hex
+
     if target_filename is None:
         target_filename = source_filename + '.md5'
 
+    from urlparse import urlparse
+    source_url = urlparse(source_filename)
+
     # Obtain MD5 hex
-    from ben10.foundation.hash import Md5Hex
-    md5_contents = Md5Hex(filename=source_filename)
+    if _UrlIsLocal(source_url):
+        # If using a local file, we can give Md5Hex the filename
+        md5_contents = Md5Hex(filename=source_filename)
+    else:
+        # Md5Hex can't handle remote files, we open it and pray we won't run out of memory.
+        # TODO: 0060634: Allow Md5Hex to receive a file-like object as parameter
+        md5_contents = Md5Hex(contents=GetFileContents(source_filename))
 
     # Write MD5 hash to a file
     CreateFile(target_filename, md5_contents)
@@ -282,38 +223,38 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
 
     :param  target_filename:
         @see _DoCopyFile
-        
+
     :param bool md5_check:
         If True, checks md5 files (of both source and target files), if they match, skip this copy
         and return MD5_SKIP
-        
+
         Md5 files are assumed to be {source, target} + '.md5'
-        
-        If any file is missing (source, target or md5), the copy will always be made. 
+
+        If any file is missing (source, target or md5), the copy will always be made.
 
     :param  copy_symlink:
         @see _DoCopyFile
 
     :raises FileAlreadyExistsError:
         If target_filename already exists, and override is False
-        
+
     :raises NotImplementedProtocol:
         If file protocol is not accepted
-        
+
         Protocols allowed are:
             source_filename: local, ftp, http
             target_filename: local, ftp
-            
+
     :rtype: None | MD5_SKIP
     :returns:
         MD5_SKIP if the file was not copied because there was a matching .md5 file
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     # Check override
     if not override and Exists(target_filename):
+        from _filesystem_exceptions import FileAlreadyExistsError
         raise FileAlreadyExistsError(target_filename)
-
 
     # If we enabled md5 checks, ignore copy of files that haven't changed their md5 contents.
     if md5_check:
@@ -331,6 +272,7 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
 
     # Copy md5 file after the file itself was copied, for safety
     if md5_check:
+        from ben10.filesystem import FileNotFoundError
         try:
             _DoCopyFile(source_md5_filename, target_md5_filename)
         except FileNotFoundError:
@@ -349,7 +291,7 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
 
     :param  copy_symlink:
         @see _CopyFileLocal
-        
+
     :raises FileNotFoundError:
         If source_filename does not exist
     '''
@@ -360,6 +302,7 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
 
     if _UrlIsLocal(source_url):
         if not Exists(source_filename):
+            from ben10.filesystem import FileNotFoundError
             raise FileNotFoundError(source_filename)
 
         if _UrlIsLocal(target_url):
@@ -367,18 +310,23 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
             _CopyFileLocal(source_filename, target_filename, copy_symlink=copy_symlink)
         elif target_url.scheme in ['ftp']:
             # local to remote
-            RemoteImpl.FTPUploadFileToUrl(source_filename, target_url)
+            from _filesystem_remote import FTPUploadFileToUrl
+            FTPUploadFileToUrl(source_filename, target_url)
         else:
+            from _filesystem_exceptions import NotImplementedProtocol
             raise NotImplementedProtocol(target_url.scheme)
 
     elif source_url.scheme in ['http', 'ftp']:
         if _UrlIsLocal(target_url):
             # HTTP/FTP to local
-            RemoteImpl.DownloadUrlToFile(source_url, target_filename)
+            from _filesystem_remote import DownloadUrlToFile
+            DownloadUrlToFile(source_url, target_filename)
         else:
             # HTTP/FTP to other ==> NotImplemented
+            from _filesystem_exceptions import NotImplementedProtocol
             raise NotImplementedProtocol(target_url.scheme)
     else:
+        from _filesystem_exceptions import NotImplementedProtocol  # @Reimport
         raise NotImplementedProtocol(source_url.scheme)
 
 
@@ -421,6 +369,7 @@ def _CopyFileLocal(source_filename, target_filename, copy_symlink=True):
             shutil.copyfile(source_filename, target_filename)
             shutil.copymode(source_filename, target_filename)
     except Exception, e:
+        from ben10.foundation.reraise import Reraise
         Reraise(e, 'While executiong _filesystem._CopyFileLocal(%s, %s)' % (source_filename, target_filename))
 
 
@@ -435,8 +384,8 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
     :param str source_dir:
         A filename, URL or a file mask.
         Ex.
-            x:\ben10
-            x:\ben10\*
+            x:\coilib50
+            x:\coilib50\*
             http://server/directory/file
             ftp://server/directory/file
 
@@ -449,13 +398,13 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
 
     :param bool create_target_dir:
         If True, creates the target path if it doesn't exists.
-        
-        
+
+
     :raises DirectoryNotFoundError:
         If target_dir does not exist, and create_target_dir is False
 
     .. see:: CopyFile for documentation on accepted protocols
-    
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     import fnmatch
@@ -473,6 +422,7 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
         if create_target_dir:
             CreateDirectory(target_dir)
         else:
+            from _filesystem_exceptions import DirectoryNotFoundError
             raise DirectoryNotFoundError(target_dir)
 
     # List and match files
@@ -502,21 +452,26 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
 def CopyFilesX(file_mapping):
     '''
     Copies files into directories, according to a file mapping
-    
+
     :param list(tuple(str,str)) file_mapping:
         A list of mappings between the directory in the target and the source.
         For syntax, @see: ExtendedPathMask
-        
+
     :rtype: list(tuple(str,str))
     :returns:
         List of files copied. (source_filename, target_filename)
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
+    from ben10.filesystem import FindFiles
+    from ._duplicates import ExtendedPathMask
+
     # List files that match the mapping
     files = []
     for i_target_path, i_source_path_mask in file_mapping:
         tree_recurse, flat_recurse, dirname, in_filters, out_filters = ExtendedPathMask.Split(i_source_path_mask)
+
+        _AssertIsLocal(dirname)
 
         filenames = FindFiles(dirname, in_filters, out_filters, tree_recurse)
         for i_source_filename in filenames:
@@ -552,14 +507,14 @@ def IsFile(path):
     '''
     :param str path:
         Path to a file (local or ftp)
-        
+
     :raises NotImplementedProtocol:
         If checking for a non-local, non-ftp file
-    
+
     :rtype: bool
     :returns:
         True if the file exists
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
@@ -569,8 +524,10 @@ def IsFile(path):
         return os.path.isfile(path)
 
     elif url.scheme == 'ftp':
-        return RemoteImpl.FTPIsFile(url)
+        from ben10.filesystem._filesystem_remote import FTPIsFile
+        return FTPIsFile(url)
     else:
+        from ben10.filesystem import NotImplementedProtocol
         raise NotImplementedProtocol(url.scheme)
 
 
@@ -586,10 +543,10 @@ def IsDir(directory):
     :rtype: bool
     :returns:
         Returns whether the given path points to an existent directory.
-        
+
     :raises NotImplementedProtocol:
         If the path protocol is not local or ftp
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
@@ -598,8 +555,10 @@ def IsDir(directory):
     if _UrlIsLocal(directory_url):
         return os.path.isdir(directory)
     elif directory_url.scheme == 'ftp':
-        return RemoteImpl.FTPIsDir(directory_url)
+        from ben10.filesystem._filesystem_remote import FTPIsDir
+        return FTPIsDir(directory_url)
     else:
+        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -612,7 +571,7 @@ def Exists(path):
     :rtype: bool
     :returns:
         True if the path already exists (either a file or a directory)
-    
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     return IsFile(path) or IsDir(path)
@@ -625,13 +584,13 @@ def Exists(path):
 def CopyDirectory(source_dir, target_dir, override=False):
     '''
     Recursively copy a directory tree.
-    
+
     :param str source_dir:
         Where files will come from
-    
+
     :param str target_dir:
         Where files will go to
-    
+
     :param bool override:
         If True and target_dir already exists, it will be deleted before copying.
 
@@ -654,16 +613,16 @@ def CopyDirectory(source_dir, target_dir, override=False):
 #===================================================================================================
 def DeleteFile(target_filename):
     '''
-    Deletes the given local filename. 
-    
+    Deletes the given local filename.
+
     .. note:: If file doesn't exist this method has no effect.
 
     :param str target_filename:
         A local filename
-        
+
     :raises NotImplementedForRemotePathError:
         If trying to delete a non-local path
-        
+
     :raises FileOnlyActionError:
         Raised when filename refers to a directory.
     '''
@@ -673,8 +632,10 @@ def DeleteFile(target_filename):
         if os.path.isfile(target_filename):
             os.remove(target_filename)
         elif IsDir(target_filename):
+            from _filesystem_exceptions import FileOnlyActionError
             raise FileOnlyActionError(target_filename)
     except Exception, e:
+        from ben10.foundation.reraise import Reraise
         Reraise(e, 'While executing filesystem.DeleteFile(%s)' % (target_filename))
 
 
@@ -682,27 +643,43 @@ def DeleteFile(target_filename):
 #===================================================================================================
 # AppendToFile
 #===================================================================================================
-def AppendToFile(filename, contents, eol_style=EOL_STYLE_NATIVE):
+def AppendToFile(filename, contents, eol_style=EOL_STYLE_NATIVE, encoding=None):
     '''
     Appends content to a local file.
-    
+
     :param str filename:
-    
+
     :param str contents:
-    
+
     :type eol_style: EOL_STYLE_XXX constant
     :param eol_style:
         Replaces the EOL by the appropriate EOL depending on the eol_style value.
         Considers that all content is using only "\n" as EOL.
-        
+
+    :param str encoding:
+        Target file's content encoding.
+
     :raises NotImplementedForRemotePathError:
         If trying to modify a non-local path
+
+    :raises ValueError:
+        If trying to mix unicode `contents` without `encoding`, or `encoding` without
+        unicode `contents`
     '''
     _AssertIsLocal(filename)
 
+    # Unicode
+    unicode_contents = isinstance(contents, unicode)
+    use_encoding = encoding is not None
+    if unicode_contents ^ use_encoding:  # XOR
+        raise ValueError('Either use unicode contents with an encoding, or string contents without encoding.')
+
+    if unicode_contents:
+        contents = contents.encode(encoding)
+    contents = _HandleContentsEol(contents, eol_style)
+
     oss = open(filename, 'ab')
     try:
-        contents = _HandleContentsEol(contents, eol_style)
         oss.write(contents)
     finally:
         oss.close()
@@ -715,11 +692,11 @@ def AppendToFile(filename, contents, eol_style=EOL_STYLE_NATIVE):
 def MoveFile(source_filename, target_filename):
     '''
     Moves a file.
-    
+
     :param str source_filename:
-    
+
     :param str target_filename:
-    
+
     :raises NotImplementedForRemotePathError:
         If trying to operate with non-local files.
     '''
@@ -737,20 +714,24 @@ def MoveFile(source_filename, target_filename):
 def MoveDirectory(source_dir, target_dir):
     '''
     Moves a directory.
-    
+
     :param str source_dir:
-    
+
     :param str target_dir:
-    
+
     :raises NotImplementedError:
         If trying to move anything other than:
             Local dir -> local dir
             FTP dir -> FTP dir (same host)
+
+
     '''
     if not IsDir(source_dir):
+        from ben10.filesystem import DirectoryNotFoundError
         raise DirectoryNotFoundError(source_dir)
 
     if Exists(target_dir):
+        from ben10.filesystem import DirectoryAlreadyExistsError
         raise DirectoryAlreadyExistsError(target_dir)
 
     from urlparse import urlparse
@@ -766,7 +747,9 @@ def MoveDirectory(source_dir, target_dir):
     elif source_url.scheme == 'ftp' and target_url.scheme == 'ftp':
         if source_url.hostname != target_url.hostname:
             raise NotImplementedError('Can only move FTP directories in the same host')
-        return RemoteImpl.FTPMoveDirectory(source_url, target_url)
+
+        from ben10.filesystem._filesystem_remote import FTPMoveDirectory
+        return FTPMoveDirectory(source_url, target_url)
     else:
         raise NotImplementedError('Can only move directories local->local or ftp->ftp')
 
@@ -774,26 +757,35 @@ def MoveDirectory(source_dir, target_dir):
 #===================================================================================================
 # GetFileContents
 #===================================================================================================
-def GetFileContents(filename, binary=False):
+def GetFileContents(filename, binary=False, encoding=None):
     '''
     Reads a file and returns its contents. Works for both local and remote files.
-    
+
     :param str filename:
-    
+
     :param bool binary:
         If True returns the file as is, ignore any EOL conversion.
-    
-    :rtype: str
+
+    :param str encoding:
+        File's encoding. If not None, contents obtained from file will be decoded using this
+        `encoding`.
+
+    :rtype: str | unicode
     :returns:
-        The file's contents
-        
+        The file's contents.
+        Returns unicode string when `encoding` is not None.
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     source_file = OpenFile(filename, binary=binary)
     try:
-        return source_file.read()
+        contents = source_file.read()
     finally:
         source_file.close()
+
+    if encoding is not None:
+        contents = contents.decode(encoding)
+    return contents
 
 
 #===================================================================================================
@@ -802,13 +794,13 @@ def GetFileContents(filename, binary=False):
 def GetFileLines(filename):
     '''
     Reads a file and returns its contents as a list of lines. Works for both local and remote files.
-    
+
     :param str filename:
-    
+
     :rtype: list(str)
     :returns:
         The file's lines
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     return GetFileContents(filename, binary=False).split('\n')
@@ -818,20 +810,20 @@ def OpenFile(filename, binary=False):
     '''
     Open a file and returns it.
     Consider the possibility of a remote file (HTTP, HTTPS, FTP)
-    
+
     :param str filename:
         Local or remote filename.
-    
+
     :param bool binary:
         If True returns the file as is, ignore any EOL conversion.
-    
+
     :rtype: file
     :returns:
         The open file, it must be closed by the caller
-        
+
     @raise: FileNotFoundError
         When the given filename cannot be found
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
@@ -840,6 +832,7 @@ def OpenFile(filename, binary=False):
     # Check if file is local
     if _UrlIsLocal(filename_url):
         if not os.path.isfile(filename):
+            from _filesystem_exceptions import FileNotFoundError
             raise FileNotFoundError(filename)
         mode = 'r'
         if binary:
@@ -849,7 +842,8 @@ def OpenFile(filename, binary=False):
         return file(filename, mode)
 
     # Not local
-    return RemoteImpl.OpenFile(filename_url)
+    import _filesystem_remote
+    return _filesystem_remote.OpenFile(filename_url)
 
 
 
@@ -860,17 +854,20 @@ def ListFiles(directory):
     '''
     Lists the files in the given directory
 
-    :param str directory:
+    :type directory: str | unicode
+    :param directory:
         A directory or URL
 
-    :rtype: list(str)
+    :rtype: list(str) | list(unicode)
     :returns:
         List of filenames/directories found in the given directory.
         Returns None if the given directory does not exists.
 
+        If `directory` is a unicode string, all files returned will also be unicode
+
     :raises NotImplementedProtocol:
         If file protocol is not local or FTP
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
@@ -884,8 +881,11 @@ def ListFiles(directory):
 
     # Handle FTP
     elif directory_url.scheme == 'ftp':
-        return RemoteImpl.FTPListFiles(directory_url)
+        from _filesystem_remote import FTPListFiles
+        return FTPListFiles(directory_url)
+
     else:
+        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -896,14 +896,15 @@ def ListFiles(directory):
 def CheckIsFile(filename):
     '''
     Check if the given file exists.
-    
+
     @filename: str
         The filename to check for existence.
-        
+
     @raise: FileNotFoundError
-        Raises if the file does not exist. 
+        Raises if the file does not exist.
     '''
     if not IsFile(filename):
+        from _filesystem_exceptions import FileNotFoundError
         raise FileNotFoundError(filename)
 
 
@@ -914,14 +915,15 @@ def CheckIsFile(filename):
 def CheckIsDir(directory):
     '''
     Check if the given directory exists.
-    
+
     @filename: str
         Path to a directory being checked for existence.
-        
+
     @raise: DirectoryNotFoundError
-        Raises if the directory does not exist. 
+        Raises if the directory does not exist.
     '''
     if not IsDir(directory):
+        from _filesystem_exceptions import DirectoryNotFoundError
         raise DirectoryNotFoundError(directory)
 
 
@@ -929,7 +931,7 @@ def CheckIsDir(directory):
 #===================================================================================================
 # CreateFile
 #===================================================================================================
-def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True):
+def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, encoding=None):
     '''
     Create a file with the given contents.
 
@@ -943,63 +945,57 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True):
     :param eol_style:
         Replaces the EOL by the appropriate EOL depending on the eol_style value.
         Considers that all content is using only "\n" as EOL.
-        
+
     :param bool create_dir:
         If True, also creates directories needed in filename's path
-        
+
+    :param str encoding:
+        Target file's content encoding.
+
     :raises NotImplementedProtocol:
         If file protocol is not local or FTP
-    
+
+    :raises ValueError:
+        If trying to mix unicode `contents` without `encoding`, or `encoding` without
+        unicode `contents`
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
+    # Unicode
+    unicode_contents = isinstance(contents, unicode)
+    use_encoding = encoding is not None
+    if unicode_contents ^ use_encoding:  # XOR
+        raise ValueError('Either use unicode contents with an encoding, or string contents without encoding.')
+
+    if unicode_contents:
+        contents = contents.encode(encoding)
+
+    # Replaces eol on each line by the given eol_style.
+    contents = _HandleContentsEol(contents, eol_style)
+
     # If asked, creates directory containing file
     if create_dir:
         dirname = os.path.dirname(filename)
         if dirname:
             CreateDirectory(dirname)
 
-    # Replaces eol on each line by the given eol_style.
-    contents = _HandleContentsEol(contents, eol_style)
-
     from urlparse import urlparse
     filename_url = urlparse(filename)
 
     # Handle local
     if _UrlIsLocal(filename_url):
-        _LocalCreateFile(filename, contents)
+        with open(filename, 'wb') as oss:
+            oss.write(contents)
 
     # Handle FTP
     elif filename_url.scheme == 'ftp':
-        RemoteImpl.FTPCreateFile(filename_url, contents)
+        from _filesystem_remote import FTPCreateFile
+        FTPCreateFile(filename_url, contents)
 
     else:
+        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(filename_url.scheme)
 
-
-def _LocalCreateFile(filename, contents):
-    '''
-    Create a file locally
-    
-    :param str filename:
-        File to be created
-
-    :param str contents:
-        Initial contents in file
-    '''
-    # Check if encoding is necessary
-    BOM = ''  # Byte order mark is a Unicode character used to signal the endianness of a text file or stream.
-    if isinstance(contents, unicode):
-        import codecs
-        BOM = codecs.BOM_UTF8
-        contents = contents.encode('utf-8')
-
-    # Write file
-    oss = file(filename, 'wb')
-    try:
-        oss.write(BOM)
-        oss.write(contents)
-    finally:
-        oss.close()
 
 
 #===================================================================================================
@@ -1010,10 +1006,13 @@ def CreateDirectory(directory):
     Create directory including any missing intermediate directory.
 
     :param str directory:
-    
+
+    :return str|urlparse.ParseResult:
+        Returns the created directory or url (see urlparse).
+
     :raises NotImplementedProtocol:
         If protocol is not local or FTP.
-        
+
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
@@ -1024,14 +1023,79 @@ def CreateDirectory(directory):
     if _UrlIsLocal(directory_url):
         if not os.path.exists(directory):
             os.makedirs(directory)
+        return directory
 
     # Handle FTP
     elif directory_url.scheme == 'ftp':
-        RemoteImpl.FTPCreateDirectory(directory_url)
+        from _filesystem_remote import FTPCreateDirectory
+        FTPCreateDirectory(directory_url)
+        return directory_url
 
     else:
+        from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
+
+#===================================================================================================
+# CreateTemporaryDirectory
+#===================================================================================================
+class CreateTemporaryDirectory(object):
+    '''
+    Context manager to create a temporary file and remove if at the context end.
+    '''
+    def __init__(self, suffix='', prefix='tmp', base_dir=None, maximum_attempts=100):
+        '''
+        :param str suffix:
+            A suffix to add in the name of the created directory
+
+        :param str prefix:
+            A prefix to add in the name of the created directory
+
+        :param str base_dir
+            A path to use as base in the created directory (if any). The temp directory will be a
+            child of the given base dir
+
+        :param int maximum_attemps:
+            The maximum number of attempts to obtain the temp dir name.
+
+        '''
+        self._suffix = suffix
+        self._prefix = prefix
+        self._base_dir = base_dir
+        self._maximum_number_of_attempts = maximum_attempts
+
+    def __enter__(self):
+        '''
+        :return str:
+            The path to the created temp file.
+        '''
+        import random
+        self._directory_name = None
+        if self._base_dir is None:
+            # If no base directoy was given, let us create a dir in system temp area
+            import tempfile
+            self._directory_name = tempfile.mkdtemp(self._suffix, self._prefix)
+        else:
+            # If a base dir was given, let us generate a unique directory name there and use it
+            for _index in xrange(self._maximum_number_of_attempts):
+                random_component = random.randrange(16 ** 7)
+                candidate_name = '%stemp_dir_%07X%s' % (self._prefix, random_component, self._suffix)
+                candidate_path = os.path.join(self._base_dir, candidate_name)
+                if not Exists(candidate_path):
+                    self._directory_name = candidate_path
+                    CreateDirectory(self._directory_name)
+                    break
+            else:
+                raise RuntimeError(
+                    'It was not possible to obtain a temporary filename from %s' % self._base_dir)
+
+        return self._directory_name
+
+
+
+    def __exit__(self, *args):
+        if self._directory_name is not None:
+            DeleteDirectory(self._directory_name, skip_on_error=False)
 
 
 #===================================================================================================
@@ -1040,9 +1104,9 @@ def CreateDirectory(directory):
 def DeleteDirectory(directory, skip_on_error=False):
     '''
     Deletes a directory.
-    
+
     :param str directory:
-    
+
     :param bool skip_on_error:
         If True, ignore any errors when trying to delete directory (for example, directory not
         found)
@@ -1083,20 +1147,23 @@ def GetMTime(path):
     '''
     :param str path:
         Path to file or directory
-    
+
     :rtype: float
     :returns:
         Modification time for path.
-        
+
         If this is a directory, the highest mtime from files inside it will be returned.
-        
+
     @note:
         In some Linux distros (such as CentOs, or anything with ext3), mtime will not return a value
         with resolutions higher than a second.
-        
+
         http://stackoverflow.com/questions/2428556/os-path-getmtime-doesnt-return-fraction-of-a-second
     '''
+    _AssertIsLocal(path)
+
     if os.path.isdir(path):
+        from ben10.filesystem import FindFiles
         files = FindFiles(path)
 
         if len(files) > 0:
@@ -1107,109 +1174,33 @@ def GetMTime(path):
 
 
 #===================================================================================================
-# CheckForUpdate
+# ListMappedNetworkDrives
 #===================================================================================================
-def CheckForUpdate(source, target):
+def ListMappedNetworkDrives():
     '''
-    Checks if the given target filename should be re-generated because the source has changed.
-    :param  source:
-            the source filename.
-    :param  target:
-            the target filename.
-    @return:
-        True if the target is out-dated, False otherwise.
+    On Windows, returns a list of mapped network drives
+
+    :return: tuple(string, string, bool)
+        For each mapped netword drive, return 3 values tuple:
+            - the local drive
+            - the remote path-
+            - True if the mapping is enabled (warning: not reliable)
     '''
-    return \
-        not os.path.isfile(target) or \
-        os.path.getmtime(source) > os.path.getmtime(target)
-
-
-
-#===================================================================================================
-# MatchMasks
-#===================================================================================================
-def MatchMasks(filename, filters):
-    '''
-    Verifies if a filename match with given patterns.
-
-    :type filename: the filename to match.
-    :param filename:
-    :type filters: the patterns to search in the filename.
-    :param filters:
-    :rtype: True if the filename has matched with one pattern, False otherwise.
-    '''
-    import fnmatch
-    if not isinstance(filters, (list, tuple)):
-        filters = [filters]
-
-    for i_filter in filters:
-        if fnmatch.fnmatch(filename, i_filter):
-            return True
-    return False
-
-
-
-#===================================================================================================
-# FindFiles
-#===================================================================================================
-def FindFiles(dir, in_filters=None, out_filters=None, recursive=True, include_root_dir=True, standard_paths=False):
-    '''
-    Searches for files in a given directory that match with the given patterns.
-
-    :type dir: the directory root, to search the files.
-    :param dir:
-    :type in_filters: a list with patterns to match (default = all). E.g.: ['*.py']
-    :param in_filters:
-    :type out_filters: a list with patterns to ignore (default = none). E.g.: ['*.py']
-    :param out_filters:
-    :type recursive: if True search in subdirectories, otherwise, just in the root.
-    :param recursive:
-    :type include_root_dir: if True, includes the directory being searched in the returned paths
-    :param include_root_dir:
-    :type standard_paths: if True, always uses unix path separators "/"
-    :param standard_paths:
-    :rtype: a list of strings with the files that matched (with the full path in the filesystem).
-    '''
-    # all files
-    if in_filters is None:
-        in_filters = ['*']
-
-    if out_filters is None:
-        out_filters = []
-
-    result = []
-
-    # maintain just files that don't have a pattern that match with out_filters
-    # walk through all directories based on dir
-    for dir_root, directories, filenames in os.walk(dir):
-
-        for i_directory in directories[:]:
-            if MatchMasks(i_directory, out_filters):
-                directories.remove(i_directory)
-
-        for filename in directories + filenames:
-            if MatchMasks(filename, in_filters) and not MatchMasks(filename, out_filters):
-                result.append(os.path.join(dir_root, filename))
-
-        if not recursive:
-            break
-
-    if not include_root_dir:
-        # Remove root dir from all paths
-        dir_prefix = len(dir) + 1
-        result = [file[dir_prefix:] for file in result]
-
-    if standard_paths:
-        result = map(StandardizePath, result)
-
-    return result
+    if sys.platform != 'win32':
+        raise NotImplementedError
+    drives_list = []
+    netuse = _CallWindowsNetCommand(['use'])
+    for line in netuse.split(EOL_STYLE_WINDOWS):
+        match = re.match("(\w*)\s+(\w:)\s+(.+)", line.rstrip())
+        if match:
+            drives_list.append((match.group(2), match.group(3), match.group(1) == 'OK'))
+    return drives_list
 
 
 
 #===================================================================================================
 # Internal functions
 #===================================================================================================
-
 def _UrlIsLocal(directory_url):
     '''
     :param ParseResult directory_url:
@@ -1229,23 +1220,24 @@ def _UrlIsLocal(directory_url):
 def _AssertIsLocal(path):
     '''
     Checks if a given path is local, raise an exception if not.
-    
+
     This is used in filesystem functions that do not support remote operations yet.
-    
+
     :param str path:
-    
+
     :raises NotImplementedForRemotePathError:
         If the given path is not local
     '''
     from urlparse import urlparse
     if not _UrlIsLocal(urlparse(path)):
+        from _filesystem_exceptions import NotImplementedForRemotePathError
         raise NotImplementedForRemotePathError
 
 
 def _HandleContentsEol(contents, eol_style):
     '''
     Replaces eol on each line by the given eol_style.
-    
+
     :param str contents:
     :type eol_style: EOL_STYLE_XXX constant
     :param eol_style:
@@ -1265,418 +1257,17 @@ def _HandleContentsEol(contents, eol_style):
     raise ValueError('Unexpected eol style: %r' % (eol_style,))
 
 
-def ListMappedNetworkDrives():
-    '''
-    On Windows, returns a list of mapped network drives
-    
-    :return: tuple(string, string, bool)
-        For each mapped netword drive, return 3 values tuple:
-            - the local drive
-            - the remote path-
-            - True if the mapping is enabled (warning: not reliable)
-    '''
-    if sys.platform != 'win32':
-        raise NotImplementedError
-    drives_list = []
-    netuse = _CallWindowsNetCommand(['use'])
-    for line in netuse.split(EOL_STYLE_WINDOWS):
-        match = re.match("(\w*)\s+(\w:)\s+(.+)", line.rstrip())
-        if match:
-            drives_list.append((match.group(2), match.group(3), match.group(1) == 'OK'))
-    return drives_list
-
-
 def _CallWindowsNetCommand(parameters):
     '''
     Call Windows NET command, used to acquire/configure network services settings.
-    
+
     :param parameters: list of command line parameters
-    
+
     :return: command output
     '''
     import subprocess
-    popen = subprocess.Popen(["net"] + parameters, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    popen = subprocess.Popen(["net"] + parameters, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdoutdata, stderrdata = popen.communicate()
     if stderrdata:
         raise OSError("Failed on call net.exe: %s" % stderrdata)
     return stdoutdata
-
-
-
-#===================================================================================================
-# ExtendedPathMask
-#===================================================================================================
-class ExtendedPathMask(object):
-    '''
-    This class is a place-holder for functions that handle the exteded path mask.
-
-    Extended Path Mask
-    ------------------
-    
-    The extended path mask is a file search path description used to find files based on the filename.
-    This extended path mask includes the following features:
-        - Recursive search (prefix with a "+" sign)
-        - The possibility of adding more than one filter to match files (separated by ";")
-        - The possibility of negate an mask (prefix the mask with "!"). 
-    
-    The extended path mask has the following syntax:
-    
-        [+|-]<path>/<filter>(;<filter>)*
-        
-    Where:
-        + : recursive and copy-tree flag
-        - : recursive and copy-flat flag (copy files to the target directory with no tree structure) 
-        <path> : a usual path, using '/' as separator
-        <filter> : A filename filter, as used in dir command:
-            Ex:
-                *.zip;*.rar
-                units.txt;*.ini
-                *.txt;!*-002.txt
-    '''
-
-
-    @classmethod
-    def Split(cls, extended_path_mask):
-        '''
-        Splits the given path into their components: recursive, dirname, in_filters and out_filters 
-        
-        :param str: extended_path_mask:
-            The "extended path mask" to split
-            
-        :rtype: tuple(bool,bool,str,list(str),list(str))
-        :returns:
-            Returns the extended path 5 components:
-            - The tree-recurse flag
-            - The flat-recurse flag
-            - The actual path
-            - A list of masks to include
-            - A list of masks to exclude
-        '''
-        import os.path
-        r_tree_recurse = extended_path_mask[0] in '+-'
-        r_flat_recurse = extended_path_mask[0] in '-'
-
-        r_dirname, r_filters = os.path.split(extended_path_mask)
-        if r_tree_recurse:
-            r_dirname = r_dirname[1:]
-
-        filters = r_filters.split(';')
-        r_in_filters = [i for i in filters if not i.startswith('!')]
-        r_out_filters = [i[1:] for i in filters if i.startswith('!')]
-
-        return r_tree_recurse, r_flat_recurse, r_dirname, r_in_filters, r_out_filters
-
-
-
-#===================================================================================================
-# RemoteImpl
-#===================================================================================================
-class RemoteImpl:
-
-    @classmethod
-    def FTPHost(cls, url):
-        '''
-        Create an ftputil.FTPHost instance at the target url. Configure the host to correctly use the
-        url's port.
-    
-        :param ParseResult url:
-            As returned by urlparse.urlparse
-    
-        :rtype: ftputil.FTPHost
-        '''
-        from ftputil.ftputil import FTPHost as ftputil_host
-        import ftplib
-
-        class DefaultFTP(ftplib.FTP):
-            def __init__(self, host='', user='', passwd='', acct='', port=ftplib.FTP.port):
-                # Must call parent constructor without any parameter so it don't try to perform
-                # the connect without the port parameter (it have the same "if host" code in there)
-                ftplib.FTP.__init__(self)
-
-                if host:
-                    self.connect(host, port)
-
-                    if user:
-                        self.login(user, passwd, acct)
-                    else:
-                        self.login()
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self):
-                self.close()
-
-
-        class ActiveFTP(DefaultFTP):
-            def __init__(self, *args, **kwargs):
-                DefaultFTP.__init__(self, *args, **kwargs)
-                self.set_pasv(False)
-
-
-        from functools import partial
-        create_host = partial(ftputil_host, url.hostname, url.username, url.password, port=url.port)
-
-        try:
-            # Try to create active ftp host
-            host = create_host(session_factory=ActiveFTP)
-
-            # Check if a simple operation fails in active ftp, if it does, switch to default (passive) ftp
-            try:
-                host.stat('~')
-            except Exception, e:
-                if e.errno in [425, 500]:
-                    # 425 = Errno raised when trying to a server without active ftp
-                    # 500 = Illegal PORT command. In this case we also want to try passive mode.
-                    host = create_host(session_factory=DefaultFTP)
-
-            return host
-        except FTPOSError, e:
-            if e.args[0] in [11004, -3]:
-                Reraise(
-                    e,
-                    'Could not connect to host "%s"\n'
-                    'Make sure that:\n'
-                    '- You have a working network connection\n'
-                    '- This hostname is valid\n'
-                    '- This hostname is not being blocked by a firewall\n' % url.hostname,
-                )
-            raise
-
-
-    @classmethod
-    def FTPUploadFileToUrl(cls, source_filename, target_url):
-        '''
-        Uploads the given LOCAL file to the given ftp url.
-    
-        :param str source_filename:
-            The local filename to copy from.
-    
-        :param ParseResult target_url:
-            The target directory.
-            
-            A parsed url as returned by urlparse.urlparse
-        '''
-        with cls.FTPHost(target_url) as ftp_host:
-            ftp_host.upload(source_filename, target_url.path, 'b')
-
-
-    @classmethod
-    def DownloadUrlToFile(cls, source_url, target_filename):
-        '''
-        Downloads file in source_url to target_filename
-        
-        :param ParseResult source_url:
-            A parsed url as returned by urlparse.urlparse
-        
-        :param str target_filename:
-            A target filename
-        
-        '''
-        if source_url.scheme == 'ftp':
-            return cls._FTPDownload(source_url, target_filename)
-
-        # Use shutil for other schemes
-        iss = cls.OpenFile(source_url)
-        with file(target_filename, 'wb') as oss:
-            import shutil
-            shutil.copyfileobj(iss, oss)
-
-
-    @classmethod
-    def OpenFile(cls, filename_url):
-        '''
-        :param ParseResult filename_url:
-            Target file to be opened
-        
-            A parsed url as returned by urlparse.urlparse
-            
-        :rtype: file
-        :returns:
-            The open file
-            
-        @raise: FileNotFoundError
-            When the given filename cannot be found
-            
-        @raise: CantOpenFileThroughProxyError
-            When trying to access a file through a proxy, using a protocol not supported by urllib
-            
-        @raise: DirectoryNotFoundError
-            When trying to access a remote directory that does not exist
-            
-        @raise: ServerTimeoutError
-            When failing to connect to a remote server
-        '''
-
-        if filename_url.scheme == 'ftp':
-            try:
-                return cls._FTPOpenFile(filename_url)
-            except FTPIOError, e:
-                if e.errno == 550:
-                    raise FileNotFoundError(filename_url.path)
-                raise
-
-        try:
-            import urllib
-            return urllib.urlopen(filename_url.geturl(), None)
-        except IOError, e:
-            # Raise better errors than the ones given by urllib
-            import errno
-            filename = filename_url.path
-            if e.errno == errno.ENOENT:  # File does not exist
-                raise FileNotFoundError(filename)
-
-            if 'proxy' in str(e.strerror):
-                raise CantOpenFileThroughProxyError(filename)
-
-            if '550' in str(e.strerror):
-                raise DirectoryNotFoundError(filename)
-
-            if '11001' in str(e.strerror):
-                raise ServerTimeoutError(filename)
-
-            # If it's another error, just raise it again.
-            raise e
-
-
-    @classmethod
-    def _FTPDownload(cls, source_url, target_filename):
-        '''
-        Downloads a file through FTP
-        
-        :param source_url:
-            .. see:: DownloadUrlToFile
-        :param target_filename:
-            .. see:: DownloadUrlToFile
-        '''
-        with cls.FTPHost(source_url) as ftp_host:
-            ftp_host.download(source=source_url.path, target=target_filename, mode='b')
-
-
-    @classmethod
-    def _FTPOpenFile(cls, filename_url):
-        '''
-        Opens a file (FTP only) and sets things up to close ftp connection when the file is closed.
-        
-        :param filename_url:
-            .. see:: OpenFile
-        '''
-        ftp_host = cls.FTPHost(filename_url)
-        try:
-            open_file = ftp_host.open(filename_url.path)
-
-            # Set it up so when open_file is closed, ftp_host closes too
-            def FTPClose():
-                # Before closing, remove callback to avoid recursion, since ftputil closes all files
-                # it has
-                from ben10.foundation.callback import Remove
-                Remove(open_file.close, FTPClose)
-
-                ftp_host.close()
-
-            from ben10.foundation.callback import After
-            After(open_file.close, FTPClose)
-
-            return open_file
-        except:
-            ftp_host.close()
-            raise
-
-
-    @classmethod
-    def FTPCreateFile(cls, url, contents):
-        '''
-        Creates a file in a ftp server.
-    
-        :param ParseResult url:
-            File to be created.
-        
-            A parsed url as returned by urlparse.urlparse
-    
-        :param text contents:
-            The file contents.
-        '''
-        with cls.FTPHost(url) as ftp_host:
-            with ftp_host.file(url.path, 'w') as oss:
-                oss.write(contents)
-
-
-    @classmethod
-    def FTPIsFile(cls, url):
-        '''
-        :param ParseResult url:
-            URL for file we want to check
-        
-        :rtype: bool
-        :returns:
-            True if file exists.
-        '''
-        with cls.FTPHost(url) as ftp_host:
-            return ftp_host.path.isfile(url.path)
-
-
-    @classmethod
-    def FTPCreateDirectory(cls, url):
-        '''
-        :param ParseResult url:
-            Target url to be created
-            
-            A parsed url as returned by urlparse.urlparse
-        '''
-        with cls.FTPHost(url) as ftp_host:
-            ftp_host.makedirs(url.path)
-
-
-    @classmethod
-    def FTPMoveDirectory(cls, source_url, target_url):
-        '''
-        :param ParseResult url:
-            Target url to be created
-            
-            A parsed url as returned by urlparse.urlparse
-        '''
-        with cls.FTPHost(source_url) as ftp_host:
-            ftp_host.rename(source_url.path, target_url.path)
-
-
-    @classmethod
-    def FTPIsDir(cls, url):
-        '''
-        List files in a url
-        
-        :param ParseResult url:
-            Directory url we are checking
-            
-            A parsed url as returned by urlparse.urlparse
-            
-        :rtype: bool
-        :returns:
-            True if url is an existing dir
-        '''
-        with cls.FTPHost(url) as ftp_host:
-            return ftp_host.path.isdir(url.path)
-
-
-    @classmethod
-    def FTPListFiles(cls, url):
-        '''
-        List files in a url
-        
-        :param ParseResult url:
-            Target url being searched for files
-            
-            A parsed url as returned by urlparse.urlparse
-            
-        :rtype: list(str) or None
-        :returns:
-            List of files, or None if directory does not exist (error 550 CWD)
-        '''
-        with cls.FTPHost(url) as ftp_host:
-            try:
-                return ftp_host.listdir(url.path)
-            except PermanentError, e:
-                if e.errno == 550:
-                    # "No such file or directory"
-                    return None
-                else:
-                    raise
