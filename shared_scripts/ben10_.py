@@ -16,7 +16,7 @@ class Ben10(EsssProject):
         'pytest',
         'pytest_cov',
         'pytest_localserver',
-        'pywin32',
+        'windows:pywin32',
     ]
 
     NAMESPACE_VARIABLES = {
