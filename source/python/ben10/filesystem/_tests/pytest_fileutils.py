@@ -22,7 +22,7 @@ def test_filename(embed_data):
 #=======================================================================================================================
 class Test:
 
-    def testOpenReadOnlyFile__serial(self, test_filename, monkeypatch):
+    def testOpenReadOnlyFile__serial(self, monkeypatch, test_filename):
         if sys.platform == 'win32':
 
             def ResetFlags():
@@ -38,9 +38,9 @@ class Test:
                 return self.original_open(filename, flags)
 
 
-            self.open_file = None
             monkeypatch.setattr(os, 'open', MockOpen)
 
+            self.open_file = None
             try:
                 # Check text, random
                 ResetFlags()
@@ -65,7 +65,6 @@ class Test:
                 assert self.binary_flag is not None
                 assert self.sequential_flag is not None
                 self.open_file.close()
-
             finally:
                 if self.open_file:
                     self.open_file.close()
