@@ -1,12 +1,11 @@
 from ben10.filesystem import OpenReadOnlyFile
-from coilib50.unittest_tools.mock import installMocks, uninstallMocks
 import os
 import pytest
 import sys
 
 
 
-pytest_plugins = ["coilib50._pytest.fixtures"]
+pytest_plugins = ["ben10.fixtures"]
 
 
 
@@ -23,7 +22,7 @@ def test_filename(embed_data):
 #=======================================================================================================================
 class Test:
 
-    def testOpenReadOnlyFile__serial(self, test_filename):
+    def testOpenReadOnlyFile__serial(self, test_filename, monkeypatch):
         if sys.platform == 'win32':
 
             def ResetFlags():
@@ -40,7 +39,8 @@ class Test:
 
 
             self.open_file = None
-            installMocks(os, open=MockOpen)
+            monkeypatch.setattr(os, 'open', MockOpen)
+
             try:
                 # Check text, random
                 ResetFlags()
@@ -69,4 +69,3 @@ class Test:
             finally:
                 if self.open_file:
                     self.open_file.close()
-                uninstallMocks(os)
