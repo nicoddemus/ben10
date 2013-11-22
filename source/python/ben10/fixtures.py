@@ -245,3 +245,9 @@ def embed_data(request):  # pylint: disable=C0103
     result = _EmbedDataFixture(request)
     request.addfinalizer(result.Finalizer)
     return result
+
+
+@pytest.fixture
+def platform():
+    from ben10.foundation.platform_ import Platform
+    return Platform.GetCurrentPlatform()

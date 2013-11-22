@@ -23,10 +23,11 @@ class Test():
 
 
     def testGetUserHomeDir(self):
-        with PushPop(sys, 'platform', 'win32'):
-            assert GetUserHomeDir() == '%(HOMEDRIVE)s%(HOMEPATH)s' % os.environ
-        with PushPop(sys, 'platform', 'linux2'):
-            assert GetUserHomeDir() == '%(HOME)s' % os.environ
+        with PushPop(os, 'environ', dict(HOMEDRIVE='C:/',HOMEPATH='Users/ama',HOME='/home/users/ama')):
+            with PushPop(sys, 'platform', 'win32'):
+                assert GetUserHomeDir() == '%(HOMEDRIVE)s%(HOMEPATH)s' % os.environ
+            with PushPop(sys, 'platform', 'linux2'):
+                assert GetUserHomeDir() == '%(HOME)s' % os.environ
 
 
     def testGetApplicationDir(self):

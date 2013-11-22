@@ -10,8 +10,8 @@ import sys
 class ModuleFinder(object):
     '''
     This class converts python modules filenames into import like strings considering the current
-    system path. If the given filename is not in the list of system-path an error is raised. 
-    
+    system path. If the given filename is not in the list of system-path an error is raised.
+
     This code was extracted from the TestRunner implementation so we can use it elsewhere (in the
     codegen_required_imports specifically)
     '''
@@ -27,7 +27,9 @@ class ModuleFinder(object):
         Returns the python-path used by the module-finder considering the parameter and the
         sys.frozen attribute.
         '''
-        if python_path:
+        if isinstance(python_path, (list, tuple)):
+            return python_path
+        elif python_path:
             return python_path.split(os.pathsep)
         elif IsFrozen():
             return os.environ['PYTHONPATH'].split(os.pathsep)
@@ -56,16 +58,16 @@ class ModuleFinder(object):
     def ModuleName(self, filename, python_paths=None):
         '''
         Given a module filename returns the module name for it considering the given system path.
-        
+
         :param  filename:
             The filename of the python module
-            
+
         :param  python_paths:
             A list of python path directories in import format.
-        
+
         For example:
             x:\coilib50\source\python\coilib50\maestro ==> coilib50.maestro
-            
+
             Considering that x:\coilib50\source\python is in PYTHONPATH
         '''
         def MatchPath(p_path_a, p_path_b):
@@ -90,26 +92,26 @@ class ModuleFinder(object):
 
         python_path = '\n   - '.join(['\n'] + sorted(python_paths))
         raise RuntimeError(
-            'Python path not found for filename: %r\n'
+            'Python path not found for filename: %r (%s)\n'
             '*** Did you forget to load the environment variables with "ii load"?\n\n'
             ' Python Path:%s'
-            % (filename, python_path))  # *** Did you forget to load the environment variables with "ii load"?
+            % (filename, result, python_path))  # *** Did you forget to load the environment variables with "ii load"?
 
 
     @classmethod
     def GetImports(cls, directory, out_filters=[]):
         '''
         Lists imports made by python files found in the given directory.
-        
+
         Directory will be scanned recursively
-        
+
         :param str directory:
             Path to a directory
-        
+
         :param list(str) out_filters:
             List of filename filters
             .. see:: FindFiles
-        
+
         :rtype: list(str)
         :returns:
             List of module imported by python
@@ -185,7 +187,7 @@ class ModuleFinder(object):
     def SystemPath(self, directories=()):
         '''
         Returns the $PYTHONPATH in "module_name" format.
-        
+
         Actually, returns the values found self.python_path, that may, or may not be $PYTHONPATH
         depending on how this class was constructed.
 
@@ -208,7 +210,7 @@ class ModuleFinder(object):
 def ImportModule(p_import_path):
     '''
         Import the module in the given import path.
-        
+
         * Returns the "final" module, so importing "coilib50.subject.visu" return the "visu"
         module, not the "coilib50" as returned by __import__
     '''
@@ -233,7 +235,7 @@ def ImportToken(path):
     The import token extends the functionality provided by ImportModule by importing members inside
     other members. This is useful to import constants, exceptions and enums wich are usually
     declared inside other module.
-    
+
     '''
     try:
         return ImportModule(path)

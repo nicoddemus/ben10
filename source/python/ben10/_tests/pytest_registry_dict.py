@@ -1,4 +1,3 @@
-from ben10.registry_dict import RegistryDict
 import pytest
 import sys
 
@@ -9,7 +8,10 @@ import sys
 #===================================================================================================
 class Test:
 
+    @pytest.mark.skipif("not sys.platform.startswith('win')")
     def testRegistryDict(self):
+        from ben10.registry_dict import RegistryDict
+
         key = r'Software\Microsoft\Windows NT\CurrentVersion'
         invalid_key = r'INVALID'
 

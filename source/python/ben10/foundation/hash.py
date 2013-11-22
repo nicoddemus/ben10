@@ -27,7 +27,7 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
 
 
     p = path(directory)
-    for f in p.files():
+    for f in sorted(p.files()):
         if include is not None:
             if not f.fnmatch(include):
                 continue

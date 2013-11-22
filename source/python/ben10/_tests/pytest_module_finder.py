@@ -44,7 +44,7 @@ class Test:
         )
         assert module_name == 'ben10.something.file'
 
-        m = ModuleFinder(python_path='/home/alpha;/home/bravo')
+        m = ModuleFinder(python_path=('/home/alpha', '/home/bravo'))
         assert m.ModuleName('/home/alpha/file.py') == 'file'
 
         with pytest.raises(RuntimeError):
@@ -71,26 +71,33 @@ class Test:
         ]
 
 
-    def testSystemPath(self):
-        m_finder = ModuleFinder(python_path='/home/python/path;x:/project10/source/python')
+    def testSystemPath(self, platform):
+        m_finder = ModuleFinder(python_path=('/home/python/path', 'x:/project10/source/python'))
         assert m_finder.SystemPath() == [
             '.home.python.path',
             'x:.project10.source.python'
             ]
-        assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
+        assert m_finder.SystemPath(directories=['/other10/source/python']) == [
             '.home.python.path',
             'x:.project10.source.python'
             ]
 
         m_finder = ModuleFinder(
             extend_sys_path=True,
-            python_path='/home/python/path;x:/project10/source/python'
+            python_path=('/home/python/path', 'x:/project10/source/python')
         )
-        assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
-            'x:.other10.source.python',
-            '.home.python.path',
-            'x:.project10.source.python',
-            ]
+        if platform.GetPlatformFlavour() == platform.FLAVOUR_WINDOWS:
+            assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
+                'x:.other10.source.python',
+                '.home.python.path',
+                'x:.project10.source.python',
+                ]
+        else:
+            assert m_finder.SystemPath(directories=['/other10/source/python']) == [
+                '.other10.source.python',
+                '.home.python.path',
+                'x:.project10.source.python',
+                ]
 
 
     def testImportToken(self):
