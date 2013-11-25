@@ -5,7 +5,7 @@ platform-win32:build_batch_command: "%%AA_AASIMAR_AA%% -t project.build ben10 --
 platform-win64:build_batch_command: "%%AA_AASIMAR_AA%% -t project.build ben10 --projects-dir=%%WORKSPACE%% --dist={dist} --platform={platform}"
 platform-redhat64:build_shell_command: "$AA_AASIMAR_AA -t project.build ben10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
 
-description_regex: "HUDSON DESCRIPTION: (.*)"
+description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
 dist:
 - 12.0
