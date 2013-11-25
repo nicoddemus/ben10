@@ -1,0 +1,16 @@
+junit_patterns:
+-  "ben10/pytest.xml"
+
+platform-win32:build_batch_command: "%%AA_AASIMAR_AA%% -t project.build ben10 --projects-dir=%%WORKSPACE%% --dist={dist} --platform={platform}"
+platform-win64:build_batch_command: "%%AA_AASIMAR_AA%% -t project.build ben10 --projects-dir=%%WORKSPACE%% --dist={dist} --platform={platform}"
+platform-redhat64:build_shell_command: "$AA_AASIMAR_AA -t project.build ben10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
+
+description_regex: "HUDSON DESCRIPTION: (.*)"
+
+dist:
+- 12.0
+
+platform:
+- win32
+- win64
+- redhat64
