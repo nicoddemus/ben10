@@ -1,4 +1,4 @@
-from aasimar10.shared_commands import BuildCommand, StopBuildException
+from aasimar10.shared_commands import BuildCommand, BuildStopped
 from coilib50.basic.override import Override
 
 
@@ -19,6 +19,6 @@ class Ben10BuildCommand(BuildCommand):
             cwd=self.shared_script['working_dir']
         )
         if retcode == 999:  # Raised by ci.py when tests fail
-            raise StopBuildException('Tests failed')
+            raise BuildStopped('Tests failed')
         elif retcode:
             raise RuntimeError('ci.py failed with retcode ' + str(retcode))
