@@ -194,6 +194,7 @@ def FindFiles(dir_, in_filters=None, out_filters=None, recursive=True, include_r
         result = [file[dir_prefix:] for file in result]
 
     if standard_paths:
+        from ben10.filesystem import StandardizePath
         result = map(StandardizePath, result)
 
     return result
