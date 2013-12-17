@@ -1,0 +1,9 @@
+<root>
+  <alpha enabled="true">
+    <bravo>
+      <charlie/>
+    </bravo>
+    <bravo.one/>
+    <delta>XXX</delta>
+  </alpha>
+</root>
