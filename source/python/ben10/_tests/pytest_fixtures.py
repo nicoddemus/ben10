@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from ben10.filesystem import CreateFile, StandardizePath
-from ben10.fixtures import MultipleFilesNotFound
+from ben10.fixtures import MultipleFilesNotFound, SkipIfImportError, _EmbedDataFixture
 from ben10.foundation import is_frozen
 from ben10.foundation.string import Dedent
 import os
@@ -109,4 +109,25 @@ class Test(object):
             in str(exception)
 
 
+    def testSkipIfImportError(self):
+        r = SkipIfImportError('sys')
+        assert repr(r) == "<MarkDecorator 'skipif' {'args': ('False',), 'kwargs': {}}>"
+
+        r = SkipIfImportError('invalid')
+        assert repr(r) == "<MarkDecorator 'skipif' {'args': ('True',), 'kwargs': {}}>"
+
+
+    def testEmbedDataFixture(self, request):
+        assert os.path.isdir('data_fixtures__testEmbedDataFixture') == False
+
+        try:
+            embed_data = _EmbedDataFixture(request)
+            assert os.path.isdir('data_fixtures__testEmbedDataFixture') == False
+
+            assert embed_data.GetDataDirectory() == 'data_fixtures__testEmbedDataFixture'
+            assert os.path.isdir('data_fixtures__testEmbedDataFixture') == True
+        finally:
+            embed_data.Finalizer()
+
+        assert os.path.isdir('data_fixtures__testEmbedDataFixture') == False
 

@@ -1,4 +1,5 @@
 from ben10.filesystem import OpenReadOnlyFile
+from ben10.filesystem._fileutils import _GetFileFlagConstants
 import os
 import pytest
 import sys
@@ -68,3 +69,8 @@ class Test:
             finally:
                 if self.open_file:
                     self.open_file.close()
+
+
+    def testGetFileFlagConstants(self):
+        assert _GetFileFlagConstants('win32') == (os.O_SEQUENTIAL, os.O_BINARY)
+        assert _GetFileFlagConstants('linux') == (0, 0)
