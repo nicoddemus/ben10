@@ -17,6 +17,7 @@ class Ben10(EsssProject):
         'pytest',
         'pytest_cov',
         'pytest_localserver',
+        'rarfile',
         'windows:pywin32',
     ]
 

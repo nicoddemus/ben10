@@ -111,12 +111,3 @@ class Test:
             '''
         )
         assert string == '                alpha\n            \tbravo'
-
-
-
-#===================================================================================================
-# Entry Point
-#===================================================================================================
-if __name__ == '__main__':
-    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.foundation.string', __file__])
-    sys.exit(retcode)

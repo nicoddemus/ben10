@@ -226,13 +226,3 @@ class Test(object):
         element = ElementTree.fromstring(oss.getvalue())
         assert element.attrib['name'] == '<no>'
         assert element.text == '> 3'
-
-
-
-#===================================================================================================
-# Entry Point
-#===================================================================================================
-if __name__ == '__main__':
-    # Executes with specific coverage.
-    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.xml_factory', __file__])
-    sys.exit(retcode)

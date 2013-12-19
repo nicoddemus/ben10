@@ -104,17 +104,17 @@ class Callback(object):
         '''
         Calls every registered function with the given args and kwargs.
         '''
+        # Note: There's a copy of this code in the _CalculateToCall method below. It's a copy
+        # because we don't want to had a function call overhead here.
+        # ------------------------------------------------------------------------------------------
         try:
             callbacks = self._callbacks
         except AttributeError:
             return  # No callbacks registered
 
-        # Note: There's a copy of this code in the _CalculateToCall method below. It's a copy
-        # because we don't want to had a function call overhead here.
         to_call = []
 
-
-        for id, info_and_extra_args in callbacks.items():  # iterate in a copy
+        for id_, info_and_extra_args in callbacks.items():  # iterate in a copy
 
             info = info_and_extra_args[0]
             func_obj = info[self.INFO_POS_FUNC_OBJ]
@@ -123,7 +123,7 @@ class Callback(object):
                 func_obj = func_obj()
                 if func_obj is None:
                     # self is dead
-                    del callbacks[id]
+                    del callbacks[id_]
                 else:
                     func_func = info[self.INFO_POS_FUNC_FUNC]
                     to_call.append(
@@ -138,11 +138,12 @@ class Callback(object):
                     # The instance of the _CallbackWrapper already died! (func_obj is None)
                     original_method = func_func.OriginalMethod()
                     if original_method is None:
-                        del callbacks[id]
+                        del callbacks[id_]
                         continue
 
                 # No self: either classmethod or just callable
                 to_call.append((func_func, info_and_extra_args[1]))
+        # ------------------------------------------------------------------------------------------
 
         # let's keep the 'if' outside of the iteration...
         if self._handle_errors:
@@ -176,7 +177,7 @@ class Callback(object):
 
         to_call = []
 
-        for id, info_and_extra_args in callbacks.items():  # iterate in a copy
+        for _id, info_and_extra_args in callbacks.items():  # iterate in a copy
 
             info = info_and_extra_args[0]
             func_obj = info[self.INFO_POS_FUNC_OBJ]

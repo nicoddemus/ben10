@@ -26,13 +26,3 @@ class Test:
             assert invalid_key not in reg
         finally:
             reg.close()
-
-
-
-#===================================================================================================
-# Entry Point
-#===================================================================================================
-if __name__ == '__main__':
-    # Executes with specific coverage.
-    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.registry_dict', __file__])
-    sys.exit(retcode)

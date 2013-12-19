@@ -862,13 +862,3 @@ class Test:
         stub = IBar(bar)
         with pytest.raises(AttributeError):
             stub(stuff=None)
-
-
-
-#===================================================================================================
-# Entry Point
-#===================================================================================================
-if __name__ == '__main__':
-    # Executes with specific coverage.
-    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.interface', __file__])
-    sys.exit(retcode)

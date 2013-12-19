@@ -13,6 +13,27 @@ _FALSE_VALUES = ['FALSE', 'NO', '0']
 _TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES
 
 
+
+def _GetKnownNumberTypes():
+    '''
+    Dynamically obtain the tuple with the types considered number, including numpy.number if
+    possible.
+
+    This code replaces an old implementation with "code replacement". Not checked if we have any
+    performance penalties.
+    '''
+    result = [int, float, long]
+    try:
+        import numpy
+        result.append(numpy.number)
+    except ImportError:
+        pass
+    return tuple(result)
+
+KNOWN_NUMBER_TYPES = _GetKnownNumberTypes()
+
+
+
 #===================================================================================================
 # Boolean
 #===================================================================================================
@@ -159,9 +180,9 @@ def CheckFormatString(format, *arguments):
 
 
 #===================================================================================================
-# _IsNumber
+# IsNumber
 #===================================================================================================
-def _IsNumber(v):
+def IsNumber(v):
     '''
     Actual function code for IsNumber.
 
@@ -170,40 +191,32 @@ def _IsNumber(v):
     @return bool
         True if the given value is a number, False otherwise
     '''
-    return isinstance(v, known_number_types)
+    return isinstance(v, KNOWN_NUMBER_TYPES)
 
 
-
-#===================================================================================================
-# IsNumber
-#===================================================================================================
-def IsNumber(v):
-    '''
-    Checks if the given value is a number
-
-    @return bool
-        True if the given value is a number, False otherwise
-
-    .. note:: This function will replace it's implementation to a lighter code, but first it must
-        define which types are known as a number.
-        The code replacement is made to avoid the call to import and listing the know numeric types.
-    '''
-    # There are cases were the numpy will not be available (for example when the aasimar is building
-    # the environment the numpy is not available yet). Delegate this import to the IsNumber would cause
-    # a severe performance impact. So we will attempt to import the numpy, but if the lib is not available
-    # let us move on the know number types.
-    global known_number_types
-
-    try:
-        import numpy
-    except ImportError:
-        known_number_types = (int, float, long)
-    else:
-        known_number_types = (int, float, long, numpy.number)
-
-    ret = _IsNumber(v)
-    IsNumber.func_code = _IsNumber.func_code
-    return ret
+# #===================================================================================================
+# # IsNumber
+# #===================================================================================================
+# def IsNumber(v):
+#     '''
+#     Checks if the given value is a number
+#
+#     @return bool
+#         True if the given value is a number, False otherwise
+#
+#     .. note:: This function will replace it's implementation to a lighter code, but first it must
+#         define which types are known as a number.
+#         The code replacement is made to avoid the call to import and listing the know numeric types.
+#     '''
+#     # There are cases were the numpy will not be available (for example when the aasimar is building
+#     # the environment the numpy is not available yet). Delegate this import to the IsNumber would
+#     # cause a severe performance impact. So we will attempt to import the numpy, but if the lib is
+#     # not available let us move on the know number types.
+#     global KNOWN_NUMBER_TYPES
+#
+#     ret = _IsNumber(v)
+#     IsNumber.func_code = _IsNumber.func_code
+#     return ret
 
 
 
@@ -242,7 +255,11 @@ def IsBasicType(value, accept_compound=False, additional=None):
     if accept_compound:
         if isinstance(value, dict):
             for key, val in value.iteritems():
-                if not IsBasicType(key, accept_compound, additional) or not IsBasicType(val, accept_compound, additional):
+                if (
+                    not IsBasicType(key, accept_compound, additional)
+                    or
+                    not IsBasicType(val, accept_compound, additional)
+                ):
                     return False
             return True
 

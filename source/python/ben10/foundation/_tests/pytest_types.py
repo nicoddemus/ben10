@@ -1,8 +1,8 @@
 from ben10.fixtures import SkipIfImportError
 from ben10.foundation.is_frozen import SetIsFrozen
 from ben10.foundation.types_ import (AsList, Boolean, CheckBasicType, CheckEnum, CheckFormatString,
-    CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType,
-    IsNumber, MergeDictsRecursively, Null, OrderedIntersection, _IsNumber)
+    CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType, IsNumber,
+    MergeDictsRecursively, Null, OrderedIntersection, _GetKnownNumberTypes)
 import copy
 import pytest
 
@@ -83,6 +83,8 @@ class Test:
         assert IsBasicType({1: set([1])}, accept_compound=True)
         assert IsBasicType(frozenset([1L, 2]), accept_compound=True)
         assert IsBasicType([1, [2, [3]]], accept_compound=True)
+        assert not IsBasicType({1: NonBasic()}, accept_compound=True)
+        assert not IsBasicType({NonBasic(): 1}, accept_compound=True)
 
         assert IsBasicType(NonBasic(), accept_compound=True) == False
         assert IsBasicType([NonBasic()], accept_compound=True) == False
@@ -119,15 +121,25 @@ class Test:
         assert IsNumber(collection[0])
 
 
+    @SkipIfImportError('numpy')
+    def testGetKnownNumberTypes(self):
+        import numpy
+        import sys
+
+        assert _GetKnownNumberTypes() == (int, float, long, numpy.number)
+
+        numpy_module = sys.modules['numpy']
+        try:
+            sys.modules['numpy'] = None
+            assert _GetKnownNumberTypes() == (int, float, long)
+        finally:
+            sys.modules['numpy'] = numpy_module
+
+
     def testCheckIsNumber(self):
         assert CheckIsNumber(1)
         with pytest.raises(TypeError):
             CheckIsNumber('alpha')
-
-
-    def testIsNumberRebinded(self):
-        IsNumber(2)
-        assert _IsNumber.func_code == IsNumber.func_code  # @UndefinedVariable
 
 
     class ListWithoutIter(object):

@@ -1,6 +1,6 @@
 from ben10.foundation import callback, handle_exception
 from ben10.foundation.callback import (After, Before, Callbacks, ErrorNotHandledInCallback,
-    PriorityCallback, Remove, _CallbackWrapper)
+    PriorityCallback, Remove, _CallbackWrapper, Callback)
 from ben10.foundation.types_ import Null
 from ben10.foundation.weak_ref import WeakMethodRef
 import pytest
@@ -1049,3 +1049,33 @@ class Test(object):
 
         priority_callback()
         assert called == [3, (11, 12, 13), 2, 5, 4]
+
+
+    def testCalculateToCall(self):
+
+        class MyClass(object):
+
+            def MyMethod(self):
+                ''
+
+        def Callable(*args, **kwargs):
+            ''
+
+        # Empty
+        c = Callback()
+        assert c._CalculateToCall() == []
+
+        # Register a function
+        c.Register(Callable)
+        assert c._CalculateToCall() == [(Callable, ())]
+
+        # Register a method
+        instance = MyClass()
+        c.Register(instance.MyMethod)
+        assert c._CalculateToCall() == [
+            (Callable, ()),
+            (instance.MyMethod, ()),
+        ]
+
+        # TODO: Line 189: self is dead
+        # TODO: Line 202-205: if func_func.__class__ == _CallbackWrapper

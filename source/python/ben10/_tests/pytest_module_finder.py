@@ -86,18 +86,28 @@ class Test:
             extend_sys_path=True,
             python_path=('/home/python/path', 'x:/project10/source/python')
         )
-        if platform.GetPlatformFlavour() == platform.FLAVOUR_WINDOWS:
-            assert m_finder.SystemPath(directories=['x:/other10/source/python']) == [
+
+        test_values = {
+            'windows' : (
+                ['x:/other10/source/python'],
+                [
                 'x:.other10.source.python',
                 '.home.python.path',
                 'x:.project10.source.python',
                 ]
-        else:
-            assert m_finder.SystemPath(directories=['/other10/source/python']) == [
+            ),
+            'linux' : (
+                ['/other10/source/python'],
+                [
                 '.other10.source.python',
                 '.home.python.path',
                 'x:.project10.source.python',
                 ]
+            ),
+        }
+
+        directories, expected = test_values.get(platform.GetPlatformFlavour())
+        assert m_finder.SystemPath(directories=directories) == expected
 
 
     def testImportToken(self):
@@ -109,13 +119,3 @@ class Test:
         error_token = 'ben10.foundation.callback.Callback.INVALID'
         with pytest.raises(ImportError):
             ImportToken(error_token)
-
-
-
-#===================================================================================================
-# Entry Point
-#===================================================================================================
-if __name__ == '__main__':
-    # Executes with specific coverage.
-    retcode = pytest.main(['--cov-report=term-missing', '--cov=ben10.module_finder', __file__])
-    sys.exit(retcode)
