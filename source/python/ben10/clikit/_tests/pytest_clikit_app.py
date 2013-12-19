@@ -76,7 +76,7 @@ class Test:
         def TestCmd(console_, first, second, option=1, option_yes=True, option_no=False):
             '''
             This is a test.
-            
+
             :param first: This is the first parameter.
             :param second: This is the second and last parameter.
             :param option: This must be a number.
@@ -151,7 +151,7 @@ Options:
         def Case2(console_):
             '''
             A "hello" message from case 2
-            
+
             Additional help for this function is available.
             '''
             console_.Print('Hello from case 2')

@@ -463,7 +463,7 @@ def CopyFilesX(file_mapping):
 
     .. see:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
-    from ben10.filesystem import FindFiles
+    from _duplicates import FindFiles
     from ._duplicates import ExtendedPathMask
 
     # List files that match the mapping
@@ -1163,7 +1163,7 @@ def GetMTime(path):
     _AssertIsLocal(path)
 
     if os.path.isdir(path):
-        from ben10.filesystem import FindFiles
+        from _duplicates import FindFiles
         files = FindFiles(path)
 
         if len(files) > 0:

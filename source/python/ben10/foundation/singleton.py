@@ -8,7 +8,7 @@ import threading
 #===================================================================================================
 class SingletonError(RuntimeError):
     '''
-    Base class for all Singleton-related exceptions. 
+    Base class for all Singleton-related exceptions.
     '''
 
 
@@ -45,7 +45,7 @@ class PushPopSingletonError(SingletonError):
 class Singleton(object):
     '''
     Base class for singletons.
-    
+
     A Singleton class should have a unique instance during the lifetime of the application. Besides
     the functionality of obtaining the singleton instance, this class also provides methods to push
     and pop singletons, useful for testing, where you push a singleton into a known state during
@@ -60,7 +60,7 @@ class Singleton(object):
     @classmethod
     def GetSingleton(cls):
         '''
-        :rtype: Singleton 
+        :rtype: Singleton
         :returns:
             Returns the current singleton instance.
 
@@ -82,14 +82,14 @@ class Singleton(object):
     def SetSingleton(cls, instance):
         '''
         Sets the current singleton.
-        
+
         :param Singleton instance:
             The Singleton to pass as parameter
-            
+
         :rtype: Singleton
         :returns:
             The singleton passed as parameter.
-            
+
         @raise PushPopSingletonError
         @raise SingletonAlreadySetError
         '''
@@ -137,7 +137,7 @@ class Singleton(object):
     def HasSingleton(cls):
         '''
         Do we have any singleton set?
-        
+
         :rtype: bool
         :returns:
             True if there's a singleton set.
@@ -151,7 +151,7 @@ class Singleton(object):
         '''
         Creates the default singleton instance, that will be used when no singleton has been installed.
         By default, tries to create the class without constructor.
-        
+
         :rtype: Singleton
         :returns:
             an instance of the singleton subclass
@@ -166,11 +166,11 @@ class Singleton(object):
         '''
         Pushes the given singleton to the top of the stack. The previous singleton will be restored
         when PopSingleton is called.
-        
+
         :param Singleton instance:
             The singleton to install as the current one. If not given, a new singleton default
             is created.
-            
+
         :rtype: Singleton
         :returns:
             The current singleton.
@@ -193,7 +193,7 @@ class Singleton(object):
     def PopSingleton(cls):
         '''
         Restores the singleton that was the current before the last PushSingleton.
-        
+
         :rtype: Singleton
         :returns:
             Return the removed singleton.
@@ -216,7 +216,7 @@ class Singleton(object):
     def _ObtainStack(cls):
         '''
         Obtains the stack of singletons.
-        
+
         :rtype: list
         :returns:
             The singleton stack.

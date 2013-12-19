@@ -45,9 +45,9 @@ class ReraiseSyntaxError(SyntaxError):
 def Reraise(exception, message):
     '''
     In Python 2.5 overriding the exception "__str__" has no effect in "str()". Instead, we must
-    change the "args" attribute which is used to build the string representation. 
+    change the "args" attribute which is used to build the string representation.
 
-    Even though the documentation says "args" will be deprecated, it uses its first argument in 
+    Even though the documentation says "args" will be deprecated, it uses its first argument in
     str() implementation and not "message".
     '''
     import sys

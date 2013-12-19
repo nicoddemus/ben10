@@ -22,10 +22,10 @@ class FIFO(odict):
     def __setitem__(self, key, value):
         '''
         Sets an item in the cache. Pops items as needed so that the max size is never passed.
-        
+
         :param object key:
             Key to be set
-            
+
         :param object value:
             Corresponding value to be set for the given key
         '''

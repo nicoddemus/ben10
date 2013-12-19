@@ -89,7 +89,7 @@ class ConsolePlugin():
 #===================================================================================================
 class ConfPlugin():
     '''
-    Adds global configuration fixture to App. 
+    Adds global configuration fixture to App.
     '''
 
     def __init__(self, name, conf_defaults=None, conf_filename=None):
@@ -238,9 +238,9 @@ class App(object):
     def __call__(self, func=None, **kwargs):
         '''
         Implement the decorator behavior for App.
-        
+
         There are two use cases:
-        
+
         Case 1:
             @app(a=1, b=2)
             def foo()
@@ -252,7 +252,7 @@ class App(object):
         :param callable func:
             Case 1: In this case, func is None.
             Case 2: In this case, func is the decorated function.
-                
+
         :return:
             Case 1: Returns a replacement for the function.
             Case 2: Returns a "functor", which in turn returns a replacement for the function.
@@ -278,7 +278,7 @@ class App(object):
         ):
         '''
         Adds a function as a subcommand to the application.
-        
+
         :param <funcion> func: The function to add as a command.
         :param list(str) alias: A list of valid aliases for the same command.
         '''
@@ -286,7 +286,7 @@ class App(object):
         def _GetNames(func, alias):
             '''
             Returns a list of names considering the function and all aliases.
-            
+
             :param <funcion> func:
             :param list(str) alias:
             '''
@@ -322,9 +322,9 @@ class App(object):
     def Fixture(self, func=None, name=None):
         '''
         This is a decorator that registers a function as a custom fixture.
-        
-        Once registered, a command can request the fixture by adding its name as a parameter. 
-        
+
+        Once registered, a command can request the fixture by adding its name as a parameter.
+
         '''
 
         def _AddFixture(name, func):
@@ -346,7 +346,7 @@ class App(object):
     def GetCommandByName(self, name):
         '''
         Returns a command instance from the given __name.
-        
+
         :param str __name:
         :return self._Command:
         '''
@@ -359,7 +359,7 @@ class App(object):
     def ListAllCommandNames(self):
         '''
         Lists all commands names, including all aliases.
-        
+
         :return list(str):
         '''
         result = []
@@ -455,7 +455,7 @@ class App(object):
     def PrintHelp(self, command=None):
         '''
         Print help for all registered commands or an specific one.
-        
+
         :param Command command: A command to print help or None to print the application help.
         '''
         if command is None:

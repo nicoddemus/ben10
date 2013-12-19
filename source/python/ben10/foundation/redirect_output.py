@@ -9,14 +9,14 @@ import contextlib
 def CaptureStd():
     '''
     Context manager used to capture stdout and stderr.
-    
+
     e.g.
         with CaptureStd() as output:
             print 'hey'
-            
+
         repr(output.stdout) == 'hey\n'
         repr(output.stderr) == ''
-        
+
     @note:
         This replaces some older code that fiddled around with file descriptions, using os.dup2
     '''

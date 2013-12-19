@@ -7,27 +7,27 @@
 class Memoize(object):
     '''
     This class is meant to be used as a decorator.
-    
+
     It decorates a class so that values can be cached (and later pruned from that cache).
-    
+
     Usage:
         class Foo(object):
-        
+
             @Memoize(2, Memoize.FIFO)  #means that max_size == 2 and we want to use a FIFO.
             def double(self, x):
                 return x * 2
 
-        or 
+        or
         @Memoize
         def double(x):
             return x * 2
-            
+
     This implementation supposes that the arguments are already immutable and won't change.
     If some function needs special behavior, this class should be subclassed and _GetCacheKey
-    should be overridden. 
-    
+    should be overridden.
+
     Note that the 1st parameter will determine whether it should be used as an instance method
-    or a function (It'll just check if the 1st parameter is 'self', and if it is, an 
+    or a function (It'll just check if the 1st parameter is 'self', and if it is, an
     instance method is used). If this behavior is not wanted, the memo_target must be forced
     to MEMO_INSTANCE_METHOD or MEMO_FUNCTION.
     '''
@@ -46,7 +46,7 @@ class Memoize(object):
         '''
         We have to override __new__ so that we treat receiving it with and without parameters,
         as the parameters are both optional and we want to support receiving it without parameters.
-        
+
         E.g.:
         @Memoize
         def double(x):
@@ -69,14 +69,14 @@ class Memoize(object):
         '''
         :param int maxsize:
             The maximum size of the internal cache (default is 50).
-        
+
         :param str prune_method:
             This is according to the way used to prune entries. Right now only
             pruning the oldest entry is supported (FIFO), but different ways could be
             available (e.g.: pruning LRU seems a natural addition)
-            
+
         :param str memo_target:
-            One of the constants MEMO_INSTANCE_METHOD or MEMO_FUNCTION or MEMO_FROM_ARGSPEC. 
+            One of the constants MEMO_INSTANCE_METHOD or MEMO_FUNCTION or MEMO_FROM_ARGSPEC.
             When from argspec it'll try to see if the 1st parameter is 'self' and if it is,
             it'll fall to using the MEMO_INSTANCE_METHOD (otherwise the MEMO_FUNCTION is used)
             If the signature of the function is 'special' and doesn't follow the conventions,
@@ -92,10 +92,10 @@ class Memoize(object):
         '''
         Subclasses may override to provide a different cache key. The default implementation
         just handles the arguments.
-        
+
         :param list args:
             The arguments received.
-            
+
         :param dict kwargs:
             The keyword arguments received.
         '''
@@ -107,7 +107,7 @@ class Memoize(object):
         '''
         :param function func:
             This is the function which should be decorated.
-            
+
         :rtype: function
         :returns:
             The function decorated to cache the values based on the arguments.
@@ -148,7 +148,7 @@ class Memoize(object):
     def _CreateCacheObject(self):
         '''
         Creates the cache object we want.
-        
+
         :rtype: object (with dict interface)
         :returns:
             The object to be used as the cache (will prune items after the maximum size
@@ -170,7 +170,7 @@ class Memoize(object):
     def _CreateCallWrapper(self, func):
         '''
         This function creates a FIFO cache
-        
+
         :param object func:
             This is the function that is being cached.
         '''

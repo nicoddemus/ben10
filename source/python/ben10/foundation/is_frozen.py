@@ -16,7 +16,7 @@ _is_frozen = hasattr(sys, 'frozen') and getattr(sys, 'frozen')
 def IsFrozen():
     '''
     Returns true if the code is frozen, that is, the code is inside a generated executable.
-    
+
     Frozen == False means the we are running the code using Python interpreter, usually associated with the code being
     in development.
     '''
@@ -26,7 +26,7 @@ def IsFrozen():
 def SetIsFrozen(is_frozen):
     '''
     Sets the is_frozen value manually, overriding the "calculated" value.
-    
+
     :param bool is_frozen: The new value for is_frozen.
     :returns bool: Returns the original value, before the given value is set.
     '''
@@ -59,7 +59,7 @@ def IsDevelopment():
 def SetIsDevelopment(is_development):
     '''
     Set the is-development global value.
-    
+
     :param bool is_development:
         The new is-development value
     '''

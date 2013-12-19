@@ -48,7 +48,7 @@ class Command:
     class Arg:
         '''
         Holds meta-information about the associated function argument.
-        
+
         I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside @argparse@ to print help message.
         '''
         NO_DEFAULT = object()
@@ -68,7 +68,7 @@ class Command:
         def ConfigureArgumentParser(self, parser):
             '''
             Configures the given parser with an argument matching the information in this class.
-            
+
             :param parser: argparse.ArgumentParser
             '''
             if self.default is Command.Arg.NO_DEFAULT:
@@ -119,7 +119,7 @@ class Command:
     def _ParseFunctionArguments(self, func):
         '''
         Parses function arguments returning meta information about it.
-        
+
         :return tuple:
             [0]: args: The list with the name of all the function arguments.
             [1]: trail?
@@ -137,12 +137,12 @@ class Command:
     def _ParseDocString(self, docstring):
         '''
         Parses the (function) docstring for the genral and arguments descriptions.
-        
+
         :param docstring: A well formed docstring of a function.
         :rtype: tuple(str, list(str))
         :returns:
             Returns the function description (doc's first line) and the description of each
-            argument (sphinx doc style).  
+            argument (sphinx doc style).
         '''
         description = None
         arg_descriptions = {}
@@ -166,7 +166,7 @@ class Command:
     def FormatHelp(self):
         '''
         Format help for this command.
-        
+
         :return str:
         '''
         console = BufferedConsole()
@@ -204,10 +204,10 @@ class Command:
     def Call(self, fixtures, argd):
         '''
         Executes the function filling the fixtures and options parameters.
-        
+
         :param fixtures:
             Map of fixtures to pass to the function as requested.
-            
+
         :param argd:
             Map of option values as passed by the user in the command line.
         '''

@@ -119,7 +119,7 @@ class CachedMethod(AbstractCachedMethod):
 class ImmutableParamsCachedMethod(CachedMethod):
     '''
         Expects all parameters to already be immutable
-        Considers only the positional parameters of key, ignoring the keyword arguments 
+        Considers only the positional parameters of key, ignoring the keyword arguments
     '''
 
     def GetCacheKey(self, *args, **kwargs):

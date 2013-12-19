@@ -12,25 +12,25 @@ import warnings
 def Override(method):
     '''
     Decorator that marks that a method overrides a method in the superclass.
-        
+
     :param type method:
         The overridden method
-    
+
     :returns function:
         The decorated function
-    
+
     .. note:: This decorator actually works by only making the user to access the class and the overridden method at
     class level scope, so if in the future that method gets deleted or renamed, the import of the decorated method will
     fail.
-    
+
     Example::
-    
+
       class MyInterface:
         def foo():
             pass
-            
+
       class MyClass(MyInterface):
-      
+
         @Overrides(MyInterace.foo)
         def foo():
             pass
@@ -56,13 +56,13 @@ def Override(method):
 def Implements(method):
     '''
     Decorator that marks that a method implements a method in some interface.
-        
+
     :param function method:
         The implemented method
-    
+
     :returns function:
         The decorated function
-    
+
     :raises AssertionError:
         if the implementation method's name is different from the one
         that is being defined. This is a common error when copying/pasting the @Implements code.
@@ -70,15 +70,15 @@ def Implements(method):
     .. note:: This decorator actually works by only making the user to access the class and the implemented method at
     class level scope, so if in the future that method gets deleted or renamed, the import of the decorated method will
     fail.
-    
+
     Example::
-    
+
       class MyInterface:
         def foo():
             pass
-            
+
       class MyClass(MyInterface):
-      
+
         @Implements(MyInterace.foo)
         def foo():
             pass
@@ -104,7 +104,7 @@ def Implements(method):
 def Deprecated(name=None):
     '''
     Decorator that marks a method as deprecated.
-        
+
     :param str name:
         The name of the method that substitutes this one, if any.
     '''

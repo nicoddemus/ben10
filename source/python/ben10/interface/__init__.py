@@ -12,7 +12,7 @@
 
         class Foo(object):
             interface.Implements(IFoo)
-        
+
     If Foo doesn't implement some method from IFoo, an exception is raised at class creation time.
 '''
 from _adaptable_interface import IAdaptable

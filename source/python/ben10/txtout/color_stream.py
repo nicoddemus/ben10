@@ -152,7 +152,7 @@ class UnixConsole(object):
 class SafeStreamFilter(object):
     '''
     Filters unicode characters by replacing their occurrences by their backslash representations.
-    
+
     This is used for target streams that are not capable of printing unicode characters, namely the
     console.
     '''
@@ -204,7 +204,7 @@ class ColorStream(object):
             returns False.
 
         :param bool verbose:
-            TextConsole option receives the verbose parameter in order to print color codes. 
+            TextConsole option receives the verbose parameter in order to print color codes.
 
         * This is needed once the color_extension of UnitTest uses an wrapper for the StdOut as
           the stream
@@ -239,7 +239,7 @@ class ColorStream(object):
     def IsConsole(self):
         '''
         Returns whether the associated stream is a console stream.
-        
+
         * Check if the stream IS "stdout".
         '''
         if isinstance(self._stream, SafeStreamFilter):

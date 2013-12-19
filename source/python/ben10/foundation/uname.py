@@ -11,7 +11,7 @@ import sys
 def IsRunningOn64BitMachine():
     '''
     TODO: Move this to Platform class.
-    
+
     :rtype: bool
     :returns:
         Returns true if the current machine is a 64 bit machine (regardless of the way this
@@ -48,7 +48,7 @@ def GetApplicationDir():
     '''
     Returns the application directory, that is, the complete path to the application executable
     or main python file.
-    
+
     Expects that the application executable is installed in a sub directory of the application
     directory.
     '''
@@ -66,7 +66,7 @@ def GetApplicationDir():
 #===================================================================================================
 def GetUserHomeDir():
     '''
-        :rtype: the user directory to be used (platform-dependent). 
+        :rtype: the user directory to be used (platform-dependent).
         In windows that means something as:
             C:\Documents and Settings\user_name
         In linux it's something as:

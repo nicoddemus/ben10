@@ -48,7 +48,7 @@ class InterfaceImplementorStub(object):
     '''
         A helper for acting as a stub for some object (in this way, we're only able to access
         attributes declared directly in the interface.
-    
+
         It forwards the calls to the actual implementor (the wrapped object)
     '''
 
@@ -96,7 +96,7 @@ class InterfaceImplementorStub(object):
 #===================================================================================================
 class Interface(object):
     '''Base class for interfaces.
-    
+
     A interface describes a behavior that some objects must implement.
     '''
 
@@ -151,7 +151,7 @@ def _GetClassForInterfaceChecking(class_or_instance):
 # IsImplementation
 #===================================================================================================
 def IsImplementation(class_or_instance, interface):
-    '''    
+    '''
     :type class_or_instance: type or classobj or object
 
     :type interface: Interface
@@ -197,13 +197,13 @@ def IsImplementation(class_or_instance, interface):
 def IsImplementationOfAny(class_or_instance, interfaces):
     '''
     Check if the class or instance implements any of the given interfaces
-     
+
     :type class_or_instance: type or classobj or object
-    
+
     :type interfaces: list(Interface)
-    
+
     :rtype: bool
-    
+
     :see: :py:func:`.IsImplementation`
     '''
     for interface in interfaces:
@@ -221,16 +221,16 @@ def AssertImplements(class_or_instance, interface):
     '''
     If given a class, will try to match the class against a given interface. If given an object
     (instance), will try to match the class of the given object.
-    
+
     NOTE: The Interface must have been explicitly declared through :py:func:`interface.Implements`.
 
     :type class_or_instance: type or classobj or object
 
     :type interface: Interface
-    
+
     :raises BadImplementationError:
         If the object's class does not implement the given :arg interface:.
-        
+
     :raises InterfaceError:
         In case the :arg interface: object is not really an interface.
 
@@ -292,11 +292,11 @@ class __ImplementedInterfacesCache(__ResultsCache, Singleton):
 def _CheckIfClassImplements(class_, interface):
     '''
     :type class_: type or classobj
-    :param class_: 
+    :param class_:
         A class type (NOT an instance of the class).
-        
+
     :type interface: Interface
-    
+
     :rtype: (bool, str) or (bool, None)
     :returns:
         (is_implementation, reason)
@@ -355,15 +355,15 @@ def IsImplementationFullChecking(class_or_instance, interface):
 def _IsImplementationFullChecking(class_or_instance, interface):
     '''
     Used internally by Attribute.
-    
+
     :see: :py:func:`._AssertImplementsFullChecking`
     :type class_or_instance: type or instance
     :param class_or_instance:
         Class or instance to check
-    
+
     :param interface.Interface interface:
         Interface to check
-    
+
     :rtype: bool
     :returns:
         If it implements the interface
@@ -410,7 +410,7 @@ class CacheInterfaceAttrs(object):
         '''
             We have to make the creation of the ImmutableParamsCacheManager lazy because
             otherwise we'd enter a cyclic import.
-            
+
             :type interface: the interface from where the methods and attributes should be gotten
             :param interface:
                 (used as the cache-key)
@@ -439,7 +439,7 @@ def _IsMethod(member, include_functions):
             1) Methods
             2) Functions (if include_functions is True)
             3) instances of Method (should it be implementors of "IMethod"?)
-            
+
         USER: cache mechanism for coilib50.basic.process
     '''
     if include_functions and inspect.isfunction(member):
@@ -467,14 +467,14 @@ def AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
 def _AssertImplementsFullChecking(class_or_instance, interface, check_attr=True):
     '''
     Used internally.
-    
+
     This method will check each member of the given instance (or class) comparing them against the
     ones declared in the interface, making sure that it actually implements it even if it does not
     declare it so using interface.Implements.
-    
+
     .. note:: Slow
         This method is *slow*, so make sure to never use it in hot-spots.
-    
+
     :raises BadImplementationError:
         If :arg class_or_instance: doesn't implement this interface.
     '''
@@ -526,7 +526,7 @@ def _AssertImplementsFullChecking(class_or_instance, interface, check_attr=True)
         '''
             Get the arguments for the method, considering the possibility of instances of Method,
             in which case, we must obtain the arguments of the instance "__call__" method.
-            
+
             USER: cache mechanism for coilib50.basic.process
         '''
         if isinstance(method, Method):
@@ -598,18 +598,18 @@ def Implements(*interfaces, **kwargs):
     '''
     Make sure a class implements the given interfaces. Must be used in the class scope during class
     creation:
-        
+
         class Foo(object):
             Implements(IFoo)
-        
+
     For old-style classes, use:
-        
-        class Foo(QWidget): 
+
+        class Foo(QWidget):
             Implements(IFoo, old_style=True)
-        
+
     For not having it checked on its creation -- may happen for performance reasons -- use:
-        
-        class Foo(object): 
+
+        class Foo(object):
             Implements(IFoo, no_init_check=True)
     '''
     # Just get the previous frame
@@ -655,7 +655,7 @@ def DeclareClassImplements(class_, *interfaces):
     '''
     This is a way to tell, from outside of the class, that a given :arg class_: implements the
     given :arg interfaces:.
-    
+
     .. attention:: Use Implements whenever possible
         This method should be used only when you can't use :py:func:`Implements`, or when you can't
         change the code of the class being declared, i.e., when you:
@@ -664,13 +664,13 @@ def DeclareClassImplements(class_, *interfaces):
         * Class is defined from bindings
         * Class is defined in an external library
         * Class is defined by generated code
-        
+
     :type interfaces: list(Interface)
     :type class_: type
-    
+
     :raises BadImplementationError:
         If, after checking the methods, :arg class_: doesn't really implement the :arg interface:.
-        
+
     .. note:: Inheritance
         When you use this method to declare that a base class implements a given interface, you
         should *also* use this in the derived classes, it does not propagate automatically to
@@ -707,7 +707,7 @@ def _GetMROForOldStyleClass(class_):
     :type class_: classobj
     :param class_:
         An old-style class
-        
+
     :rtype: list(classobj)
     :return:
         A list with all the bases in the older MRO (method resolution order)
@@ -731,7 +731,7 @@ def _GetMROForClass(class_):
     '''
     :param classobj class_:
         A class
-        
+
     :rtype: list(classobj)
     :return:
         A list with all the bases in the older MRO (method resolution order)
@@ -780,7 +780,7 @@ def _GetClassImplementedInterfaces(class_):
 #===================================================================================================
 def GetImplementedInterfaces(class_or_object):
     '''
-   :rtype: frozenset([interfaces]) 
+   :rtype: frozenset([interfaces])
        The interfaces implemented by the object or class passed.
     '''
     class_ = _GetClassForInterfaceChecking(class_or_object)
@@ -818,11 +818,11 @@ def _IsInterfaceDeclared(class_, interface):
         :param interface:
             The target interface(s). If multitple interfaces are passed the method will return True
             if the given class or instance implements any of the given interfaces.
-            
+
         :rtype: True if the object declares the interface passed and False otherwise. Note that
-        to declare an interface, the class MUST have declared 
-        
-            >>> interface.Implements(Class) 
+        to declare an interface, the class MUST have declared
+
+            >>> interface.Implements(Class)
     '''
     if class_ is None:
         return False
@@ -886,7 +886,7 @@ class Attribute(object):
         :param type attribute_type:
             Will check the attribute type in the implementation against this type.
             Checks if the attribute is a direct instance of attribute_type, or of it implements it.
-            
+
         :param object instance:
             If passed, will check for *equality* against this instance. The default is to not check
             for equality.
@@ -899,7 +899,7 @@ class Attribute(object):
         '''
         :param object attribute:
             Object that will be compared to see if it matches the expected interface.
-            
+
         :rtype: (bool, str)
         :returns:
             If the given object implements or inherits from the interface expected by this

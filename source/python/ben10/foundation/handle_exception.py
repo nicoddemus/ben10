@@ -45,8 +45,8 @@ def EndIgnoreHandleException():
 def HandleException(msg):
     '''
     Handles the current exception (in sys.exc_info()) without actually continuing its raise.
-    
-    It should be used when for some reason the current exception should not stop the current 
+
+    It should be used when for some reason the current exception should not stop the current
     execution flow but should still be shown to the user and reported accordingly.
     '''
     # Let listeners know about the exception (usually the test case)

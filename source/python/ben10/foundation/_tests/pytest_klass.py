@@ -146,8 +146,8 @@ class Test:
     def testIsInstanceWithDateTime(self):
         '''
         Make sure IsInstance works with DateTime objects.
-        
-        Previously passing a DateTime to IsInstance would yield an AttributeError for __class__. 
+
+        Previously passing a DateTime to IsInstance would yield an AttributeError for __class__.
         Changed IsInstance to use type() instead.
         '''
         import mx.DateTime

@@ -93,11 +93,11 @@ class Platform(object):
     def Create(cls, seed=None):
         '''
         Returns a Platform instance from the given seed.
-        
+
         :param str|None|Platform seed:
             If str, create a Platform based on the given string
             If None, returns the current platform
-            If Platform, returns the seed 
+            If Platform, returns the seed
         '''
         if isinstance(seed, str):
             try:
@@ -266,7 +266,7 @@ class Platform(object):
     def GetCurrentFlavour(cls):
         '''
         Shortcut to obtain platform flavour from current platform.
-        
+
         :rtype: str
         :returns:
             @see: Platform.GetPlatformFlavour
@@ -298,7 +298,7 @@ class Platform(object):
     def GetPlatformFlavour(self):
         '''
         Returns the platform flavour associated with this platform.
-        
+
         :rtype: str
         :returns:
             The platform flavour, which is a supper set of the platform name itself.

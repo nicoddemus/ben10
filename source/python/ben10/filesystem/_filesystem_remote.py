@@ -122,7 +122,7 @@ def FTPUploadFileToUrl(source_filename, target_url):
 
     :param ParseResult target_url:
         The target directory.
-        
+
         A parsed url as returned by urlparse.urlparse
     '''
     with FTPHost(target_url) as ftp_host:
@@ -136,10 +136,10 @@ def FTPUploadFileToUrl(source_filename, target_url):
 def DownloadUrlToFile(source_url, target_filename):
     '''
     Downloads file in source_url to target_filename
-    
+
     :param ParseResult source_url:
         A parsed url as returned by urlparse.urlparse
-    
+
     :param str target_filename:
         A target filename
     '''
@@ -171,22 +171,22 @@ def OpenFile(filename_url):
     '''
     :param ParseResult filename_url:
         Target file to be opened
-    
+
         A parsed url as returned by urlparse.urlparse
-        
+
     :rtype: file
     :returns:
         The open file
-        
+
     @raise: FileNotFoundError
         When the given filename cannot be found
-        
+
     @raise: CantOpenFileThroughProxyError
         When trying to access a file through a proxy, using a protocol not supported by urllib
-        
+
     @raise: DirectoryNotFoundError
         When trying to access a remote directory that does not exist
-        
+
     @raise: ServerTimeoutError
         When failing to connect to a remote server
     '''
@@ -231,7 +231,7 @@ def OpenFile(filename_url):
 def _FTPDownload(source_url, target_filename):
     '''
     Downloads a file through FTP
-    
+
     :param source_url:
         .. see:: DownloadUrlToFile
     :param target_filename:
@@ -244,7 +244,7 @@ def _FTPDownload(source_url, target_filename):
 def _FTPOpenFile(filename_url):
     '''
     Opens a file (FTP only) and sets things up to close ftp connection when the file is closed.
-    
+
     :param filename_url:
         .. see:: OpenFile
     '''
@@ -281,7 +281,7 @@ def FTPCreateFile(url, contents):
 
     :param ParseResult url:
         File to be created.
-    
+
         A parsed url as returned by urlparse.urlparse
 
     :param text contents:
@@ -300,7 +300,7 @@ def FTPIsFile(url):
     '''
     :param ParseResult url:
         URL for file we want to check
-    
+
     :rtype: bool
     :returns:
         True if file exists.
@@ -318,7 +318,7 @@ def FTPCreateDirectory(url):
     '''
     :param ParseResult url:
         Target url to be created
-        
+
         A parsed url as returned by urlparse.urlparse
     '''
     with FTPHost(url) as ftp_host:
@@ -334,7 +334,7 @@ def FTPMoveDirectory(source_url, target_url):
     '''
     :param ParseResult url:
         Target url to be created
-        
+
         A parsed url as returned by urlparse.urlparse
     '''
     with FTPHost(source_url) as ftp_host:
@@ -349,12 +349,12 @@ def FTPMoveDirectory(source_url, target_url):
 def FTPIsDir(url):
     '''
     List files in a url
-    
+
     :param ParseResult url:
         Directory url we are checking
-        
+
         A parsed url as returned by urlparse.urlparse
-        
+
     :rtype: bool
     :returns:
         True if url is an existing dir
@@ -371,12 +371,12 @@ def FTPIsDir(url):
 def FTPListFiles(url):
     '''
     List files in a url
-    
+
     :param ParseResult url:
         Target url being searched for files
-        
+
         A parsed url as returned by urlparse.urlparse
-        
+
     :rtype: list(str) or None
     :returns:
         List of files, or None if directory does not exist (error 550 CWD)

@@ -8,12 +8,12 @@ from _interface import Interface
 class IAdaptable(Interface):
     '''
         An interface for an object that is adaptable.
-        
+
         Adaptable objects can be queried about interfaces they adapt to (to which they
         may respond or not).
-        
+
         For example:
-        
+
         a = [some IAdaptable];
         x = a.GetAdapter(IFoo);
         if x is not None:

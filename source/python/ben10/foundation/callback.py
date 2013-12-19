@@ -14,15 +14,15 @@ class Callback(object):
     '''
     Object that provides a way for others to connect in it and later call it to call
     those connected.
-    
+
     .. note:: This implementation is improved in that it works directly accessing functions based
     on a key in an ordered dict, so, Register, Unregister and Contains are much faster than the
     old callback.
-    
+
     .. note:: it only stores weakrefs to objects connected
-    
-    .. note:: __slots__ added, so, it cannot have weakrefs to it (but as it stores weakrefs 
-        internally, that shouldn't be a problem). If weakrefs are really needed, 
+
+    .. note:: __slots__ added, so, it cannot have weakrefs to it (but as it stores weakrefs
+        internally, that shouldn't be a problem). If weakrefs are really needed,
         __weakref__ should be added to the slots.
     '''
 
@@ -57,11 +57,11 @@ class Callback(object):
         '''
         :param object func:
             The function for which we want the key.
-            
+
         :rtype: object
         :returns:
             Returns the key to be used to access the object.
-            
+
         .. note:: The key is guaranteed to be unique among the living objects, but if the object
         is garbage collected, a new function may end up having the same key.
         '''
@@ -217,10 +217,10 @@ class Callback(object):
     def Register(self, func, extra_args=_EXTRA_ARGS_CONSTANT):
         '''
         Registers a function in the callback.
-        
+
         :param object func:
             Method or function that will be called later.
-            
+
         :param list(object) extra_args:
             A list with the objects to be used
         '''
@@ -296,7 +296,7 @@ class Callback(object):
     def Unregister(self, func):
         '''
         Unregister a function previously registered with Register.
-        
+
         :param object func:
             The function to be unregistered.
         '''
@@ -340,7 +340,7 @@ class Callback(object):
 class Callbacks(object):
     '''
     Holds created callbacks, making it easy to disconnect later.
-    
+
     Note: keeps a strong reference to the callback and the sender, thus, they won't be garbage-
     collected while still connected in this case.
     '''
@@ -383,7 +383,7 @@ class PriorityCallback(Callback):
     def _GetInfo(self, func, priority):
         '''
         Overridden to add the priority to the info.
-        
+
         :param int priority:
             The priority to be set to the added callback.
         '''
@@ -397,7 +397,7 @@ class PriorityCallback(Callback):
         Register a function in the callback.
         :param object func:
             Method or function that will be called later.
-            
+
         :param int priority:
             If passed, it'll be be used to put the callback into the correct place based on the
             priority passed (lower numbers have higher priority).
@@ -456,11 +456,11 @@ def Before(method, callback, sender_as_parameter=False):
     '''
         Registers the given callback to be executed before the given method is called, with the
         same arguments.
-        
+
         The method can be eiher an unbound method or a bound method. If it is an unbound method,
         *all* instances of the class will generate callbacks when method is called. If it is a bound
         method, only the method of the instance will generate callbacks.
-        
+
         Remarks:
             The function has changed its signature to accept an extra parameter (sender_as_parameter).
             Using "*args" as before made impossible to add new parameters to the function.
@@ -473,7 +473,7 @@ def After(method, callback, sender_as_parameter=False):
     '''
         Registers the given callbacks to be execute after the given method is called, with the same
         arguments.
-        
+
         The method can be eiher an unbound method or a bound method. If it is an unbound method,
         *all* instances of the class will generate callbacks when method is called. If it is a bound
         method, only the method of the instance will generate callbacks.
@@ -687,13 +687,13 @@ class ErrorNotHandledInCallback(RuntimeError):
 def HandleErrorOnCallback(func, *args, **kwargs):
     '''
     Called when there's some error calling a callback.
-    
+
     :param object func:
         The callback called.
-        
+
     :param list args:
         The arguments passed to the callback.
-        
+
     :param dict kwargs:
         The keyword arguments passed to the callback.
     '''

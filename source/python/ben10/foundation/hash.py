@@ -6,19 +6,19 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
     '''
     Helper to iterate over the files in a directory putting those in the passed StringIO in ini
     format.
-    
+
     :param str directory:
         The directory for which the hash should be done.
-        
+
     :param StringIO stringio:
         The string to which the dump should be put.
-        
+
     :param str base:
         If provided should be added (along with a '/') before the name=hash of file.
-        
+
     :param str exclude:
         Pattern to match files to exclude from the hashing. E.g.: *.gz
-        
+
     :param str include:
         Pattern to match files to include in the hashing. E.g.: *.zip
     '''
@@ -51,11 +51,11 @@ def Md5Hex(filename=None, contents=None):
     :param str filename:
         The file from which the md5 should be calculated. If the filename is given, the contents
         should NOT be given.
-        
+
     :param str contents:
         The contents for which the md5 should be calculated. If the contents are given, the filename
         should NOT be given.
-        
+
     :rtype: str
     :returns:
         Returns a string with the hex digest of the stream.

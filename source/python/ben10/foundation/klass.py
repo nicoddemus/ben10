@@ -1,5 +1,5 @@
 '''
-    @author 
+    @author
         ama@esss.com.br
         fabioz@esss.com.br
 '''
@@ -33,11 +33,11 @@ def IsInstance(p_object, p_class_name):
     '''
     :param object p_object:
         The object we would like to test for.
-        
+
     :param str p_class_name:
         Name or class to test if the object is an instance of.
-        
-    Like the built-in isinstance, but also accepts a class name as parameter.        
+
+    Like the built-in isinstance, but also accepts a class name as parameter.
     '''
     try:
         # obtain the type of the class; using only type() is not enough, because some built-in
@@ -56,7 +56,7 @@ def IsInstance(p_object, p_class_name):
 #===================================================================================================
 def IsSubclass(p_class, p_class_name):
     '''
-    Like the built-in issubclass, but also accepts a class name as parameter.        
+    Like the built-in issubclass, but also accepts a class name as parameter.
     '''
     isins = isinstance  # put it in locals
 

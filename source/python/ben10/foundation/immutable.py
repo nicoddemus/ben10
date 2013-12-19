@@ -17,14 +17,14 @@ def AsImmutable(value, return_str_if_not_expected=True):
         - Converts dicts to ImmutableDicts
         - Converts other objects to str
         - Does not convert basic types (int/float/str/bool)
-        
+
     :param object value:
         The value to be returned as an immutable value
-        
+
     :param bool return_str_if_not_expected:
         If True, a string representation of the object will be returned if we're unable to match the
         type as a known type (otherwise, an error is thrown if we cannot handle the passed type).
-        
+
     :rtype: object
     :returns:
         Returns an immutable representation of the passed object

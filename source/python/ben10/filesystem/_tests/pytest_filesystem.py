@@ -1,14 +1,14 @@
 # -*- coding: latin-1 -*-
 from __future__ import with_statement
 from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFile, CopyDirectory,
-    CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5, CreateTemporaryDirectory,
-    Cwd, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError, DirectoryNotFoundError, EOL_STYLE_MAC,
-    EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError, FileError,
-    FileNotFoundError, FileOnlyActionError, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile,
-    ListFiles, ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile, NormStandardPath,
-    NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile,
-    ServerTimeoutError, StandardizePath, UnknownPlatformError)
-from ben10.filesystem._duplicates import MatchMasks, FindFiles, CheckForUpdate
+    CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5,
+    CreateTemporaryDirectory, Cwd, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError,
+    DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS,
+    FileAlreadyExistsError, FileError, FileNotFoundError, FileOnlyActionError, GetFileContents,
+    GetFileLines, GetMTime, IsDir, IsFile, ListFiles, ListMappedNetworkDrives, MD5_SKIP,
+    MoveDirectory, MoveFile, NormStandardPath, NormalizePath, NotImplementedForRemotePathError,
+    NotImplementedProtocol, OpenFile, ServerTimeoutError, StandardizePath, UnknownPlatformError)
+from ben10.filesystem._duplicates import CheckForUpdate, FindFiles, MatchMasks
 from ben10.filesystem._filesystem import _GetNativeEolStyle, _HandleContentsEol
 import errno
 import logging

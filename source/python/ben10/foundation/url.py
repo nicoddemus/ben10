@@ -8,13 +8,13 @@ from ben10.foundation.platform_ import Platform
 def IsUrlEqual(url_or_path_1, url_or_path_2):
     '''
     :param str url_or_path_1:
-    
+
     :param str url_or_path_2:
-    
+
     :rtype: bool
     :returns:
         True if Url's are equal.
-        
+
         Ignores case if url protocol is 'file' in a Windows machine (Windows ignores case for local
         directories).
     '''
@@ -41,10 +41,10 @@ def HideURLPassword(url):
     '''
     Hides username and password in a URL, useful when you want to print an URL without showing
     protected information.
-    
+
     :param str url:
         A URL
-    
+
     :rtype: str
     :returns:
         The given FTP URL with hidden username and password

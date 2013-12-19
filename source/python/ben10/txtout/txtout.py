@@ -10,9 +10,9 @@ import sys
 class IndentContextManager(object):
     '''
     Represents a section in the output stream.
-    
+
     Used with the 'with' statement.
-    
+
     Starts a new indentation level upon entry, and dedent on exit.
     '''
     def __init__(self, oss):
@@ -103,7 +103,7 @@ class AbstractTextOutput(object):
     def writeln(self, p_text=''):
         '''
             Writes a line in the output stream.
-            
+
             * 'writeln' is expected by the UnitTest framework.
         '''
         self._oss.write(p_text)
@@ -311,7 +311,7 @@ class TextOutput(AbstractTextOutput):
     def Indent(self, **kargs):
         '''
         Adds one to the global indentation level.
-        
+
         * The global indentation is used for all method calls without "indent" keyword.
         '''
         if not self._HandleVerbose(kargs):
@@ -323,7 +323,7 @@ class TextOutput(AbstractTextOutput):
     def Dedent(self, **kargs):
         '''
         Subs one to the global indentation level.
-        
+
         * The global indentation is used for all method calls without "indent" keyword.
         '''
         if not self._HandleVerbose(kargs):
@@ -342,7 +342,7 @@ class TextOutput(AbstractTextOutput):
         '''
         Returns a pair of strings, one for the first line indentation and the other for the
         other lines.
-        
+
         The first line indentation adds the given 'mark' to it. The other lines indentation,
         replace the mark for white spaces, making the text aligned.
         '''
@@ -422,7 +422,7 @@ class TextOutput(AbstractTextOutput):
         '''
         Handles the 'indent' and 'mark' keywords of the given 'kargs'. Returns the same result
         as "_IndentStrings".
-        
+
         * The default indent is defined by the internal indentation level (see Indent, Dedent)
         * The mark is used by "Items" methods, by default is an empty string.
         '''
@@ -473,7 +473,7 @@ class TextOutput(AbstractTextOutput):
     def P(self, *args, **kargs):
         '''
         Print a paragram, observing the indentation, verbose level and text width.
-        
+
         Format:
         <MESSAGE>
 
@@ -502,9 +502,9 @@ class TextOutput(AbstractTextOutput):
     def I(self, *args, **kargs):
         '''
         Print an item, observing the indentation, verbose level and text width.
-        
+
         - Can spread to multiple lines, all aligned with the first line text.
-        
+
         Format:
         - <MESSAGE>
 
@@ -532,11 +532,11 @@ class TextOutput(AbstractTextOutput):
     def DT(self, *args, **kargs):
         '''
         Prints a definition title, observing the indentation, verbose level and text width.
-        
+
         Format:
         \n
         <MESSAGE>:
-        
+
         Keyword Arguments:
             indent=None
             verbose=1
@@ -682,7 +682,7 @@ class TextOutput(AbstractTextOutput):
     def EXCEPTION(self, **kargs):
         '''
         Prints-out the exception being handling.
-        
+
         Keywords params:
             top_margin:
             bottom_margin:
@@ -767,18 +767,18 @@ class TextOutput(AbstractTextOutput):
     def TABLE(self, widths, labels, values):
         '''
         Print a table of values, correctly indented.
-        
+
         :param  widths:
             A list of width, one for each column
         @type labels:
             [int]
-        
+
         :param  labels:
             A list of labels, one for each column
             If None, does not print labels
         @type labels:
             [str]
-            
+
         :param  values:
             A list of values, each entry must have a value for each column.
         @type values:

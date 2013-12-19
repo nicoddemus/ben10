@@ -89,10 +89,10 @@ class NullHandler(Handler):
 def AddDebugStreamHandler(logger=''):
     '''
     Helper to add a default stream handler (that'll log to stderr) into a given logger.
-    
+
     :param str logger:
         The logger to which the handler should be added.
-        
+
     :returns:
         Return a logger with the specified name, creating it if necessary.
     '''
@@ -113,10 +113,10 @@ class _LogHandle(object):
         '''
         :param str logger:
             The logger context.
-            
+
         :param StreamHandler stream_handler:
             The stream handler added to the log context.
-            
+
         :param StringIO string_io:
             The string io used to record the log.
         '''
@@ -135,9 +135,9 @@ class _LogHandle(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         '''
         Context Management protocol method.
-        
+
         Parameters are any exception occurred during the "with" block, or all None.
-        
+
         :rtype: bool
         :returns:
             Return True if the exception should be suppressed
@@ -165,7 +165,7 @@ def StartLogging(logger=''):
             ... Do something
             log = logger.GetRecordedLog()
             ... check the log.
-            
+
     :param str logger:
         The logger context to be logged.
     '''

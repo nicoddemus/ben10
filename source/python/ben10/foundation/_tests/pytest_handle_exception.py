@@ -11,7 +11,7 @@ import sys
 def exception_handler(request):
     '''
     Captures the exceptions using handle_exception module.
-    
+
     This code was in coilib50's base TestCase.
     '''
 

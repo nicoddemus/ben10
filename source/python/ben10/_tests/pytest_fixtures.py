@@ -2,6 +2,7 @@ from __future__ import with_statement
 from ben10.filesystem import CreateFile, StandardizePath
 from ben10.fixtures import MultipleFilesNotFound
 from ben10.foundation import is_frozen
+from ben10.foundation.string import Dedent
 import os
 import pytest
 
@@ -62,19 +63,23 @@ class Test(object):
                 'alpha.txt',
                 'different.txt'
             )
-        assert str(e.value) == '''*** FILENAME: data_fixtures__test_embed_data_AssertEqualFiles/alpha.txt
-*** 
+        assert str(e.value) == Dedent(
+            '''
+            *** FILENAME: data_fixtures__test_embed_data_AssertEqualFiles/alpha.txt
+            ***\w
 
---- 
+            ---\w
 
-***************
+            ***************
 
-*** 1 ****
+            *** 1 ****
 
-! This is alpha.txt
---- 1 ----
+            ! This is alpha.txt
+            --- 1 ----
 
-! This is different.txt'''
+            ! This is different.txt
+            '''.replace('\w', ' ')
+        )
 
 
         with pytest.raises(MultipleFilesNotFound) as e:

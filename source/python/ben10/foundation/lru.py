@@ -15,7 +15,7 @@ DEFAULT_LRU_SIZE = 50
 class _Node(object):
     '''
     Node with key, object and the last access time.
-    
+
     Identity hashable and comparable.
     '''
 
@@ -25,10 +25,10 @@ class _Node(object):
         '''
         :param object key:
             The key this node is storing
-        
+
         :param object obj:
             The object this node is storing
-        
+
         :param int node_time:
             The last time this node changed
 
@@ -44,7 +44,7 @@ class _Node(object):
     def __le__(self, other):
         '''
         Compares if less than other item (used by heapify).
-        
+
         :param _Node other:
             The node to compare: It's currently based on the node_time.
         '''
@@ -54,7 +54,7 @@ class _Node(object):
     def __cmp__(self, other):
         '''
         Compares if less than other item (used by sort).
-        
+
         :param _Node other:
             The node to compare: It's currently based on the node_time.
         '''
@@ -80,7 +80,7 @@ class _Node(object):
 class LRU(object):
     '''
     Least Recently Used (LRU) cache.
-    
+
     Based on heapq module (which is used to guarantee that the 1st item in _heap is
     always the item that has the lowest access time).
     '''
@@ -89,7 +89,7 @@ class LRU(object):
         '''
         :param int size:
             The maximum size for this cache.
-        
+
         :param dict internal_dict:
             If passed, this will be used as the internal dictionary in this LRU.
         '''
@@ -154,14 +154,14 @@ class LRU(object):
     def __setitem__(self, key, obj):
         '''
         Sets an item in the cache (with the proper access time)
-        
+
         :param object key:
             The key to be gotten
-            
+
         :rtype: object
         :returns:
             The value that was stored for the given item
-            
+
         :raises KeyError:
             If the key is not available
         '''
@@ -241,14 +241,14 @@ class LRU(object):
     def __getitem__(self, key):
         '''
         Gets an item from the cache (and updates the access time)
-        
+
         :param object key:
             The key to be gotten
-            
+
         :rtype: object
         :returns:
             The value that was stored for the given item
-            
+
         :raises KeyError:
             If the key is not available
         '''
@@ -263,13 +263,13 @@ class LRU(object):
     def get(self, key, default=None):
         '''
         Gets an item from the cache (and updates the access time if it exists)
-        
+
         :param object key:
             The key to be gotten
-            
+
         :param object default:
             This is the value to be returned if the key doesn't exist.
-            
+
         :rtype: object
         :returns:
             The value that was stored for the given item or the default value passed.
@@ -283,14 +283,14 @@ class LRU(object):
     def __delitem__(self, key):
         '''
         Deletes an item from the cache
-        
+
         :param object key:
             The key to be removed
-            
+
         :rtype: object
         :returns:
             The value that was stored for the given item
-            
+
         :raises KeyError:
             If the key is not available
         '''
@@ -411,15 +411,15 @@ class LRUWithRemovalMemo(LRU):
     '''
     This is an LRU that is able to provide which items were removed from it when another item was
     added and its size would exceed the maximum size.
-    
+
     Note that as it will keep references alive it must be used with care (so, ideally, any time an
     item is added a call to GetAndClearRemovedItems is done, otherwise the references may stay alive
     much more than they should).
-    
+
     This is used to handle a maximum number of display lists in the
     RenderWindowWithSharedDisplayLists, so that display lists that are not used anymore are properly
     deleted in the opengl context.
-    
+
     Note that it will only store the references gotten when the size of the lru would become too big
     or when __delitem__ is called explicitly (not on clear()).
     '''

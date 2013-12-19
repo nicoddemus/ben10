@@ -356,7 +356,7 @@ class Test:
     def testIsImplementationWithSubclasses(self):
         '''
         Checks if the IsImplementation method works with subclasses interfaces.
-        
+
         Given that an interface I2 inherits from I1 of a given object declared that it implements I2
         then it is implicitly declaring that implements I1.
         '''
@@ -412,7 +412,7 @@ class Test:
     def testClassImplementMethod(self):
         '''
         Tests replacing a method that implements an interface with a class.
-        
+
         The class must be derived from "Method" in order to be accepted as a valid
         implementation.
         '''
@@ -615,10 +615,10 @@ class Test:
 
     def testReadOnlyAttributeMissingImplementation(self):
         '''
-        First implementation of changes in interfaces to support read-only attributes was not 
-        including read-only attributes when AssertImplements was called. 
-        
-        This caused missing read-only attributes to go unnoticed and sometimes false positives, 
+        First implementation of changes in interfaces to support read-only attributes was not
+        including read-only attributes when AssertImplements was called.
+
+        This caused missing read-only attributes to go unnoticed and sometimes false positives,
         recognizing objects as valid implementations when in fact they weren't.
         '''
         class IZoo(Interface):
@@ -827,10 +827,10 @@ class Test:
     def testCallableInterfaceStub(self):
         '''
         Validates that is possible to create stubs for interfaces of callables (i.e. declaring
-        __call__ method in interface). 
-        
-        If a stub for a interface not declared as callable is tried to be executed as callable it 
-        raises an error. 
+        __call__ method in interface).
+
+        If a stub for a interface not declared as callable is tried to be executed as callable it
+        raises an error.
         '''
         # ok, calling a stub for a callable
         class IFoo(Interface):

@@ -17,7 +17,7 @@ import copy
 #===================================================================================================
 class MetaBunch(type):
     """
-    metaclass for new and improved "Bunch": implicitly defines 
+    metaclass for new and improved "Bunch": implicitly defines
     __slots__, __init__ and __repr__ from variables bound in class scope.
 
     An instance of metaMetaBunch (a class whose metaclass is metaMetaBunch)
@@ -57,7 +57,7 @@ class MetaBunch(type):
                 setattr(self, k, value)
 
         def __repr__(self):
-            """ 
+            """
             repr operator.
             """
             rep = ['%s=%r' % (k, getattr(self, k)) for k in sorted(self.__defaults__)]
@@ -160,13 +160,13 @@ class Bunch(object):
 class MetaHashableBunch(MetaBunch):
     """
     Implements a hashable Bunch.
-    
+
     A hashable bunch is created exactly the same as a normal bunch, but the attributes are read-only
     (immutable) and the bunches created this way can be used as keys in dicts and sets.
-    
+
     Each property defined will have a private attribute and a public read-only property, as well
     as hash and equality methods as expected.
-    
+
     @note: take care when creating methods for hashable bunches, they should not change the internal
         attributes, because this way the hash will change and will create chaos if those bunches are
         being used as keys in dicts or sets.
@@ -178,7 +178,7 @@ class MetaHashableBunch(MetaBunch):
 
         def __init__(self, **kw):
             """
-            Overwrite Bunch's __init__ to initialize the private attributes instead of the public 
+            Overwrite Bunch's __init__ to initialize the private attributes instead of the public
             ones.
             """
             self._p_hash_value = None
@@ -197,7 +197,7 @@ class MetaHashableBunch(MetaBunch):
 
 
         def __repr__(self):
-            """ 
+            """
             repr operator. Overwritten to generate the string using the public name
             """
             # strip "_" from the attr names
@@ -239,7 +239,7 @@ class MetaHashableBunch(MetaBunch):
         '''
         :param str name:
             The name of the property to create the get method for.
-        
+
         :rtype: function
         :returns:
             Return a Get method for the property with the given name for use with the builtin
@@ -269,23 +269,23 @@ def ConvertToDict(bunch):
     '''
     Converts the contents of a bunch to a dictionary. Every attribute name of the bunch is converted
     to a string which maps to its respective attribute value. For instance, given the bunch
-    
+
     class ThisBunchIsAnExample(Bunch):
         foo = 'cake'
         bar = 0
-    
+
     the conversion to dict would result in:
-    
+
     this_dict_is_an_example = {
         'foo' : 'cake'
         'bar' : 0
     }
-    
-    Note that attribute values have their original types kept intact in the dict.        
-    
+
+    Note that attribute values have their original types kept intact in the dict.
+
     :param Bunch bunch:
         A bunch.
-        
+
     :rtype: dict(str -> object)
     :returns:
         The bunch mapped as a dict.

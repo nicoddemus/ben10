@@ -55,23 +55,23 @@ class Console(object):
     '''
     Verbosity
     ---------
-    
+
     Controls how much output is generated. It accepts three values:
         0: Quiet: Messages in this level are printed even if verbosity is quiet.
         1: Normal: Messages in this level are printed only of verbosity is normal or higher.
         2: Verbose: Messages in this level are only printed when asked, that is, setting verbosity
                     to the max level.
-    
+
     Print calls with vebosity parameter equal or inferior to the console verbosity value will print
     their messages, otherwise the message is skipped.
-    
-    The shortcut methods PrintVerbose and PrintQuiet defaults verbosity to the appropriate level. 
+
+    The shortcut methods PrintVerbose and PrintQuiet defaults verbosity to the appropriate level.
 
     Color
     -----
-    
+
     If true prints using colors on the stdout and stderr. On Windows we convert all ANSI color codes
-    to appropriate calls using @colorama@ library. 
+    to appropriate calls using @colorama@ library.
     '''
 
     def __init__(self, verbosity=1, color=None, colorama=True, stdout=sys.stdout, stdin=sys.stdin):
@@ -79,10 +79,10 @@ class Console(object):
         :param bool|None color:
             Define whether to generate colored output or not.
             If None try to guess whether to use color based on the output capabilities.
-            
+
         :param bool colorama:
             Enables/disbales the use of colorama.
-            This is necessary because colorama is incompatible with pytest. 
+            This is necessary because colorama is incompatible with pytest.
         '''
         self.verbosity = verbosity
         self.color = color
@@ -95,7 +95,7 @@ class Console(object):
     def SetStdOut(self, stdout):
         '''
         Configure output streams, both for normal (stdout) and PrintError (stderr) outputs.
-        
+
         :param stdout: A file-like object.
         '''
         self.__stdout = stdout
@@ -172,7 +172,7 @@ class Console(object):
     def Print(self, message='', verbosity=1, newlines=1, indent=0, stderr=False):
         '''
         Prints a message to the output.
-        
+
         :param int verbosity:
         :param int newlines:
         :param int indent:
@@ -259,7 +259,7 @@ class Console(object):
     def Ask(self, message):
         '''
         Ask the users for a value.
-        
+
         :param str message: Message to print before asking for the value
         :return str: A value entered by the user.
         '''
@@ -280,7 +280,7 @@ class Console(object):
     def ProgressOk(self, message='OK', format_='<green>%s</>'):
         '''
         Ends a progress "successfully" with a message
-        
+
         :param str message: Message to finish the progress. Default to "OK"
         '''
         self.Print(format_ % message)
@@ -289,7 +289,7 @@ class Console(object):
     def ProgressError(self, message, format_='<red>%s</>'):
         '''
         Ends a progress "with failure" message
-        
+
         :param str message: (Error) message to finish the progress.
         '''
         self.Print('<red>%s</>' % message)
@@ -298,7 +298,7 @@ class Console(object):
     def ProgressWarning(self, message, format_='<yellow>%s</>'):
         '''
         Ends a progress "with a warning" message
-        
+
         :param str message: (Warning) message to finish the progress.
         '''
         self.Print(format_ % message)
