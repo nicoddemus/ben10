@@ -10,7 +10,7 @@ import os
 #===================================================================================================
 class ExtendedPathMask(object):
     '''
-    This class is a place-holder for functions that handle the exteded path mask.
+    This class is a place-holder for functions that handle the extended path mask.
 
     Extended Path Mask
     ------------------
