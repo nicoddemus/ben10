@@ -1,4 +1,4 @@
-from ben10.foundation.pushpop import PushPop
+from ben10.foundation.pushpop import PushPopAttr, PushPopItem
 
 
 
@@ -7,7 +7,7 @@ from ben10.foundation.pushpop import PushPop
 #===================================================================================================
 class Test():
 
-    def testPushPop(self):
+    def testPushPopAttr(self):
 
         class MyObject:
 
@@ -19,16 +19,28 @@ class Test():
         obj = MyObject(1)
 
         assert obj.value == 1
-        with PushPop(obj, 'value', 2) as value:
+        with PushPopAttr(obj, 'value', 2) as value:
             assert obj.value == 2
             assert value == 2
         assert obj.value == 1
 
         assert MyObject.class_value == 1
         assert obj.class_value == 1
-        with PushPop(MyObject, 'class_value', 2) as value:
+        with PushPopAttr(MyObject, 'class_value', 2) as value:
             assert MyObject.class_value == 2
             assert obj.class_value == 2
             assert value == 2
         assert MyObject.class_value == 1
         assert obj.class_value == 1
+
+
+    def testPushPopItem(self):
+
+        obj = {
+            'key' : 1
+        }
+
+        assert obj['key'] == 1
+        with PushPopItem(obj, 'key', 2):
+            assert obj['key'] == 2
+        assert obj['key'] == 1
