@@ -21,7 +21,7 @@ import urllib
 
 
 
-pytest_plugins = ["ben10.fixtures", "pytest_localserver.plugin"]
+pytest_plugins = ["ben10.fixtures"]
 
 
 
