@@ -62,8 +62,8 @@ Now using with!
                 raise RuntimeError('This is an exception')
             ********************************************************************************
 
-            ''' % '\n'.join(textwrap.wrap(__file__ + ':52:', 80))
-        )
+            '''
+        ) % '\n'.join(textwrap.wrap(__file__ + ':52:', 80))
 
         stream = StringIO()
         oss.SetOutputStream(stream)
