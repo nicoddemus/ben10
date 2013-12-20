@@ -1,6 +1,7 @@
 from ben10.foundation.string import Dedent
 from ben10.txtout.txtout import TextOutput
 from cStringIO import StringIO
+import textwrap
 
 
 
@@ -57,11 +58,11 @@ Now using with!
             RuntimeError:
                 This is an exception
             --------------------------------------------------------------------------------
-            %s:51:
+            %s
                 raise RuntimeError('This is an exception')
             ********************************************************************************
 
-            ''' % __file__
+            ''' % '\n'.join(textwrap.wrap(__file__ + ':52:', 80))
         )
 
         stream = StringIO()
