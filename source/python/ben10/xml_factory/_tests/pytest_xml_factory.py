@@ -202,16 +202,14 @@ class Test(object):
         oss = StringIO()
 
         WritePrettyXML(iss, oss)
-
         assert oss.getvalue() == Dedent(self.testPrettyXMLToStream.__doc__)
 
 
     def testPrettyXMLToFile(self, embed_data):
-        in_ss = file(embed_data['input.xml'])
-
+        iss = file(embed_data['input.xml'], 'r')
         obtained_filename = embed_data['pretty.obtained.xml']
-        WritePrettyXML(in_ss, obtained_filename)
 
+        WritePrettyXML(iss, obtained_filename)
         embed_data.AssertEqualFiles('pretty.expected.xml', obtained_filename)
 
 

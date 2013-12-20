@@ -2,8 +2,11 @@ language: python
 python:
   - "2.7"
 install:
-    - pip install -r requirements.txt
+    - sudo apt-get install -qq unrar
+    - pip install -r requirements.txt --use-mirrors
+    - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
 script:
     - export PYTHONPATH=$PYTHONPATH:$PWD/source/python
-    - py.test source
-
+    - py.test -vv --timeout=90 --cov-report term-missing --cov ben10 source/python/ben10
+after_success:
+    - coveralls

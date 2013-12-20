@@ -207,7 +207,7 @@ class Test():
         weak_set.add(s2.Method)
         self.CustomAssertEqual(len(weak_set), 1)
         del s2
-        self.CustomAssertEqual(len(weak_set), 1)  # <-- This should be ZERO!
+        self.CustomAssertEqual(len(weak_set), 0)
 
 
     def testFunction(self):

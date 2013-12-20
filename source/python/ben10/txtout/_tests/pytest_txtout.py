@@ -1,5 +1,8 @@
+from ben10.foundation.pushpop import PushPopItem
+from ben10.foundation.string import Dedent
 from ben10.txtout.txtout import TextOutput
 from cStringIO import StringIO
+import os
 
 
 
@@ -38,145 +41,169 @@ Now using with!
 
 
     def testPageWidthParameter(self):
-        oss = TextOutput()
-        oss.RegisterKeyword('yes', 'This will be shown')
-        oss.RegisterKeyword('no', 'This will not be shown')
-        oss.SetKeyword('yes', True)
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        try:
-            raise RuntimeError('This is an exception')
-        except Exception:
-            oss.EXCEPTION()
-        assert (
-            stream.getvalue()
-            == '''***********************************************************************************************************************
-RuntimeError:
-    This is an exception
------------------------------------------------------------------------------------------------------------------------
-%s:49:
-    raise RuntimeError('This is an exception')
-***********************************************************************************************************************
-''' % __file__
-        )
+        with PushPopItem(os.environ, 'ESSS_WIDTH', '10'):
+            oss = TextOutput()
+            oss.RegisterKeyword('yes', 'This will be shown')
+            oss.RegisterKeyword('no', 'This will not be shown')
+            oss.SetKeyword('yes', True)
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.P('alpha bravo charlie delta echo foxtrot')
-        oss.P('No show', verbose=4)
-        oss.P('No show', keywords=('no',))
-        assert stream.getvalue() == '''alpha bravo charlie delta echo foxtrot
-'''
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            try:
+                raise RuntimeError('This is an exception')
+            except Exception:
+                oss.EXCEPTION()
+            assert stream.getvalue() == Dedent(
+                '''
+                ***********************************************************************************************************************
+                RuntimeError:
+                    This is an exception
+                -----------------------------------------------------------------------------------------------------------------------
+                %s:54:
+                    raise RuntimeError('This is an exception')
+                ***********************************************************************************************************************
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.P('alpha bravo charlie delta echo foxtrot', page_width=12)
-        assert stream.getvalue() == '''alpha bravo
-charlie
-delta echo
-foxtrot
-'''
+                ''' % __file__
+            )
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.I('alpha')
-        oss.I('bravo')
-        oss.I('charlie')
-        oss.I('No show', verbose=4)
-        oss.I('No show', keywords=('no',))
-        assert stream.getvalue() == '''- alpha
-- bravo
-- charlie
-'''
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.P('alpha bravo charlie delta echo foxtrot')
+            oss.P('No show', verbose=4)
+            oss.P('No show', keywords=('no',))
+            assert stream.getvalue() == Dedent(
+                '''
+                alpha bravo charlie delta echo foxtrot
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.TABLE([7, 8, 9], ['alpha', 'bravo', 'charlie'], [[1, 2, 3], [4, 5, 6]])
-        assert stream.getvalue() == '''      alpha   bravo  charlie
-          1       2        3
-          4       5        6
-'''
+                '''
+            )
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.HEADER("This is header")
-        oss.HEADER('No show', verbose=4)
-        oss.HEADER('No show', keywords=('no',))
-        assert (
-            stream.getvalue()
-            == '''-----------------------------------------------------------------------------------------------------------------------
-This is header
------------------------------------------------------------------------------------------------------------------------
-'''
-        )
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.P('alpha bravo charlie delta echo foxtrot', page_width=12)
+            assert stream.getvalue() == Dedent(
+                '''
+                alpha bravo
+                charlie
+                delta echo
+                foxtrot
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.ERROR('Oops!')
-        oss.ERROR('Oops!', verbose=4)
-        oss.ERROR('Oops!', keywords=('no',))
-        assert (
-            stream.getvalue()
-            == '''***********************************************************************************************************************
-ERROR
-  Oops!
-***********************************************************************************************************************
-'''
-        )
+                '''
+            )
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.PROCESSING('...', 'Doing')
-        oss.PROCESSING('Done')
-        oss.PROCESSING('...', 'Multi\nline\ndoing')
-        oss.PROCESSING('Done')
-        oss.flat_output = True
-        oss.PROCESSING('...', 'Doing')
-        oss.PROCESSING('Done')
-        oss.PROCESSING('No show', verbose=4)
-        oss.PROCESSING('No show', keywords=('no',))
-        assert (
-            stream.getvalue()
-            == '''...Doing\\rDone
-...Multi
-   line
-   doing
-\\rDone
-Doing...Done
-''')
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.I('alpha')
+            oss.I('bravo')
+            oss.I('charlie')
+            oss.I('No show', verbose=4)
+            oss.I('No show', keywords=('no',))
+            assert stream.getvalue() == Dedent(
+                '''
+                - alpha
+                - bravo
+                - charlie
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.DT('caption', 'value')
-        oss.DT('No show', verbose=4)
-        oss.DT('No show', keywords=('no',))
-        assert (stream.getvalue() == 'caption value:\n')
+                '''
+            )
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.DD('caption', 'value')
-        oss.DD('No show', 'No show', verbose=4)
-        oss.DD('No show', 'No show', keywords=('no',))
-        assert (stream.getvalue() == 'caption:\n    value\n')
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.TABLE([7, 8, 9], ['alpha', 'bravo', 'charlie'], [[1, 2, 3], [4, 5, 6]])
+            assert 'x\n' + stream.getvalue() == Dedent(
+                '''
+                x
+                      alpha   bravo  charlie
+                          1       2        3
+                          4       5        6
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.LINE('-')
-        oss.LINE('X', verbose=4)
-        oss.LINE('X', keywords=('no',))
-        assert (stream.getvalue() == '-' * 119 + '\n')
+                '''
+            )
 
-        stream = StringIO()
-        oss.SetOutputStream(stream)
-        oss.Indent()
-        oss.Indent()
-        oss.P('alpha')
-        oss.Dedent()
-        oss.P('bravo')
-        oss.ResetIndentation()
-        oss.P('charlie')
-        assert (stream.getvalue() == '        alpha\n    bravo\ncharlie\n')
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.HEADER("This is header")
+            oss.HEADER('No show', verbose=4)
+            oss.HEADER('No show', keywords=('no',))
+            assert stream.getvalue() == Dedent(
+                '''
+                -----------------------------------------------------------------------------------------------------------------------
+                This is header
+                -----------------------------------------------------------------------------------------------------------------------
+
+                '''
+            )
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.ERROR('Oops!')
+            oss.ERROR('Oops!', verbose=4)
+            oss.ERROR('Oops!', keywords=('no',))
+            assert stream.getvalue() == Dedent(
+                '''
+                ***********************************************************************************************************************
+                ERROR
+                  Oops!
+                ***********************************************************************************************************************
+
+                '''
+            )
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.PROCESSING('...', 'Doing')
+            oss.PROCESSING('Done')
+            oss.PROCESSING('...', 'Multi\nline\ndoing')
+            oss.PROCESSING('Done')
+            oss.flat_output = True
+            oss.PROCESSING('...', 'Doing')
+            oss.PROCESSING('Done')
+            oss.PROCESSING('No show', verbose=4)
+            oss.PROCESSING('No show', keywords=('no',))
+            assert stream.getvalue() == Dedent(
+                '''
+                ...Doing\\rDone
+                ...Multi
+                   line
+                   doing
+                \\rDone
+                Doing...Done
+
+                '''
+            )
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.DT('caption', 'value')
+            oss.DT('No show', verbose=4)
+            oss.DT('No show', keywords=('no',))
+            assert (stream.getvalue() == 'caption value:\n')
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.DD('caption', 'value')
+            oss.DD('No show', 'No show', verbose=4)
+            oss.DD('No show', 'No show', keywords=('no',))
+            assert (stream.getvalue() == 'caption:\n    value\n')
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.LINE('-')
+            oss.LINE('X', verbose=4)
+            oss.LINE('X', keywords=('no',))
+            assert (stream.getvalue() == '-' * 119 + '\n')
+
+            stream = StringIO()
+            oss.SetOutputStream(stream)
+            oss.Indent()
+            oss.Indent()
+            oss.P('alpha')
+            oss.Dedent()
+            oss.P('bravo')
+            oss.ResetIndentation()
+            oss.P('charlie')
+            assert (stream.getvalue() == '        alpha\n    bravo\ncharlie\n')
 
 
     def testPrintEmptyString(self):

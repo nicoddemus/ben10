@@ -1353,6 +1353,63 @@ class _PhonyFtpServer(object):
         from pyftpdlib import ftpserver
         from threading import Thread
 
+        class MyFtpServer(ftpserver.FTPServer):
+            '''
+            Add the feature to stop the server-forever graceously.
+            '''
+
+            def __init__(self, address, handler):
+                self.__serve_forever = False
+                ftpserver.FTPServer.__init__(self, address, handler)
+
+            def ServeForever(self, timeout=1.0, use_poll=False, count=None):
+                """A wrap around asyncore.loop(); starts the asyncore polling
+                loop including running the scheduler.
+                The arguments are the same expected by original asyncore.loop()
+                function:
+
+                 - (float) timeout: the timeout passed to select() or poll()
+                   system calls expressed in seconds (default 1.0).
+
+                 - (bool) use_poll: when True use poll() instead of select()
+                   (default False).
+
+                 - (int) count: how many times the polling loop gets called
+                   before returning.  If None loops forever (default None).
+                """
+                from pyftpdlib.ftpserver import _tasks, _scheduler, log
+                import asyncore
+
+                if use_poll and hasattr(asyncore.select, 'poll'):
+                    poll_fun = asyncore.poll2
+                else:
+                    poll_fun = asyncore.poll
+
+                self.__serve_forever = True
+                try:
+                    if count is None:
+                        log("Serving FTP on %s:%s" % self.socket.getsockname()[:2])
+                        try:
+                            while self.__serve_forever and (asyncore.socket_map or _tasks):
+                                poll_fun(timeout)
+                                _scheduler()
+                        except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
+                            log("Shutting down FTP server.")
+                            self.close_all()
+                    else:
+                        while self.__serve_forever and (asyncore.socket_map or _tasks) and count > 0:
+                            if asyncore.socket_map:
+                                poll_fun(timeout)
+                            if _tasks:
+                                _scheduler()
+                            count = count - 1
+                finally:
+                    self.__serve_forever = False
+
+            def StopServeForever(self):
+                self.__serve_forever = False
+
+
         authorizer = ftpserver.DummyAuthorizer()
         authorizer.add_user("dev", "123", self._directory, perm="elradfmw")
         authorizer.add_anonymous(self._directory)
@@ -1361,18 +1418,18 @@ class _PhonyFtpServer(object):
         handler.authorizer = authorizer
 
         address = ("127.0.0.1", port)
-        self.ftpd = ftpserver.FTPServer(address, handler)
+        self.ftpd = MyFtpServer(address, handler)
         if port == 0:
             _address, port = self.ftpd.getsockname()
 
-        self.thread = Thread(target=self.ftpd.serve_forever)
+        self.thread = Thread(target=self.ftpd.ServeForever)
         self.thread.start()
 
         return port
 
 
     def Stop(self):
-        self.ftpd.stop_serve_forever()
+        self.ftpd.StopServeForever()
         self.thread.join()
 
 

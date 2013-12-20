@@ -1,6 +1,10 @@
 Basic ESSS Namespace 1.0
 ===========
 
+[![Build Status](https://travis-ci.org/ESSS/ben10.png)](https://travis-ci.org/ESSS/ben10)
+[![Coverage Status](https://coveralls.io/repos/ESSS/ben10/badge.png)](https://coveralls.io/r/ESSS/ben10)
+
+
 About
 -----------
 

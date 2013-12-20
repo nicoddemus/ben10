@@ -1,3 +1,4 @@
+from StringIO import StringIO
 from ben10.clikit.console import BufferedConsole, Console
 import os
 import sys
@@ -11,7 +12,6 @@ import sys
 class Test:
 
     def testConsole(self):
-        from StringIO import StringIO
         import pytest
 
         # Test verbosity control
@@ -129,8 +129,11 @@ class Test:
                 os.environ = os_environ
 
             # Tests TERM environment variable
+            console.color = not console._AutoColor()
+            assert console.color == (not console._AutoColor())
+
             console.color = None
-            assert console.color == False
+            assert console.color == console._AutoColor()
 
             os_environ = os.environ
             os.environ = dict(os.environ)
@@ -143,3 +146,13 @@ class Test:
         finally:
             sys.stdout = sys_stdout
 
+
+    def testColorama(self):
+        '''
+        Smoke test to make sure colorama works from inside pytest. In previous version of pytest
+        the colorama import failed if called from inside pytest.
+        '''
+        oss = StringIO()
+        console = Console(color=True, colorama=True, stdout=oss)
+        console.Print('Hello')
+        assert oss.getvalue() == 'Hello\n'

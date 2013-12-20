@@ -1,5 +1,11 @@
-path.py
-pytest-localserver
-rarfile
-pyftpdlib
+colorama
 ftputil==2.6
+path.py
+pyftpdlib==0.6.0
+pytest==2.5.1
+pytest-cov
+pytest-localserver
+pytest-timeout
+pytest-xdist
+python-coveralls
+rarfile
