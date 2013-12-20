@@ -1,4 +1,3 @@
-# -*- coding: latin-1 -*-
 from __future__ import with_statement
 from ben10.filesystem import (CreateFile, ExtendedPathMask, UnknownPlatformError, Cwd,
     StandardizePath, CreateMD5, GetFileContents, CopyFile, MD5_SKIP, DeleteFile, CopyFilesX,
@@ -74,7 +73,7 @@ class Test:
 
         # Testing with unicode
         # Create non-ascii files in runtime, to make sure git won't complain
-        filename = embed_data['files/source/áéíõu.txt'].decode('latin1')
+        filename = embed_data['files/source/a\xe7\xe3o.txt'].decode('latin1')
         CreateFile(filename, contents='test')
         CreateMD5(filename)
         assert GetFileContents(filename + '.md5') == '098f6bcd4621d373cade4e832627b4f6'
@@ -434,7 +433,7 @@ class Test:
         '''
         Creates a dummy file with a non-ascii filename and checks its existance.
         '''
-        target_file = embed_data['éáóãçí.txt'].decode('latin1')
+        target_file = embed_data['a\xe7\xe3o.txt'].decode('latin1')
         CreateFile(target_file, 'contents')
         assert os.path.isfile(target_file.encode(sys.getfilesystemencoding()))
         assert os.path.isfile(target_file)
@@ -445,10 +444,10 @@ class Test:
         '''
         No FTP function supports non-ascii filenames / paths
         '''
-        unicode_filename = ftpserver.GetFTPUrl(embed_data['éáóãçí.txt']).decode('latin1')
+        unicode_filename = ftpserver.GetFTPUrl(embed_data['a\xe7\xe3o.txt']).decode('latin1')
         _unicode_filename2 = ftpserver.GetFTPUrl(embed_data['file.txt']).decode('latin1')
 
-        unicode_dirname = ftpserver.GetFTPUrl(embed_data['éáóãçí_dir']).decode('latin1')
+        unicode_dirname = ftpserver.GetFTPUrl(embed_data['a\xe7\xe3o_dir']).decode('latin1')
         unicode_dirname2 = ftpserver.GetFTPUrl(embed_data['complex_tree']).decode('latin1')
 
         def _TestUnicode(func, *args, **kwargs):
@@ -482,21 +481,21 @@ class Test:
 
     def testUnicodeFileContents(self, embed_data):
         target_file = embed_data['file.txt']
-        unicode_contents = 'unicode ãéí'.decode('latin1')
+        unicode_contents = 'unicode a\xe7\xe3o'.decode('latin1')
 
         # If given unicode contents, must also receive an encoding
         with pytest.raises(ValueError):
             CreateFile(target_file, contents=unicode_contents)
         # If given encoding, must receive unicode contents
         with pytest.raises(ValueError):
-            CreateFile(target_file, contents='string', encoding='utf8')
+            CreateFile(target_file, contents='string acao', encoding='utf8')
 
         CreateFile(target_file, unicode_contents, encoding='utf8')
         assert IsFile(target_file)
 
         # GetFileContents will usually return a byte array
         byte_array = GetFileContents(target_file)
-        assert byte_array == 'unicode \xc3\xa3\xc3\xa9\xc3\xad'
+        assert byte_array == 'unicode a\xc3\xa7\xc3\xa3o'
 
         # When receiving an encoding, it will return a unicode string
         obtained_contents = GetFileContents(target_file, encoding='utf8')
@@ -604,7 +603,7 @@ class Test:
         assert IsFile(embed_data['files/doesnt_exist']) == False
 
         # Create non-ascii files in runtime, to make sure git won't complain
-        filename = embed_data['files/source/áéíõu.txt'].decode('latin1')
+        filename = embed_data['files/source/a\xe7\xe3o.txt'].decode('latin1')
         CreateFile(filename, contents='test')
         assert IsFile(filename) == True
 
@@ -762,9 +761,9 @@ class Test:
         Creates a directory with a non-ascii name checks its existance.
         '''
         # Creating dir with slightly more complex name
-        assert os.path.isdir(embed_data['póço'].decode('latin1').encode(sys.getfilesystemencoding())) == False
-        CreateDirectory(embed_data['póço'].decode('latin1'))
-        assert os.path.isdir(embed_data['póço'].decode('latin1').encode(sys.getfilesystemencoding())) == True
+        assert os.path.isdir(embed_data['a\xe7\xe3o'].decode('latin1').encode(sys.getfilesystemencoding())) == False
+        CreateDirectory(embed_data['a\xe7\xe3o'].decode('latin1'))
+        assert os.path.isdir(embed_data['a\xe7\xe3o'].decode('latin1').encode(sys.getfilesystemencoding())) == True
 
 
     def testListFiles(self, embed_data):
@@ -813,8 +812,8 @@ class Test:
         '''
             Creates files with non-ascii filenames and copies them.
         '''
-        source_file = embed_data['álça.txt']
-        target_file = embed_data['álça_copy.txt']
+        source_file = embed_data['alpha-a\xe7\xe3o.txt']
+        target_file = embed_data['alpha-a\xe7\xe3o_copy.txt']
 
         # Sanity check
         assert not os.path.isfile(target_file.decode('latin1').encode(sys.getfilesystemencoding()))
@@ -825,7 +824,7 @@ class Test:
         embed_data.AssertEqualFiles(source_file, target_file)
 
         # Copy again... overrides with no error.
-        source_file = embed_data['brãvó.txt']
+        source_file = embed_data['bravo-a\xe7\xe3o.txt']
         CreateFile(source_file, 'fake_content_2')
         CopyFile(source_file, target_file)
         embed_data.AssertEqualFiles(source_file, target_file)
