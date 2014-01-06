@@ -22,3 +22,4 @@ class Ben10BuildCommand(BuildCommand):
             raise BuildStopped('Tests failed')
         elif retcode:
             raise RuntimeError('ci.py failed with retcode ' + str(retcode))
+

@@ -4,7 +4,7 @@ import pytest
 from pylint.lint import Run
 
 pytest_retcode = pytest.main(
-    '--junitxml=pytest.xml --cov-report xml --cov ben10 source/python/'.split()
+    '-n5 --junitxml=pytest.xml --cov-report xml --cov ben10 source/python/'.split()
 )
 
 sys_stdout = sys.stdout
