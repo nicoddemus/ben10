@@ -1,7 +1,7 @@
 '''
 Collection of fixtures for pytests.
 
-Note:
+.. note::
     Coverage for this file gives a lot of misses, just like calling coverave from module's main.
 '''
 import pytest
