@@ -16,6 +16,7 @@ class Ben10(EsssProject):
         'pylint',
         'pytest',
         'pytest_cov',
+        'pytest_xdist',
         'pytest_localserver',
         'rarfile',
         'windows:pywin32',
