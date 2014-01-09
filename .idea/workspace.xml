@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="13eb11b5-2541-4290-8231-89cff7b6bdd3" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/ben10.iml" afterPath="$PROJECT_DIR$/.idea/ben10.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/archivist/_tests/pytest_archivist.py" afterPath="$PROJECT_DIR$/source/python/archivist/_tests/pytest_archivist.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="13eb11b5-2541-4290-8231-89cff7b6bdd3" name="Default" comment="" />
     <ignored path="ben10.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -32,17 +28,7 @@
     <favorites_list name="ben10" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="pytest_archivist.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/source/python/archivist/_tests/pytest_archivist.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="3" column="0" selection-start="106" selection-end="106" vertical-scroll-proportion="0.08600337" vertical-offset="0" max-vertical-offset="1989">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -473,8 +459,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/source/python/archivist/_tests/pytest_archivist.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="3" column="0" selection-start="106" selection-end="106" vertical-scroll-proportion="0.08600337" vertical-offset="0" max-vertical-offset="1989">
-          <folding />
+        <state line="4" column="0" selection-start="120" selection-end="120" vertical-scroll-proportion="0.11467116" vertical-offset="0" max-vertical-offset="1989">
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
