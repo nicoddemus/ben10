@@ -1,4 +1,4 @@
-from ben10.archivist import Archivist
+from archivist import Archivist
 from ben10.filesystem import CreateFile, FileAlreadyExistsError
 import os
 import pytest
