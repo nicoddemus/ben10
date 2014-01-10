@@ -1,5 +1,4 @@
-from ben10.filesystem import CreateFile
-from ben10.xml_factory._pretty_xml import WritePrettyXMLElement
+from ._pretty_xml import WritePrettyXMLElement
 from xml.etree import ElementTree
 
 

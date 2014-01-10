@@ -1,9 +1,8 @@
 from StringIO import StringIO
 from ben10.foundation.string import Dedent
-from ben10.xml_factory import WritePrettyXML, WritePrettyXMLElement, XmlFactory
 from xml.etree import ElementTree
+from xml_factory import WritePrettyXML, WritePrettyXMLElement, XmlFactory
 import pytest
-import sys
 
 
 
