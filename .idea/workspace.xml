@@ -2,12 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="13eb11b5-2541-4290-8231-89cff7b6bdd3" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/ben10.iml" afterPath="$PROJECT_DIR$/.idea/ben10.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="X:/etk/plugins10/source/python/pt-BR.ts" afterPath="X:/etk/plugins10/source/python/pt-BR.ts" />
-      <change type="MODIFICATION" beforePath="X:/etk/xgui20/source/python/pt-BR.ts" afterPath="X:/etk/xgui20/source/python/pt-BR.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_app.py" afterPath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_app.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_command.py" afterPath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_command.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_console.py" afterPath="$PROJECT_DIR$/source/python/clikit/_tests/pytest_clikit_console.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/txtout/_tests/pytest_color_stream.py" afterPath="$PROJECT_DIR$/source/python/txtout/_tests/pytest_color_stream.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/source/python/txtout/_tests/pytest_txtout.py" afterPath="$PROJECT_DIR$/source/python/txtout/_tests/pytest_txtout.py" />
     </list>
     <ignored path="ben10.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -56,10 +55,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="x" value="384" />
+    <option name="y" value="200" />
+    <option name="width" value="1152" />
+    <option name="height" value="800" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -103,6 +102,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -113,19 +113,18 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
     <property name="recentsLimit" value="5" />
+    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
     <property name="last_opened_file_path" value="X:/etk" />
     <property name="FullScreen" value="false" />
-    <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
+    <property name="options.splitter.details.proportions" value="0.2" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -412,12 +411,12 @@
       <method />
     </configuration>
     <list size="6">
-      <item index="0" class="java.lang.String" itemvalue="Python.pytest_archivist" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in pytest_archivist" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in pytest_filesystem" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.py.test in pytest_archivist.py" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.py.test in pytest_filesystem.py" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.py.test in _tests" />
+      <item index="0" class="java.lang.String" itemvalue="Python tests.py.test in _tests" />
+      <item index="1" class="java.lang.String" itemvalue="Python.pytest_archivist" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in pytest_archivist" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in pytest_filesystem" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.py.test in pytest_archivist.py" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.py.test in pytest_filesystem.py" />
     </list>
     <recent_temporary>
       <list size="5">
@@ -456,14 +455,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="384" y="200" width="1152" height="800" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.184375" sideWeight="0.6706392" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.1880734" sideWeight="0.6706392" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.43343982" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -471,7 +471,6 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -491,24 +490,6 @@
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/source/python/ben10/filesystem/_tests/pytest_filesystem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="35" selection-start="1117" selection-end="1117" vertical-scroll-proportion="0.0" vertical-offset="323" max-vertical-offset="26350">
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/source/python/ben10/filesystem/_tests/pytest_filesystem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="13" selection-start="1078" selection-end="1078" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="26350">
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pycharm/utrunner.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="142" column="12" selection-start="4340" selection-end="4340" vertical-scroll-proportion="1.0" vertical-offset="1794" max-vertical-offset="2635" />
@@ -519,11 +500,6 @@
         <state line="10" column="0" selection-start="292" selection-end="292" vertical-scroll-proportion="0.2901024" vertical-offset="0" max-vertical-offset="2176" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/source/python/archivist/_tests/pytest_archivist.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="0" selection-start="120" selection-end="120" vertical-scroll-proportion="0.11467116" vertical-offset="0" max-vertical-offset="1989" />
-      </provider>
-    </entry>
     <entry file="file://X:/etk/utexas10io/source/python/utexas10io/chemsim/model/model_generator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="2494" column="24" selection-start="83604" selection-end="83604" vertical-scroll-proportion="0.4198988" vertical-offset="42149" max-vertical-offset="48467" />
@@ -532,15 +508,6 @@
     <entry file="file://X:/etk/utexas10io/source/python/utexas10io/chemsim/model/input_data_description.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="4" column="27" selection-start="156" selection-end="175" vertical-scroll-proportion="0.11467116" vertical-offset="0" max-vertical-offset="38437" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/source/python/ben10/filesystem/_tests/pytest_filesystem.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="35" selection-start="1117" selection-end="1117" vertical-scroll-proportion="0.0" vertical-offset="323" max-vertical-offset="26350">
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
       </provider>
     </entry>
   </component>

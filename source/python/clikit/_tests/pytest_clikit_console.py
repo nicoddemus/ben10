@@ -1,5 +1,5 @@
 from StringIO import StringIO
-from ben10.clikit.console import BufferedConsole, Console
+from clikit.console import BufferedConsole, Console
 import os
 import sys
 

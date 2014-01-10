@@ -1,5 +1,5 @@
-from ben10.clikit.app import App
-from ben10.clikit.console import BufferedConsole, Console
+from clikit.app import App
+from clikit.console import BufferedConsole, Console
 import inspect
 import pytest
 import sys

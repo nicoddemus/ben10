@@ -1,5 +1,5 @@
-from ben10.clikit.command import Command, InvalidFixture
-from ben10.clikit.console import BufferedConsole
+from clikit.command import Command, InvalidFixture
+from clikit.console import BufferedConsole
 import pytest
 
 
@@ -88,7 +88,7 @@ Options:
         import argparse
         parser = argparse.ArgumentParser('TEST')
         cmd.ConfigureArgumentParser(parser)
-        assert parser.format_help() =='''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
+        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
             [--no_default NO_DEFAULT]
             filename
 
