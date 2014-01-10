@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from ben10.filesystem import StandardizePath
 from ben10.foundation.decorators import Implements
-from ben10.interface import Interface, ImplementsInterface
+from ben10.interface import ImplementsInterface, Interface
 import os
 
 

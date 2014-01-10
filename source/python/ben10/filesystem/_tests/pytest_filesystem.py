@@ -1,13 +1,13 @@
 from __future__ import with_statement
-from ben10.filesystem import (CreateFile, ExtendedPathMask, UnknownPlatformError, Cwd,
-    StandardizePath, CreateMD5, GetFileContents, CopyFile, MD5_SKIP, DeleteFile, CopyFilesX,
-    DirectoryNotFoundError, CopyFiles, ListFiles, NotImplementedProtocol, OpenFile, FileNotFoundError,
-    ServerTimeoutError, GetFileLines, FileError, EOL_STYLE_MAC, EOL_STYLE_WINDOWS, EOL_STYLE_UNIX,
-    EOL_STYLE_NONE, IsFile, CheckIsDir, CheckIsFile, CreateDirectory, IsDir, MoveDirectory, AppendToFile,
-    MoveFile, NotImplementedForRemotePathError, DirectoryAlreadyExistsError, CopyDirectory,
-    FileOnlyActionError, DeleteDirectory, CreateTemporaryDirectory, CanonicalPath,
-    FileAlreadyExistsError, NormalizePath, NormStandardPath, GetMTime, ListMappedNetworkDrives,
-    MatchMasks, FindFiles)
+from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFile, CopyDirectory,
+    CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5,
+    CreateTemporaryDirectory, Cwd, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError,
+    DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS,
+    ExtendedPathMask, FileAlreadyExistsError, FileError, FileNotFoundError, FileOnlyActionError,
+    FindFiles, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile, ListFiles,
+    ListMappedNetworkDrives, MD5_SKIP, MatchMasks, MoveDirectory, MoveFile, NormStandardPath,
+    NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile,
+    ServerTimeoutError, StandardizePath, UnknownPlatformError)
 from ben10.filesystem._duplicates import CheckForUpdate
 from ben10.filesystem._filesystem import _GetNativeEolStyle, _HandleContentsEol
 from socket import errno
@@ -1408,7 +1408,7 @@ class _PhonyFtpServer(object):
                  - (int) count: how many times the polling loop gets called
                    before returning.  If None loops forever (default None).
                 """
-                from pyftpdlib.ftpserver import _tasks, _scheduler, log
+                from pyftpdlib.ftpserver import _scheduler, _tasks, log
                 import asyncore
 
                 if use_poll and hasattr(asyncore.select, 'poll'):

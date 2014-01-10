@@ -1,5 +1,5 @@
 from ben10.filesystem import (CheckIsFile, CreateDirectory, CreateFile, DeleteFile, EOL_STYLE_NONE,
-    FileAlreadyExistsError, ExtendedPathMask, FindFiles)
+    ExtendedPathMask, FileAlreadyExistsError, FindFiles)
 import os
 
 

@@ -1,8 +1,8 @@
 from ben10.fixtures import SkipIfImportError
 from ben10.foundation.is_frozen import SetIsFrozen
 from ben10.foundation.types_ import (AsList, Boolean, CheckBasicType, CheckEnum, CheckFormatString,
-    CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType, IsNumber,
-    MergeDictsRecursively, Null, OrderedIntersection, _GetKnownNumberTypes)
+    CheckIsNumber, CheckType, CreateDevelopmentCheckType, Flatten, Intersection, IsBasicType,
+    IsNumber, MergeDictsRecursively, Null, OrderedIntersection, _GetKnownNumberTypes)
 import copy
 import pytest
 
