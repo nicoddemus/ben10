@@ -2,7 +2,7 @@
 Perform maintenance operations on source code.
 '''
 from ben10.clikit.app import App
-from ben10.filesystem import FindFiles, GetFileLines, CreateFile
+from ben10.filesystem import CreateFile, FindFiles, GetFileLines
 
 
 
@@ -12,7 +12,7 @@ app = App('maintenance')
 def license_headers(console_, directory, header='HEADER.txt'):
     '''
     Check and fix license headers in all source files.
-    
+
     :param directory: The base directory perform the operation.
     :param header: Filename containing the header information.
     '''

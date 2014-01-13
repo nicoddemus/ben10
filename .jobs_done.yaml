@@ -1,14 +1,13 @@
 junit_patterns:
--  "ben10/pytest.xml"
+- ben10/pytest.xml
 
-platform-win32:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.build ben10 --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform}"
+platform-windows:build_batch_commands:
+- %AA_AASIMAR_AA_CONFIG% --conf-dir=%WORKSPACE% --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform} --reset-env --load-env=ben10
+- python ben10/ci.py
 
-platform-win64:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.build ben10 --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform}"
-
-platform-redhat64:build_shell_commands:
-- "$AA_AASIMAR_AA -t project.build ben10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
+platform-linux:build_shell_commands:
+- $AA_AASIMAR_AA_CONFIG --conf-dir=$WORKSPACE --projects-dir=$WORKSPACE --dist={dist} --platform={platform} --reset-env --load-env=ben10
+- python ben10/ci.py
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
@@ -17,6 +16,7 @@ matrix:
   - 12.0
 
   platform:
-  - win32
-  - win64
-  - redhat64
+  - win32,windows
+  - win64,windows
+  - redhat64,linux
+

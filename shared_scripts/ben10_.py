@@ -1,5 +1,5 @@
-from sharedscripts10.shared_scripts.esss_project import EsssProject
 from sharedscripts10.namespace.namespace_types import PATH, PATHLIST
+from sharedscripts10.shared_scripts.esss_project import EsssProject
 
 
 #===================================================================================================
