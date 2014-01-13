@@ -9,7 +9,7 @@ platform-linux:build_shell_commands:
 - $AA_AASIMAR_AA_CONFIG --conf-dir=$WORKSPACE --projects-dir=$WORKSPACE --dist={dist} --platform={platform} --reset-env --load-env=ben10
 - python ben10/ci.py
 
-description_regex: "HUDSON DESCRIPTION\\: (.*)"
+description_regex: "MESSAGE\\: (.*)"
 
 matrix:
   dist:
