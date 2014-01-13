@@ -2,7 +2,7 @@ junit_patterns:
 - ben10/pytest.xml
 
 platform-windows:build_batch_commands:
-- %AA_AASIMAR_AA_CONFIG% --conf-dir=%WORKSPACE% --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform} --reset-env --load-env=ben10
+- "%AA_AASIMAR_AA_CONFIG% --conf-dir=%WORKSPACE% --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform} --reset-env --load-env=ben10"
 - python ben10/ci.py
 
 platform-linux:build_shell_commands:
