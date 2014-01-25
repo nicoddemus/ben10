@@ -1,6 +1,6 @@
 from ben10.foundation.types_ import Method, Null
 from ben10.interface import (AssertImplements, Attribute, BadImplementationError,
-    DeclareClassImplements, GetImplementedInterfaces, IAdaptable, Implements, Interface,
+    DeclareClassImplements, GetImplementedInterfaces, IAdaptable, ImplementsInterface, Interface,
     InterfaceError, InterfaceImplementorStub, IsImplementation, ReadOnlyAttribute)
 import pytest
 import sys
@@ -56,7 +56,7 @@ class Test:
                 ''
 
         class C(object):
-            Implements(I)
+            ImplementsInterface(I)
 
             def foo(self, a, b=None):
                 ''
@@ -107,7 +107,7 @@ class Test:
 
         def TestMissingMethod():
             class C(object):
-                Implements(I)
+                ImplementsInterface(I)
 
         with pytest.raises(AssertionError):
             TestMissingMethod()
@@ -115,7 +115,7 @@ class Test:
 
         def TestMissingSignature():
             class C(object):
-                Implements(I)
+                ImplementsInterface(I)
 
                 def foo(self, a):
                     ''
@@ -126,7 +126,7 @@ class Test:
 
         def TestMissingSignatureOptional():
             class C(object):
-                Implements(I)
+                ImplementsInterface(I)
 
                 def foo(self, a, b):
                     ''
@@ -137,7 +137,7 @@ class Test:
 
         def TestWrongParameterName():
             class C(object):
-                Implements(I)
+                ImplementsInterface(I)
 
                 def foo(self, a, c):
                     ''
@@ -154,7 +154,7 @@ class Test:
                 ''
 
         class C(object):
-            Implements(I)
+            ImplementsInterface(I)
             def foo(self, a, b=None):
                 ''
 
@@ -172,12 +172,12 @@ class Test:
                 ''
 
         class C(object):
-            Implements(I)
+            ImplementsInterface(I)
             def foo(self):
                 ''
 
         class D(C):
-            Implements(I2)
+            ImplementsInterface(I2)
             def bar(self):
                 ''
 
@@ -217,7 +217,7 @@ class Test:
 
 
         class Zoo(object):
-            Implements(IZoo)
+            ImplementsInterface(IZoo)
 
         # NOTE: This class 'C' doesn't REALLY implements 'I', although it says so. The problem is
         #       that there's a flaw with attributes *not being checked*.
@@ -227,7 +227,7 @@ class Test:
         #          getter call, and this affects runtime behaviour).
         #          This should be reviewed later.
         class C(object):
-            Implements(I)
+            ImplementsInterface(I)
 
         c1 = C()
         c1.foo = 10
@@ -280,13 +280,13 @@ class Test:
         '''
 
         class Old:
-            Implements(_InterfM1, old_style=True)
+            ImplementsInterface(_InterfM1, old_style=True)
 
             def m1(self):
                 ''
 
         class Old2:
-            Implements(_InterfM1, old_style=True)  # but do not really implements
+            ImplementsInterface(_InterfM1, old_style=True)  # but do not really implements
 
 
         AssertImplements(Old, _InterfM1)  # Not raises AssertionError
@@ -302,7 +302,7 @@ class Test:
 
     def testNoInitCheck(self):
         class NoCheck(object):
-            Implements(_InterfM1, no_init_check=True)
+            ImplementsInterface(_InterfM1, no_init_check=True)
 
         no_check = NoCheck()
         with pytest.raises(AssertionError):
@@ -315,7 +315,7 @@ class Test:
             Tests if the interface "AssertImplements" works with "callbacked" methods.
         '''
         class My(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
 
             def m1(self):
                 ''
@@ -336,7 +336,7 @@ class Test:
 
     def testInterfaceStub(self):
         class My(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
 
             def m1(self):
                 return 'm1'
@@ -362,19 +362,19 @@ class Test:
         '''
 
         class My2(object):
-            Implements(_InterfM2)
+            ImplementsInterface(_InterfM2)
 
             def m2(self):
                 ''
 
         class My3(object):
-            Implements(_InterfM3)
+            ImplementsInterface(_InterfM3)
 
             def m3(self, arg1, arg2):
                 ''
 
         class My4(object):
-            Implements(_InterfM4)
+            ImplementsInterface(_InterfM4)
 
             def m3(self, arg1, arg2):
                 ''
@@ -418,7 +418,7 @@ class Test:
         '''
 
         class My(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
 
             def m1(self):
                 ''
@@ -460,7 +460,7 @@ class Test:
 
     def testGetImplementedInterfaces(self):
         class A(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
             def m1(self):
                 ''
         class B(A):
@@ -468,7 +468,7 @@ class Test:
 
 
         class C(object):
-            Implements(_InterfM4)
+            ImplementsInterface(_InterfM4)
             def m4(self):
                 ''
 
@@ -481,11 +481,11 @@ class Test:
 
     def testGetImplementedInterfaces2(self):
         class A(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
             def m1(self):
                 ''
         class B(A):
-            Implements(_InterfM2)
+            ImplementsInterface(_InterfM2)
             def m2(self):
                 ''
 
@@ -499,14 +499,14 @@ class Test:
     def testAdaptableInterface(self):
 
         class A(object):
-            Implements(IAdaptable)
+            ImplementsInterface(IAdaptable)
 
             def GetAdapter(self, interface_class):
                 if interface_class == _InterfM1:
                     return B()
 
         class B(object):
-            Implements(_InterfM1)
+            ImplementsInterface(_InterfM1)
 
             def m1(self):
                 ''
@@ -538,7 +538,7 @@ class Test:
                 ''
 
         class A(object):
-            Implements(InterfSetItem)
+            ImplementsInterface(InterfSetItem)
             def __setitem__(self, id, subject):
                 self.set = (id, subject)
             def __getitem__(self, id):
@@ -603,7 +603,7 @@ class Test:
 
 
         class Zoo(object):
-            Implements(IZoo)
+            ImplementsInterface(IZoo)
 
             def __init__(self, value):
                 self.zoo = value
@@ -626,7 +626,7 @@ class Test:
 
         # Doesn't have necessary 'zoo' attribute, should raise a bad implementation error
         class FlawedZoo(object):
-            Implements(IZoo)
+            ImplementsInterface(IZoo)
 
             def __init__(self, value):
                 ''
@@ -745,8 +745,8 @@ class Test:
         def Create():
 
             class Foo(object):
-                Implements(I1)
-                Implements(I2)
+                ImplementsInterface(I1)
+                ImplementsInterface(I2)
 
                 def Method2(self):
                     ''
@@ -777,7 +777,7 @@ class Test:
                 ''
 
         class C2B(object):
-            Implements(I2)
+            ImplementsInterface(I2)
             def M2(self):
                 ''
 
@@ -838,7 +838,7 @@ class Test:
                 ''
 
         class Foo(object):
-            Implements(IFoo)
+            ImplementsInterface(IFoo)
 
             def __call__(self, bar):
                 ''
@@ -853,7 +853,7 @@ class Test:
                 ''
 
         class Bar(object):
-            Implements(IBar)
+            ImplementsInterface(IBar)
 
             def something(self, stuff):
                 ''

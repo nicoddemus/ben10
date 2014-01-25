@@ -174,20 +174,10 @@ def IsImplementation(class_or_instance, interface):
     class_ = _GetClassForInterfaceChecking(class_or_instance)
 
     is_implementation, _reason = _CheckIfClassImplements(class_, interface)
-#    # DEBUG CODE (will be removed after refactory)
-#
-#    print 'class:', class_
-#    print 'interface:', interface
-#    print 'is_implementation:', is_implementation
-#    if _reason:
-#        print 'reason:', _reason
-#    print
-#
-#    # END OF DEBUG CODE
-    if is_implementation:
-        return True
 
-    return False
+    # Check older revisions of this file for helper debug code in this place.
+
+    return is_implementation
 
 
 
@@ -222,7 +212,7 @@ def AssertImplements(class_or_instance, interface):
     If given a class, will try to match the class against a given interface. If given an object
     (instance), will try to match the class of the given object.
 
-    NOTE: The Interface must have been explicitly declared through :py:func:`interface.Implements`.
+    NOTE: The Interface must have been explicitly declared through :py:func:`ImplementsInterface`.
 
     :type class_or_instance: type or classobj or object
 
@@ -246,8 +236,7 @@ def AssertImplements(class_or_instance, interface):
 
     is_implementation, reason = _CheckIfClassImplements(class_, interface)
 
-    if not is_implementation:
-        raise AssertionError(reason)
+    assert is_implementation, reason
 
 
 
@@ -341,15 +330,6 @@ def _CheckIfClassImplements(class_, interface):
 
 
 #===================================================================================================
-# IsImplementationFullChecking
-#===================================================================================================
-@Deprecated(IsImplementation)
-def IsImplementationFullChecking(class_or_instance, interface):
-    return IsImplementation(class_or_instance, interface)
-
-
-
-#===================================================================================================
 # _IsImplementationFullChecking
 #===================================================================================================
 def _IsImplementationFullChecking(class_or_instance, interface):
@@ -361,7 +341,7 @@ def _IsImplementationFullChecking(class_or_instance, interface):
     :param class_or_instance:
         Class or instance to check
 
-    :param interface.Interface interface:
+    :param Interface interface:
         Interface to check
 
     :rtype: bool
@@ -470,7 +450,7 @@ def _AssertImplementsFullChecking(class_or_instance, interface, check_attr=True)
 
     This method will check each member of the given instance (or class) comparing them against the
     ones declared in the interface, making sure that it actually implements it even if it does not
-    declare it so using interface.Implements.
+    declare it so using ImplementsInterface.
 
     .. note:: Slow
         This method is *slow*, so make sure to never use it in hot-spots.
@@ -592,25 +572,24 @@ def _AssertImplementsFullChecking(class_or_instance, interface, check_attr=True)
 
 
 #===================================================================================================
-# Implements
+# ImplementsInterface
 #===================================================================================================
-def Implements(*interfaces, **kwargs):
+def ImplementsInterface(*interfaces, **kwargs):
     '''
     Make sure a class implements the given interfaces. Must be used in the class scope during class
     creation:
 
         class Foo(object):
-            Implements(IFoo)
+            ImplementsInterface(IFoo)
 
-    For old-style classes, use:
-
-        class Foo(QWidget):
-            Implements(IFoo, old_style=True)
-
-    For not having it checked on its creation -- may happen for performance reasons -- use:
+    To avoid checking if the class implements declared interfaces during class creation time, or for
+    old-style classes, make sure to pass the flag "no_init_check" as True:
 
         class Foo(object):
-            Implements(IFoo, no_init_check=True)
+            ImplementsInterface(IFoo, no_init_check=True)
+
+    .. note:: the previous flag "old_style", supposed to be used when declaring interfaces in old-style classes, is now
+              deprecated; just use "no_init_check" as True instead.
     '''
     # Just get the previous frame
     frame = sys._getframe().f_back
@@ -628,24 +607,17 @@ def Implements(*interfaces, **kwargs):
         # only put the metaclass on new-style classes (which want to be checked)
         if not old_style and not no_init_check:
             namespace['__metaclass__'] = InterfaceImplementationMetaClass
-        else:
-            if old_style:
-                if kwargs.get('old_style', False):
-                    warnings.warn(
-                        'DEPRECATED: Interface is deprecated for old-style classes. Use new style.',
-                        stacklevel=1,
-                    )
+        elif old_style:
+            warnings.warn(
+                'DEPRECATED: Interface is deprecated for old-style classes. Use new style or pass "no_init_check" instead.',
+                stacklevel=2,
+            )
 
         assert len(kwargs) == 0, \
             'Expected only no_init_check or old_style as kwargs. Found: %s' % (kwargs,)
 
     finally:
         del frame
-
-
-# TODO: Replace by ImplementsInterface permanently.
-ImplementsInterface = Implements
-
 
 
 #===================================================================================================
@@ -725,26 +697,6 @@ def _GetMROForOldStyleClass(class_):
 
 
 #===================================================================================================
-# _GetMROForClass
-#===================================================================================================
-def _GetMROForClass(class_):
-    '''
-    :param classobj class_:
-        A class
-
-    :rtype: list(classobj)
-    :return:
-        A list with all the bases in the older MRO (method resolution order)
-    '''
-    if hasattr(class_, '__mro__'):
-        mro = class_.__mro__
-    else:
-        mro = _GetMROForOldStyleClass(class_)
-    return mro
-
-
-
-#===================================================================================================
 # _GetClassImplementedInterfaces
 #===================================================================================================
 def _GetClassImplementedInterfaces(class_):
@@ -755,12 +707,12 @@ def _GetClassImplementedInterfaces(class_):
 
     result = set()
 
-    mro = _GetMROForClass(class_)
+    mro = inspect.getmro(class_)
 
     for c in mro:
         interfaces = getattr(c, '__implements__', ())
         for interface in interfaces:
-            interface_mro = _GetMROForClass(interface)
+            interface_mro = inspect.getmro(interface)
 
             for interface_type in interface_mro:
                 if interface_type in [Interface, object]:
@@ -792,24 +744,6 @@ def GetImplementedInterfaces(class_or_object):
 
 
 #===================================================================================================
-# IsInterfaceDeclared
-#===================================================================================================
-@Deprecated('IsImplementation')
-def IsInterfaceDeclared(class_or_instance, interface_or_interfaces):
-    if isinstance(interface_or_interfaces, (set, list, tuple)):
-        interfaces = interface_or_interfaces
-    else:
-        interfaces = [interface_or_interfaces]
-
-    for interface in interfaces:
-        if IsImplementation(class_or_instance, interface):
-            return True
-
-    return False
-
-
-
-#===================================================================================================
 # _IsInterfaceDeclared
 #===================================================================================================
 def _IsInterfaceDeclared(class_, interface):
@@ -822,7 +756,7 @@ def _IsInterfaceDeclared(class_, interface):
         :rtype: True if the object declares the interface passed and False otherwise. Note that
         to declare an interface, the class MUST have declared
 
-            >>> interface.Implements(Class)
+            >>> ImplementsInterface(Class)
     '''
     if class_ is None:
         return False

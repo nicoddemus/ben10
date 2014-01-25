@@ -19,10 +19,9 @@ from _adaptable_interface import IAdaptable
 from _cached_method import AttributeBasedCachedMethod, CachedMethod, LastResultCachedMethod
 from _interface import (AssertDeclaresInterface, AssertImplements, AssertImplementsFullChecking,
     Attribute, BadImplementationError, CacheInterfaceAttrs, DeclareClassImplements,
-    GetImplementedInterfaces, Implements, ImplementsInterface, Interface, InterfaceError,
+    GetImplementedInterfaces, ImplementsInterface, Interface, InterfaceError,
     InterfaceImplementationMetaClass, InterfaceImplementorStub, IsImplementation,
-    IsImplementationFullChecking, IsImplementationOfAny, IsInterfaceDeclared, ReadOnlyAttribute,
-    ScalarAttribute)
+    IsImplementationOfAny, ReadOnlyAttribute, ScalarAttribute)
 
 __all__ = [
     'AssertDeclaresInterface',
@@ -33,14 +32,11 @@ __all__ = [
     'CacheInterfaceAttrs',
     'GetImplementedInterfaces',
     'IAdaptable',
-    'Implements',
     'Interface',
     'InterfaceError',
     'InterfaceImplementationMetaClass',
     'InterfaceImplementorStub',
     'IsImplementation',
-    'IsImplementationFullChecking',
-    'IsInterfaceDeclared',
     'ReadOnlyAttribute',
     'ScalarAttribute',
     # _cached_method
