@@ -1,6 +1,5 @@
-set COVERAGE_MODULE=ben10.log
-set COVERAGE_PATH=source\python\ben10\_tests\pytest_log.py
-set COVERAGE_MODULE=ben10
-set COVERAGE_PATH=source\python\ben10
-pytest -n8 --cov-report term-missing --cov %COVERAGE_MODULE% %COVERAGE_PATH%
-
+for %m in (archivist ben10 clikit txtout xml_factory) (
+  set COVERAGE_MODULE=%m
+  set COVERAGE_PATH=source\python\%m
+  pytest -n8 --cov-report term-missing --cov %COVERAGE_MODULE% %COVERAGE_PATH%
+)
