@@ -1076,6 +1076,3 @@ class Test(object):
             (Callable, ()),
             (instance.MyMethod, ()),
         ]
-
-        # TODO: Line 189: self is dead
-        # TODO: Line 202-205: if func_func.__class__ == _CallbackWrapper

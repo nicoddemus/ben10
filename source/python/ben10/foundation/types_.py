@@ -194,31 +194,6 @@ def IsNumber(v):
     return isinstance(v, KNOWN_NUMBER_TYPES)
 
 
-# #===================================================================================================
-# # IsNumber
-# #===================================================================================================
-# def IsNumber(v):
-#     '''
-#     Checks if the given value is a number
-#
-#     @return bool
-#         True if the given value is a number, False otherwise
-#
-#     .. note:: This function will replace it's implementation to a lighter code, but first it must
-#         define which types are known as a number.
-#         The code replacement is made to avoid the call to import and listing the know numeric types.
-#     '''
-#     # There are cases were the numpy will not be available (for example when the aasimar is building
-#     # the environment the numpy is not available yet). Delegate this import to the IsNumber would
-#     # cause a severe performance impact. So we will attempt to import the numpy, but if the lib is
-#     # not available let us move on the know number types.
-#     global KNOWN_NUMBER_TYPES
-#
-#     ret = _IsNumber(v)
-#     IsNumber.func_code = _IsNumber.func_code
-#     return ret
-
-
 
 #===================================================================================================
 # CheckIsNumber
