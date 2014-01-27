@@ -10,7 +10,7 @@ class XmlFactory(object):
     '''
     Fast and easy XML creation class.
 
-    This class provides a simple a fast way of creating XML files in Python. It tries to deduce as
+    This class provides a simple and fast way of creating XML files in Python. It tries to deduce as
     much information as possible, creating intermediate elements as necessary.
 
     Example:
@@ -27,6 +27,8 @@ class XmlFactory(object):
         '''
         :type root_element: str | Element
         :param root_element:
+            The name of the root element.
+            Well formated XML files have only one root element.
         '''
         if isinstance(root_element, (str, unicode)):
             self.root = ElementTree.Element(root_element)
