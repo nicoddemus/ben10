@@ -50,7 +50,7 @@ class Archivist(object):
 
         for i_ext, i_cmd, i_mode in handles_table:
             if archive.endswith(i_ext):
-                return i_cmd(archive, archive_mapping, mode=i_mode)
+                i_cmd(archive, archive_mapping, mode=i_mode)
 
         raise RuntimeError('Unknown archive format: %s' % archive)
 
