@@ -19,3 +19,5 @@ matrix:
   - win64,windows
   - redhat64,linux
 
+display_name: "[{branch}] {name} {dist}-{platform}"
+
