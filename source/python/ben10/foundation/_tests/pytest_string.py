@@ -111,3 +111,30 @@ class Test:
             '''
         )
         assert string == '                alpha\n            \tbravo'
+
+
+    def testDedent10(self):
+        '''
+        Checking how Dedent handles empty lines at the end of string without parameters.
+        '''
+        string = Dedent(
+            '''
+            alpha
+            '''
+        )
+        assert string == 'alpha'
+        string = Dedent(
+            '''
+            alpha
+
+            '''
+        )
+        assert string == 'alpha\n'
+        string = Dedent(
+            '''
+            alpha
+
+
+            '''
+        )
+        assert string == 'alpha\n\n'
