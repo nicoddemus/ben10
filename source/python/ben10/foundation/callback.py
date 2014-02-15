@@ -107,10 +107,9 @@ class Callback(object):
         # Note: There's a copy of this code in the _CalculateToCall method below. It's a copy
         # because we don't want a function call overhead here.
         # ------------------------------------------------------------------------------------------
-        try:
-            callbacks = self._callbacks
-        except AttributeError:
+        if not hasattr(self, '_callbacks'):
             return  # No callbacks registered
+        callbacks = self._callbacks
 
         to_call = []
 
@@ -170,10 +169,9 @@ class Callback(object):
         Copy of the code above so that subclasses can use it (we don't want the overhead in the
         call above).
         '''
-        try:
-            callbacks = self._callbacks
-        except AttributeError:
+        if not hasattr(self, '_callbacks'):
             return []  # No callbacks registered
+        callbacks = self._callbacks
 
         to_call = []
 
@@ -250,10 +248,9 @@ class Callback(object):
         '''
         key = self._GetKey(func)
 
-        try:
-            callbacks = self._callbacks
-        except AttributeError:
+        if not hasattr(self, '_callbacks'):
             return False
+        callbacks = self._callbacks
 
         info_and_extra_args = callbacks.get(key)
         if info_and_extra_args is None:
@@ -319,19 +316,15 @@ class Callback(object):
         '''
         Unregisters all functions
         '''
-        try:
+        if hasattr(self, '_callbacks'):
+            # The _callbacks attribute only exists after a callback is registered
             del self._callbacks
-        except AttributeError:
-            # The _callbacks attribute only exists after a callback is registered,
-            #    so we can ignore this error.
-            pass
 
 
     def __len__(self):
-        try:
-            return len(self._callbacks)
-        except AttributeError:
-            return 0  # Ignore: no self._callbacks.
+        if not hasattr(self, '_callbacks'):
+            return 0 #Ignore: no self._callbacks.
+        return len(self._callbacks)
 
 
 
