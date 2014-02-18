@@ -1,3 +1,4 @@
+from ben10.foundation.string import Dedent
 from clikit.app import App
 from clikit.console import BufferedConsole, Console
 import inspect
@@ -100,37 +101,56 @@ Commands:
     TestCmd   This is a test.
 ''')
 
-        self._TestMain(app, 'TestCmd --help', '''This is a test.
+        self._TestMain(
+            app,
+            'TestCmd --help',
+            Dedent(
+                '''
+                    This is a test.
 
-Usage:
-    ['TestCmd']
+                    Usage:
+                        TestCmd <first> <second> [--option=1],[--option_yes],[--option_no]
 
-Parameters:
-    first   This is the first parameter.
-    second   This is the second and last parameter.
+                    Parameters:
+                        first   This is the first parameter.
+                        second   This is the second and last parameter.
 
-Options:
-    --option   This must be a number. [default: 1]
-    --option_yes   If set, says yes.
-    --option_no   If set, says nop.
-''')
+                    Options:
+                        --option   This must be a number. [default: 1]
+                        --option_yes   If set, says yes.
+                        --option_no   If set, says nop.
 
-        self._TestMain(app, 'TestCmd', '''ERROR: Too few arguments.
 
-This is a test.
+                '''
+            )
+        )
 
-Usage:
-    ['TestCmd']
+        self._TestMain(
+            app,
+            'TestCmd',
+            Dedent(
+                '''
+                    ERROR: Too few arguments.
 
-Parameters:
-    first   This is the first parameter.
-    second   This is the second and last parameter.
+                    This is a test.
 
-Options:
-    --option   This must be a number. [default: 1]
-    --option_yes   If set, says yes.
-    --option_no   If set, says nop.
-''', app.RETCODE_ERROR)
+                    Usage:
+                        TestCmd <first> <second> [--option=1],[--option_yes],[--option_no]
+
+                    Parameters:
+                        first   This is the first parameter.
+                        second   This is the second and last parameter.
+
+                    Options:
+                        --option   This must be a number. [default: 1]
+                        --option_yes   If set, says yes.
+                        --option_no   If set, says nop.
+
+
+                '''
+            ),
+            app.RETCODE_ERROR
+        )
 
 
     def testApp(self):

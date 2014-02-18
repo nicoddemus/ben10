@@ -481,24 +481,7 @@ class App(object):
                 spaces = ' ' * ((max_width - i_width) + 3)
                 self.console.PrintQuiet('%s%s%s' % (i_names, spaces, i_description), indent=1)
         else:
+            help = command.FormatHelp()
             self.console.PrintQuiet(command.description)
             self.console.PrintQuiet()
-            self.console.PrintQuiet('Usage:')
-            self.console.PrintQuiet('%s' % command.names, indent=1)
-
-            parameters = [i for i in command.args.itervalues() if i.default is Command.Arg.NO_DEFAULT]
-            if parameters:
-                self.console.PrintQuiet()
-                self.console.PrintQuiet('Parameters:')
-                for i_arg in parameters:
-                    self.console.PrintQuiet('<teal>%s</>   %s' % (i_arg.name, i_arg.description), indent=1)
-
-            options = [i for i in command.args.itervalues() if i.default is not Command.Arg.NO_DEFAULT]
-            if options:
-                self.console.PrintQuiet()
-                self.console.PrintQuiet('Options:')
-                for i_arg in options:
-                    if any(map(lambda x: i_arg.default is x, (Command.Arg.NO_DEFAULT, None, True, False))):
-                        self.console.PrintQuiet('<teal>--%s</>   %s' % (i_arg.name, i_arg.description), indent=1)
-                    else:
-                        self.console.PrintQuiet('<teal>--%s</>   %s [default: %s]' % (i_arg.name, i_arg.description, i_arg.default), indent=1)
+            self.console.Print(help)

@@ -44,7 +44,7 @@ class Test:
             :param dependency: True if set
             :param no_setup: False if set
             :param no_default: Receives None
-            :param *config: Configurations
+            :param config: Configurations
             '''
             console_.Print('%s - %s' % (filename, option))
             [console_.Item(i) for i in config]
@@ -53,18 +53,23 @@ class Test:
         assert cmd.names == ['Hello']
         assert cmd.description == 'Hello function.'
 
-        assert cmd.fixtures == ['console_']
-        assert cmd.args.keys() == ['filename', 'option', 'dependency', 'no_setup', 'no_default', '*config']
-        assert map(str, cmd.args.values()) == ['filename', 'option=yes', 'dependency', 'no_setup', 'no_default=VALUE', '*config']
+        assert cmd.args.keys() == ['console_', 'filename', 'option', 'dependency', 'no_setup', 'no_default', 'config']
+        assert map(str, cmd.args.values()) == ['console_', 'filename', 'option=yes', 'dependency', 'no_setup', 'no_default=VALUE', '*config']
         assert cmd.kwargs is None
 
         console = BufferedConsole()
-        cmd.Call({'console_' : console}, {'filename' : 'alpha.txt', 'config' : ['one', 'two', 'three']})
+        cmd.Call(
+            fixtures={'console_' : console},
+            argd={'filename' : 'alpha.txt', 'config' : ['one', 'two', 'three']}
+        )
         assert console.GetOutput() == 'alpha.txt - yes\n- one\n- two\n- three\n'
 
         # Ignores all invalid arguments passed to Call.
         console = BufferedConsole()
-        cmd.Call({'console_' : console}, {'filename' : 'bravo.txt', 'INVALID' : 'INVALID'})
+        cmd.Call(
+            fixtures={'console_' : console},
+            argd={'filename' : 'bravo.txt', 'INVALID' : 'INVALID'}
+        )
         assert console.GetOutput() == 'bravo.txt - yes\n'
 
         with pytest.raises(InvalidFixture):
@@ -78,7 +83,7 @@ class Test:
 
 Parameters:
     filename   The name of the file.
-    *config   Configurations
+    config   Configurations
 
 Options:
     --option   (no description) [default: yes]
@@ -105,3 +110,15 @@ optional arguments:
   --no_setup
   --no_default NO_DEFAULT
 '''
+
+    def testNoArgument(self):
+
+        def Hello(console_):
+            '''
+            Hello function.
+
+            :param noargument: This argument does not exist.
+            '''
+
+        with pytest.raises(RuntimeError):
+            Command(Hello)

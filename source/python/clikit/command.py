@@ -54,15 +54,24 @@ class Command:
         '''
         NO_DEFAULT = object()
 
-        def __init__(self, name, default=NO_DEFAULT, trail=False):
+        def __init__(self, name, default=NO_DEFAULT, fixture=False, trail=False):
             self.name = name
             self.default = default
+            self.fixture = fixture
             self.trail = trail
             self.description = '(no description)'
 
+        @property
+        def positional(self):
+            return self.default is self.NO_DEFAULT and not self.fixture
+
+        @property
+        def optional(self):
+            return self.default is not self.NO_DEFAULT and not self.fixture
+
         def __str__(self):
             if self.trail:
-                return self.name
+                return '*' + self.name
             elif any(map(lambda x: self.default is x, (Command.Arg.NO_DEFAULT, True, False))):
                 return self.name
             elif self.default is None:
@@ -76,7 +85,9 @@ class Command:
 
             :param parser: argparse.ArgumentParser
             '''
-            if self.trail:
+            if self.fixture:
+                pass
+            elif self.trail:
                 parser.add_argument(self.name, nargs='+')
             elif self.default is Command.Arg.NO_DEFAULT:
                 parser.add_argument(self.name)
@@ -100,18 +111,14 @@ class Command:
         # Meta-info from function inspection
         args, trail, self.kwargs, defaults = self._ParseFunctionArguments(self.func)
 
-        # Holds the names of args that request fixtures.
-        self.fixtures = []
-
         # Holds a dict, mapping the arg name to an Arg instance. (See Arg class)
         self.args = OrderedDict()
 
         first_default = len(args) - len(defaults)
         for i, i_arg in enumerate(args):
             if i_arg.endswith('_'):
-                self.fixtures.append(i_arg)
-                continue
-            if i < first_default:
+                self.args[i_arg] = self.Arg(i_arg, fixture=True)
+            elif i < first_default:
                 self.args[i_arg] = self.Arg(i_arg)
             else:
                 self.args[i_arg] = self.Arg(i_arg, defaults[i - first_default])
@@ -186,8 +193,8 @@ class Command:
         '''
         console = BufferedConsole()
         console.Print('Usage:')
-        positionals = [i for i in self.args.values() if i.default is Command.Arg.NO_DEFAULT]
-        optionals = [i for i in self.args.values() if i.default is not Command.Arg.NO_DEFAULT]
+        positionals = [i for i in self.args.values() if i.positional]
+        optionals = [i for i in self.args.values() if i.optional]
         console.Print('%s %s %s' % (
             ','.join(self.names),
             ' '.join(['<%s>' % i for i in positionals]),
@@ -195,11 +202,11 @@ class Command:
         ), indent=1, newlines=2)
         console.Print('Parameters:')
         for i in positionals:
-            console.Print('%s   %s' % (i.name, i.description), indent=1)
+            console.Print('<teal>%s</>   %s' % (i.name, i.description), indent=1)
         console.Print()
         console.Print('Options:')
         for i in optionals:
-            if i.default in (None, True, False):
+            if any(map(lambda x: i.default is x, (Command.Arg.NO_DEFAULT, None, True, False))):
                 console.Print('--%s   %s' % (i.name, i.description), indent=1)
             else:
                 console.Print('--%s   %s [default: %s]' % (i.name, i.description, i.default), indent=1)
@@ -226,37 +233,23 @@ class Command:
         :param argd:
             Map of option values as passed by the user in the command line.
         '''
-        kwargs = {}
+        args = []
+        for i_arg in self.args.itervalues():
+            if i_arg.fixture:
+                try:
+                    arg = fixtures[i_arg.name]
+                except KeyError as exception:
+                    raise InvalidFixture(str(exception))
+                args.append(arg)
+            elif i_arg.trail:
+                args += argd.get(i_arg.name, ())
+            elif i_arg.positional:
+                try:
+                    args.append(argd[i_arg.name])
+                except KeyError:
+                    raise TypeError(i_arg.name)
+            else:
+                arg = argd.get(i_arg.name, i_arg.default)
+                args.append(arg)
 
-        # Fixtures
-        try:
-            kwargs.update({(i, fixtures[i]) for i in self.fixtures})
-        except KeyError as exception:
-            raise InvalidFixture(str(exception))
-
-        # Default values
-        def DefaultValues():
-            return {
-                (i.name, i.default)
-                for i in self.args.values()
-                if i.default is not Command.Arg.NO_DEFAULT
-            }
-        kwargs.update(DefaultValues())
-
-        # Passed arguments (argd)
-        def ArgumentValues():
-            return {
-                (i,j)
-                for i,j in argd.iteritems()
-                if i in self.args and not self.args[i].trail
-            }
-        kwargs.update(ArgumentValues())
-
-        def TrailValues():
-            for i_arg in self.args.itervalues():
-                if i_arg.trail:
-                    return argd[i_arg.name]
-            return []
-        args = TrailValues()
-        print args, kwargs
-        return self.func(**kwargs)
+        return self.func(*args)
