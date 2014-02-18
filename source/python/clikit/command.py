@@ -49,16 +49,21 @@ class Command:
         '''
         Holds meta-information about the associated function argument.
 
-        I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside @argparse@ to print help message.
+        I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside
+        @argparse@ to print help message.
         '''
         NO_DEFAULT = object()
-        def __init__(self, name, default=NO_DEFAULT):
+
+        def __init__(self, name, default=NO_DEFAULT, trail=False):
             self.name = name
             self.default = default
+            self.trail = trail
             self.description = '(no description)'
 
         def __str__(self):
-            if any(map(lambda x: self.default is x, (Command.Arg.NO_DEFAULT, True, False))):
+            if self.trail:
+                return self.name
+            elif any(map(lambda x: self.default is x, (Command.Arg.NO_DEFAULT, True, False))):
                 return self.name
             elif self.default is None:
                 return '%s=VALUE' % self.name
@@ -71,7 +76,9 @@ class Command:
 
             :param parser: argparse.ArgumentParser
             '''
-            if self.default is Command.Arg.NO_DEFAULT:
+            if self.trail:
+                parser.add_argument(self.name, nargs='+')
+            elif self.default is Command.Arg.NO_DEFAULT:
                 parser.add_argument(self.name)
             elif self.default is True:
                 parser.add_argument('--%s' % self.name, action='store_true')
@@ -91,7 +98,7 @@ class Command:
             self.names = names  # already a list
 
         # Meta-info from function inspection
-        args, self.trail, self.kwargs, defaults = self._ParseFunctionArguments(self.func)
+        args, trail, self.kwargs, defaults = self._ParseFunctionArguments(self.func)
 
         # Holds the names of args that request fixtures.
         self.fixtures = []
@@ -109,11 +116,19 @@ class Command:
             else:
                 self.args[i_arg] = self.Arg(i_arg, defaults[i - first_default])
 
+        # Adds trail (*args) to the list of arguments.
+        # - Note that this arguments have a asterisk prefix.
+        if trail is not None:
+            self.args[trail] = self.Arg(trail, trail=True)
+
         # Meta-info from
         description, arg_descriptions = self._ParseDocString(self.func.__doc__ or '')
         self.description = description or '(no description)'
         for i_arg, i_description in arg_descriptions.iteritems():
-            self.args[i_arg].description = i_description
+            try:
+                self.args[i_arg].description = i_description
+            except KeyError, e:
+                raise RuntimeError('%s: argument not found for documentation entry.' % str(e))
 
 
     def _ParseFunctionArguments(self, func):
@@ -175,7 +190,7 @@ class Command:
         optionals = [i for i in self.args.values() if i.default is not Command.Arg.NO_DEFAULT]
         console.Print('%s %s %s' % (
             ','.join(self.names),
-            ','.join(['<%s>' % i for i in positionals]),
+            ' '.join(['<%s>' % i for i in positionals]),
             ','.join(['[--%s]' % i for i in optionals]),
         ), indent=1, newlines=2)
         console.Print('Parameters:')
@@ -215,16 +230,33 @@ class Command:
 
         # Fixtures
         try:
-            kwargs.update(dict(
-                [(i, fixtures[i]) for i in self.fixtures]
-            ))
+            kwargs.update({(i, fixtures[i]) for i in self.fixtures})
         except KeyError as exception:
             raise InvalidFixture(str(exception))
 
         # Default values
-        kwargs.update(dict([(i.name, i.default) for i in self.args.values() if i.default is not Command.Arg.NO_DEFAULT]))
+        def DefaultValues():
+            return {
+                (i.name, i.default)
+                for i in self.args.values()
+                if i.default is not Command.Arg.NO_DEFAULT
+            }
+        kwargs.update(DefaultValues())
 
         # Passed arguments (argd)
-        kwargs.update(dict([i for i in argd.iteritems() if i[0] in self.args]))
+        def ArgumentValues():
+            return {
+                (i,j)
+                for i,j in argd.iteritems()
+                if i in self.args and not self.args[i].trail
+            }
+        kwargs.update(ArgumentValues())
 
+        def TrailValues():
+            for i_arg in self.args.itervalues():
+                if i_arg.trail:
+                    return argd[i_arg.name]
+            return []
+        args = TrailValues()
+        print args, kwargs
         return self.func(**kwargs)

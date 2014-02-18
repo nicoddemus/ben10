@@ -84,6 +84,13 @@ class Test:
         console = BufferedConsole(verbosity=2, stdin=iss)
         assert console.Ask('Ask:') == 'alpha'
 
+        oss = StringIO()
+        console = Console(verbosity=2, stdout=oss)
+        console.Item('alpha')
+        console.Item('bravo')
+        console.Item('charlie')
+        assert oss.getvalue() == '''- alpha\n- bravo\n- charlie\n'''
+
 
     def testBufferedConsole(self):
         console = BufferedConsole()

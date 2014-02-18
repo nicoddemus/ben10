@@ -12,17 +12,18 @@ class Test:
     def testRegistryDict(self):
         from ben10.registry_dict import RegistryDict
 
-        key = r'Software\Microsoft\Windows NT\CurrentVersion'
+        key = r'SOFTWARE\Microsoft\Windows NT\CurrentVersion'
         invalid_key = r'INVALID'
 
         reg = RegistryDict()
         try:
-            value = reg[key]
-
-            assert value['CurrentVersion'] == u'6.1'
             assert reg.has_key(key) == True
-            assert reg.has_key(invalid_key) == False
             assert key in reg
+
+            value = reg[key]
+            assert value['CurrentVersion'] == u'6.1'
+
             assert invalid_key not in reg
+            assert reg.has_key(invalid_key) == False
         finally:
             reg.close()

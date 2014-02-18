@@ -304,6 +304,19 @@ class Console(object):
         self.Print(format_ % message)
 
 
+    def Item(self, message, verbosity=1, newlines=1, indent=0, stderr=False):
+        '''
+        Prints an item.
+
+        :param str message:
+        :param int verbosity:
+        :param int newlines:
+        :param int indent:
+        :paran bool stderr:
+        '''
+        return self.Print('- %s' % message, verbosity, newlines, indent, stderr)
+
+
 
 #===================================================================================================
 # BufferedConsole

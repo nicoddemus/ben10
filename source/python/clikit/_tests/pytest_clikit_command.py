@@ -36,7 +36,7 @@ class Test:
 
     def testArguments(self):
 
-        def Hello(console_, filename, option='yes', dependency=True, no_setup=False, no_default=None):
+        def Hello(console_, filename, option='yes', dependency=True, no_setup=False, no_default=None, *config):
             '''
             Hello function.
 
@@ -44,22 +44,23 @@ class Test:
             :param dependency: True if set
             :param no_setup: False if set
             :param no_default: Receives None
+            :param *config: Configurations
             '''
             console_.Print('%s - %s' % (filename, option))
+            [console_.Item(i) for i in config]
 
         cmd = Command(Hello)
         assert cmd.names == ['Hello']
         assert cmd.description == 'Hello function.'
 
         assert cmd.fixtures == ['console_']
-        assert cmd.args.keys() == ['filename', 'option', 'dependency', 'no_setup', 'no_default']
-        assert map(str, cmd.args.values()) == ['filename', 'option=yes', 'dependency', 'no_setup', 'no_default=VALUE']
-        assert cmd.trail is None
+        assert cmd.args.keys() == ['filename', 'option', 'dependency', 'no_setup', 'no_default', '*config']
+        assert map(str, cmd.args.values()) == ['filename', 'option=yes', 'dependency', 'no_setup', 'no_default=VALUE', '*config']
         assert cmd.kwargs is None
 
         console = BufferedConsole()
-        cmd.Call({'console_' : console}, {'filename' : 'alpha.txt'})
-        assert console.GetOutput() == 'alpha.txt - yes\n'
+        cmd.Call({'console_' : console}, {'filename' : 'alpha.txt', 'config' : ['one', 'two', 'three']})
+        assert console.GetOutput() == 'alpha.txt - yes\n- one\n- two\n- three\n'
 
         # Ignores all invalid arguments passed to Call.
         console = BufferedConsole()
@@ -73,10 +74,11 @@ class Test:
             cmd.Call({'console_' : console}, {})
 
         assert cmd.FormatHelp() == '''Usage:
-    Hello <filename> [--option=yes],[--dependency],[--no_setup],[--no_default=VALUE]
+    Hello <filename> <*config> [--option=yes],[--dependency],[--no_setup],[--no_default=VALUE]
 
 Parameters:
     filename   The name of the file.
+    *config   Configurations
 
 Options:
     --option   (no description) [default: yes]
@@ -90,10 +92,11 @@ Options:
         cmd.ConfigureArgumentParser(parser)
         assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
             [--no_default NO_DEFAULT]
-            filename
+            filename config [config ...]
 
 positional arguments:
   filename
+  config
 
 optional arguments:
   -h, --help            show this help message and exit
