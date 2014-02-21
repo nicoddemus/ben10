@@ -168,8 +168,11 @@ class Console(object):
     MARKUP_RE = property(_CreateMarkupRe)
     COLOR_CODES = _CreateColorMap()
 
+    DEFAULT_VERBOSITY = 1
+    DEFAULT_NEWLINES = 1
+    DEFAULT_INDENT = 0
 
-    def Print(self, message='', verbosity=1, newlines=1, indent=0, stderr=False):
+    def Print(self, message='', verbosity=DEFAULT_VERBOSITY, newlines=DEFAULT_NEWLINES, indent=DEFAULT_INDENT, stderr=False):
         '''
         Prints a message to the output.
 
@@ -236,6 +239,7 @@ class Console(object):
             stream.write(text)
             stream.flush()
 
+
     def PrintError(self, message, newlines=1, indent=0):
         '''
         Shortcut to Print using stderr.
@@ -243,11 +247,13 @@ class Console(object):
         message = str(message)
         return self.Print(message, verbosity=0, newlines=newlines, indent=indent, stderr=True)
 
+
     def PrintQuiet(self, message='', newlines=1, indent=0):
         '''
         Shortcut to Print using 'quiet' verbosity.
         '''
         return self.Print(message, verbosity=0, newlines=newlines, indent=indent)
+
 
     def PrintVerbose(self, message='', newlines=1, indent=0):
         '''
@@ -267,44 +273,44 @@ class Console(object):
         return self.__stdin.readline().strip()
 
 
-    def Progress(self, message):
+    def Progress(self, message, verbosity=DEFAULT_VERBOSITY, indent=DEFAULT_INDENT, format_='%s: '):
         '''
         Starts a progree message, without the eol.
         Use one of the "finishers" methods to finish the progress:
         * ProgressOk
         * ProgressError
         '''
-        self.Print(message, newlines=0)
+        self.Print(format_ % message, verbosity=verbosity, newlines=0, indent=indent)
 
 
-    def ProgressOk(self, message='OK', format_='<green>%s</>'):
+    def ProgressOk(self, message='OK', verbosity=DEFAULT_VERBOSITY, format_='<green>%s</>'):
         '''
         Ends a progress "successfully" with a message
 
         :param str message: Message to finish the progress. Default to "OK"
         '''
-        self.Print(format_ % message)
+        self.Print(format_ % message, verbosity=verbosity)
 
 
-    def ProgressError(self, message, format_='<red>%s</>'):
+    def ProgressError(self, message, verbosity=DEFAULT_VERBOSITY, format_='<red>%s</>'):
         '''
         Ends a progress "with failure" message
 
         :param str message: (Error) message to finish the progress.
         '''
-        self.Print('<red>%s</>' % message)
+        self.Print(format_ % message, verbosity=verbosity)
 
 
-    def ProgressWarning(self, message, format_='<yellow>%s</>'):
+    def ProgressWarning(self, message, verbosity=DEFAULT_VERBOSITY, format_='<yellow>%s</>'):
         '''
         Ends a progress "with a warning" message
 
         :param str message: (Warning) message to finish the progress.
         '''
-        self.Print(format_ % message)
+        self.Print(format_ % message, verbosity=verbosity)
 
 
-    def Item(self, message, verbosity=1, newlines=1, indent=0, stderr=False):
+    def Item(self, message, verbosity=DEFAULT_VERBOSITY, newlines=1, indent=0, stderr=False, format_='- %s'):
         '''
         Prints an item.
 
@@ -314,7 +320,7 @@ class Console(object):
         :param int indent:
         :paran bool stderr:
         '''
-        return self.Print('- %s' % message, verbosity, newlines, indent, stderr)
+        return self.Print(format_ % message, verbosity, newlines, indent, stderr)
 
 
 
