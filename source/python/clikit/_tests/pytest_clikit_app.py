@@ -21,29 +21,6 @@ class Test:
         assert app.console.GetOutput() == output
 
 
-    def _TestScript(self, app, script):
-
-        def Execute(cmd, output):
-            retcode = app.Main(cmd.split())
-            assert retcode == App.RETCODE_OK
-            assert app.console.GetOutput() == output
-
-        cmd = None
-        output = ''
-        for i_line in script.splitlines():
-            if i_line.startswith('>'):
-                if cmd is not None:
-                    Execute(cmd, output)
-                    cmd = None
-                    output = ''
-                cmd = i_line[1:]
-            else:
-                output += i_line + '\n'
-
-        if cmd is not None:
-            Execute(cmd, output)
-
-
     def testSysArgv(self):
         # False on tests because of colorama incompatibility with py.test
         app = App('test', color=False, buffered_console=True)
@@ -54,10 +31,10 @@ class Test:
             console_.Print(argv_)
 
         old_sys_argv = sys.argv
-        sys.argv = [sys.argv[0], 'Case', 'alpha', 'bravo']
+        sys.argv = [sys.argv[0], 'case', 'alpha', 'bravo']
         try:
             app.Main()
-            assert app.console.GetOutput() == "alpha..bravo\n['Case', 'alpha', 'bravo']\n"
+            assert app.console.GetOutput() == "alpha..bravo\n['case', 'alpha', 'bravo']\n"
         finally:
             sys.argv = old_sys_argv
 
@@ -85,31 +62,41 @@ class Test:
             :param option_no: If set, says nop.
             '''
 
-        self._TestMain(app, '', '''
-Usage:
-    test <subcommand> [options]
+        self._TestMain(app, '', Dedent(
+            '''
 
-Commands:
-    TestCmd   This is a test.
-''')
+            Usage:
+                test <subcommand> [options]
 
-        self._TestMain(app, '--help', '''
-Usage:
-    test <subcommand> [options]
+            Commands:
+                test-cmd   This is a test.
 
-Commands:
-    TestCmd   This is a test.
-''')
+            '''
+            )
+        )
+
+        self._TestMain(app, '--help', Dedent(
+            '''
+
+            Usage:
+                test <subcommand> [options]
+
+            Commands:
+                test-cmd   This is a test.
+
+            '''
+            )
+        )
 
         self._TestMain(
             app,
-            'TestCmd --help',
+            'test-cmd --help',
             Dedent(
                 '''
                     This is a test.
 
                     Usage:
-                        TestCmd <first> <second> [--option=1],[--option_yes],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option_yes],[--option_no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -127,7 +114,7 @@ Commands:
 
         self._TestMain(
             app,
-            'TestCmd',
+            'test-cmd',
             Dedent(
                 '''
                     ERROR: Too few arguments.
@@ -135,7 +122,7 @@ Commands:
                     This is a test.
 
                     Usage:
-                        TestCmd <first> <second> [--option=1],[--option_yes],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option_yes],[--option_no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -182,30 +169,35 @@ Commands:
 
         # Test duplicate name
         with pytest.raises(ValueError):
-            app.Add(Case3, alias='cs')
+            app.Add(Case3.func, alias='cs')
 
         # Test commands listing
-        assert app.ListAllCommandNames() == ['Case1', 'cs', 'Case2', 'Case3', 'c3', 'cs3']
+        assert app.ListAllCommandNames() == ['case1', 'cs', 'case2', 'case3', 'c3', 'cs3']
 
         # Tests all commands output
-        self._TestMain(app, 'Case1', 'Hello from case 1\n')
+        self._TestMain(app, 'case1', 'Hello from case 1\n')
         self._TestMain(app, 'cs', 'Hello from case 1\n')
-        self._TestMain(app, 'Case2', 'Hello from case 2\n')
-        self._TestMain(app, 'Case3', 'Hello from case 3\n')
+        self._TestMain(app, 'case2', 'Hello from case 2\n')
+        self._TestMain(app, 'case3', 'Hello from case 3\n')
         self._TestMain(app, 'c3', 'Hello from case 3\n')
         self._TestMain(app, 'cs3', 'Hello from case 3\n')
 
         # Tests output when an invalid command is requested
-        self._TestMain(app, 'INVALID', '''ERROR: Unknown command 'INVALID'
+        self._TestMain(app, 'INVALID', Dedent(
+            '''
+            ERROR: Unknown command 'INVALID'
 
-Usage:
-    test <subcommand> [options]
+            Usage:
+                test <subcommand> [options]
 
-Commands:
-    Case1, cs        A "hello" message from case 1
-    Case2            A "hello" message from case 2
-    Case3, c3, cs3   (no description)
-''', app.RETCODE_ERROR)
+            Commands:
+                case1, cs        A "hello" message from case 1
+                case2            A "hello" message from case 2
+                case3, c3, cs3   (no description)
+
+            '''),
+            app.RETCODE_ERROR
+    )
 
 
     def testConf(self, tmpdir):
@@ -243,7 +235,7 @@ Commands:
 
         self._TestMain(
             app,
-            'ConfigurationCmd',
+            'configuration-cmd',
             'conf_.filename: %s\ngroup.value: ALPHA\ngroup.value: BRAVO\n' % conf_filename
         )
 
@@ -268,14 +260,14 @@ Commands:
 
         self._TestMain(
             app,
-            'Cmd',
+            'cmd',
             '%s\nBRAVO\n' % conf_filename
         )
 
 
     def testPositionalArgs(self):
         '''
-        >Command alpha bravo
+        >command alpha bravo
         alpha..bravo
         '''
         app = App('test', color=False, buffered_console=True)
@@ -284,14 +276,14 @@ Commands:
         def Command(console_, first, second):
             console_.Print('%s..%s' % (first, second))
 
-        self._TestScript(app, inspect.getdoc(self.testPositionalArgs))
+        app.TestScript(inspect.getdoc(self.testPositionalArgs))
 
 
     def testOptionArgs(self):
         '''
-        >Command
+        >command
         1..2
-        >Command --first=alpha --second=bravo
+        >command --first=alpha --second=bravo
         alpha..bravo
         '''
         app = App('test', color=False, buffered_console=True)
@@ -300,7 +292,7 @@ Commands:
         def Command(console_, first='1', second='2'):
             console_.Print('%s..%s' % (first, second))
 
-        self._TestScript(app, inspect.getdoc(self.testOptionArgs))
+        app.TestScript(inspect.getdoc(self.testOptionArgs))
 
 
     def testColor(self):
@@ -317,35 +309,38 @@ Commands:
         self._TestMain(
             app,
             '',
-            '''
-Usage:
-    test <subcommand> [options]
+            Dedent(
+                '''
 
-Commands:
-    %(teal)sCase%(reset)s   This is Case.
-''' % Console.COLOR_CODES
+                    Usage:
+                        test <subcommand> [options]
+
+                    Commands:
+                        %(teal)scase%(reset)s   This is Case.
+
+                ''' % Console.COLOR_CODES
+            )
         )
 
 
-    def testColorama(self, monkeypatch):
-        '''
-        TODO: Importing colorama from inside pytest raises an exception:
+    def testColorama(self):
+        """
+        Importing colorama from inside pytest USED TO raise an exception:
 
             File "D:\Kaniabi\EDEn\dist\12.0-all\colorama-0.2.5\lib\site-packages\colorama\win32.py", line 64
             in GetConsoleScreenBufferInfo
             >           handle, byref(csbi))
             E       ArgumentError: argument 2: <type 'exceptions.TypeError'>: expected LP_CONSOLE_SCREEN_BUFFER_INFO
                                    instance instead of pointer to CONSOLE_SCREEN_BUFFER_INFO
-        '''
-#        import colorama
-
+        """
+        import colorama
 
 
     def testFixture1(self):
         app = App('test', color=True, buffered_console=True)
 
         @app.Fixture
-        def my_fix_():
+        def MyFix():
             return 'This is a custom fixture'
 
         @app
@@ -354,7 +349,7 @@ Commands:
 
         self._TestMain(
             app,
-            'Cmd',
+            'cmd',
             'This is a custom fixture\n'
         )
 
@@ -363,7 +358,7 @@ Commands:
         app = App('test', color=True, buffered_console=True)
 
         @app.Fixture(name='rubles')
-        def my_fix_():
+        def MyFix():
             return 'This is rubles.'
 
         @app
@@ -372,7 +367,22 @@ Commands:
 
         self._TestMain(
             app,
-            'Cmd',
+            'cmd',
             'This is rubles.\n'
         )
 
+
+    def testExecuteCommand(self):
+        app = App('test', color=False, buffered_console=True)
+
+        @app
+        def Cmd(console_, subject='World'):
+            console_.Print('Hello, %s!' % subject)
+
+        retcode, output = app.ExecuteCommand('cmd')
+        assert retcode == app.RETCODE_OK
+        assert output == 'Hello, World!\n'
+
+        retcode, output = app.ExecuteCommand('cmd', 'Alpha')
+        assert retcode == app.RETCODE_OK
+        assert output == 'Hello, Alpha!\n'

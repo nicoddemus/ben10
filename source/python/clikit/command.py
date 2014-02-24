@@ -232,6 +232,9 @@ class Command:
 
         :param argd:
             Map of option values as passed by the user in the command line.
+
+        :return:
+            Returns the command function result.
         '''
         args = []
         for i_arg in self.args.itervalues():
@@ -253,3 +256,7 @@ class Command:
                 args.append(arg)
 
         return self.func(*args)
+
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)

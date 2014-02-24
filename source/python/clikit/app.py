@@ -1,8 +1,8 @@
 from .command import Command
 from .console import BufferedConsole, Console
+from ben10.foundation.pushpop import PushPopAttr
 import ConfigParser
 import argparse
-import inspect
 import os
 import sys
 import types
@@ -25,20 +25,20 @@ class InvalidCommand(KeyError):
 # ConsolePlugin
 #===================================================================================================
 class ConsolePlugin():
-    '''
+    """
     Options and fixtures for console.
     Note that all Apps have a console, this plugin does not add the console per se, but only the options and fixtures
     associated with the console.
-    '''
+    """
 
     def __init__(self, console):
         self.__console = console
 
 
     def ConfigureOptions(self, parser):
-        '''
+        """
         Implements IClikitPlugin.ConfigureOptions
-        '''
+        """
         parser.add_argument(
             '-v',
             '--verbose',
@@ -67,17 +67,16 @@ class ConsolePlugin():
 
 
     def HandleOptions(self, opts):
-        '''
+        """
         Implements IClikitPlugin.HandleOptions
-        '''
-        # self.__console.color = getattr(opts, 'console_color', True)
+        """
         self.__console.verbosity = getattr(opts, 'console_verbosity', 1)
 
 
     def GetFixtures(self):
-        '''
+        """
         Implements IClikitPlugin.GetFixtures
-        '''
+        """
         return {
             'console_' : self.__console
         }
@@ -229,10 +228,9 @@ class App(object):
         else:
             self.console = Console(color=color, colorama=colorama)
 
-        self.plugins = [
-            ConsolePlugin(self.console),
-            ConfPlugin(self.__name, conf_defaults, conf_filename),
-        ]
+        self.plugins = {
+            'conf' : ConfPlugin(self.__name, conf_defaults, conf_filename),
+        }
 
 
     def __call__(self, func=None, **kwargs):
@@ -263,11 +261,11 @@ class App(object):
                 In "Case 1" we return a simple callable that registers the function then returns it
                 unchanged.
                 '''
-                self.Add(func, **kwargs)
+                return self.Add(func, **kwargs)
                 return func
             return Decorator
         else:
-            self.Add(func)
+            return self.Add(func)
             return func
 
 
@@ -279,18 +277,19 @@ class App(object):
         '''
         Adds a function as a subcommand to the application.
 
-        :param <funcion> func: The function to add as a command.
+        :param <funcion> func: The function to add.
         :param list(str) alias: A list of valid aliases for the same command.
+        :return Command:
+            Command instance for the given function.
         '''
-
         def _GetNames(func, alias):
             '''
             Returns a list of names considering the function and all aliases.
 
-            :param <funcion> func:
+            :param funcion func:
             :param list(str) alias:
             '''
-            result = [func.__name__]
+            result = [self.ConvertToCommandName(func.__name__)]
             if alias is None:
                 alias = []
             elif isinstance(alias, types.StringTypes):
@@ -300,12 +299,14 @@ class App(object):
             result.extend(alias)
             return result
 
+        assert not isinstance(func, Command)
+
         names = _GetNames(func, alias)
         command = Command(func, names)
 
         # Make sure none of the existing commands share a name.
         all_names = self.ListAllCommandNames()
-        for i_name in names:
+        for i_name in command.names:
             if i_name in all_names:
                 command = self.GetCommandByName(i_name)
                 raise ValueError(
@@ -317,6 +318,7 @@ class App(object):
                     )
 
         self.__commands.append(command)
+        return command
 
 
     def Fixture(self, func=None, name=None):
@@ -326,9 +328,8 @@ class App(object):
         Once registered, a command can request the fixture by adding its name as a parameter.
 
         '''
-
         def _AddFixture(name, func):
-            name = name or func.__name__
+            name = name or self.ConvertToFixtureName(func.__name__)
             if not name.endswith('_'):
                 name += '_'
             self.__custom_fixtures[name] = func()
@@ -341,6 +342,20 @@ class App(object):
         else:
             _AddFixture(name, func)
             return func
+
+
+    @staticmethod
+    def ConvertToCommandName(name):
+        import re
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
+
+
+    @staticmethod
+    def ConvertToFixtureName(name):
+        import re
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
     def GetCommandByName(self, name):
@@ -377,7 +392,7 @@ class App(object):
             'argv_' : argv,
         }
         result.update(self.__custom_fixtures)
-        for i_plugin in self.plugins:
+        for i_plugin in self.plugins.itervalues():
             result.update(i_plugin.GetFixtures())
 
         return result
@@ -387,9 +402,11 @@ class App(object):
     RETCODE_ERROR = 1
 
     def Main(self, argv=None):
-        '''
+        """
         Entry point for the commands execution.
-        '''
+        """
+        self.plugins['console'] = ConsolePlugin(self.console)
+
         if argv is None:
             argv = sys.argv[1:]
 
@@ -412,7 +429,7 @@ class App(object):
                 return self.RETCODE_OK
 
             # Give plugins change to handle options
-            for i_plugin in self.plugins:
+            for i_plugin in self.plugins.itervalues():
                 i_plugin.HandleOptions(opts.__dict__)
 
             # Configure parser with command specific parameters/options
@@ -447,7 +464,7 @@ class App(object):
             add_help=False,
         )
         r_parser.add_argument('--help', action='store_true', help='Help about a command')
-        for i_plugin in self.plugins:
+        for i_plugin in self.plugins.itervalues():
             i_plugin.ConfigureOptions(r_parser)
         return r_parser
 
@@ -485,3 +502,38 @@ class App(object):
             self.console.PrintQuiet(command.description)
             self.console.PrintQuiet()
             self.console.Print(help)
+
+
+    def ExecuteCommand(self, cmd, *args, **kwargs):
+        command = self.GetCommandByName(cmd)
+        console = BufferedConsole()
+        retcode = command(console, *args, **kwargs)
+        if retcode is None:
+            retcode = self.RETCODE_OK
+        return retcode, console.GetOutput()
+
+
+    def TestScript(self, script):
+
+        def Execute(cmd, output):
+            with PushPopAttr(self, 'console', BufferedConsole()):
+                retcode = self.Main(cmd.split())
+                assert retcode == App.RETCODE_OK
+                obtained = self.console.GetOutput()
+                assert  obtained == output
+
+        cmd = None
+        output = ''
+        for i_line in script.splitlines():
+            if i_line.startswith('>'):
+                if cmd is not None:
+                    Execute(cmd, output)
+                    cmd = None
+                    output = ''
+                cmd = i_line[1:]
+            else:
+                output += i_line + '\n'
+
+        if cmd is not None:
+            Execute(cmd, output)
+

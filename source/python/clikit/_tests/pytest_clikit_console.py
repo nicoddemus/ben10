@@ -59,23 +59,23 @@ class Test:
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...'''
+        assert oss.getvalue() == '''Doing...: '''
         console.ProgressOk()
-        assert oss.getvalue() == '''Doing...OK\n'''
+        assert oss.getvalue() == '''Doing...: OK\n'''
 
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...'''
+        assert oss.getvalue() == '''Doing...: '''
         console.ProgressError('Failed!')
-        assert oss.getvalue() == '''Doing...Failed!\n'''
+        assert oss.getvalue() == '''Doing...: Failed!\n'''
 
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...'''
+        assert oss.getvalue() == '''Doing...: '''
         console.ProgressWarning('Skiped!')
-        assert oss.getvalue() == '''Doing...Skiped!\n'''
+        assert oss.getvalue() == '''Doing...: Skiped!\n'''
 
         # Test Ask methods
         iss = StringIO()
