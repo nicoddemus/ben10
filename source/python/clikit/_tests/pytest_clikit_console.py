@@ -23,7 +23,7 @@ class Test:
         console.PrintQuiet('Alpha.q')
         console.Print('Alpha.n')
         console.PrintVerbose('Alpha.v')
-        assert oss.getvalue() == '''Alpha.q\nAlpha.n\n'''
+        assert oss.getvalue() == """Alpha.q\nAlpha.n\n"""
 
         oss = StringIO()
         console = Console(verbosity=0)
@@ -32,7 +32,7 @@ class Test:
         console.Print('Alpha.n')
         console.PrintVerbose('Alpha.v')
         console.PrintError('Alpha.PrintError')  # For now, stdout and stoerr are the same!
-        assert oss.getvalue() == '''Alpha.q\nAlpha.PrintError\n'''
+        assert oss.getvalue() == """Alpha.q\nAlpha.PrintError\n"""
 
         # Test color control
         console = Console(color=None)
@@ -59,23 +59,23 @@ class Test:
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...: '''
+        assert oss.getvalue() == """Doing...: """
         console.ProgressOk()
-        assert oss.getvalue() == '''Doing...: OK\n'''
+        assert oss.getvalue() == """Doing...: OK\n"""
 
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...: '''
+        assert oss.getvalue() == """Doing...: """
         console.ProgressError('Failed!')
-        assert oss.getvalue() == '''Doing...: Failed!\n'''
+        assert oss.getvalue() == """Doing...: Failed!\n"""
 
         oss = StringIO()
         console = Console(verbosity=2, stdout=oss)
         console.Progress('Doing...')
-        assert oss.getvalue() == '''Doing...: '''
+        assert oss.getvalue() == """Doing...: """
         console.ProgressWarning('Skiped!')
-        assert oss.getvalue() == '''Doing...: Skiped!\n'''
+        assert oss.getvalue() == """Doing...: Skiped!\n"""
 
         # Test Ask methods
         iss = StringIO()
@@ -89,17 +89,17 @@ class Test:
         console.Item('alpha')
         console.Item('bravo')
         console.Item('charlie')
-        assert oss.getvalue() == '''- alpha\n- bravo\n- charlie\n'''
+        assert oss.getvalue() == """- alpha\n- bravo\n- charlie\n"""
 
 
     def testBufferedConsole(self):
         console = BufferedConsole()
 
         console.Print('alpha')
-        assert console.GetOutput() == '''alpha\n'''
+        assert console.GetOutput() == """alpha\n"""
 
         console.Print('bravo')
-        assert console.GetOutput() == '''bravo\n'''
+        assert console.GetOutput() == """bravo\n"""
 
 
     def testAutoColor(self):
@@ -107,9 +107,9 @@ class Test:
         assert console.color == False
 
         class FakeStdout:
-            '''
+            """
             Mocks the sys.stdout.isatty function behavior.
-            '''
+            """
             def __init__(self):
                 self._isatty = False
             def isatty(self):
@@ -155,10 +155,10 @@ class Test:
 
 
     def testColorama(self):
-        '''
+        """
         Smoke test to make sure colorama works from inside pytest. In previous version of pytest
         the colorama import failed if called from inside pytest.
-        '''
+        """
         oss = StringIO()
         console = Console(color=True, colorama=True, stdout=oss)
         console.Print('Hello')

@@ -1,6 +1,5 @@
 from .console import BufferedConsole
 from collections import OrderedDict
-import pytest
 import re
 
 
@@ -9,9 +8,9 @@ import re
 # IsString
 #===================================================================================================
 def IsString(variable):
-    '''
+    """
     PLACEHOLD to check if this given variable is a string in a PYTHON 3 safe way.
-    '''
+    """
     return isinstance(variable, str)
 
 
@@ -20,9 +19,9 @@ def IsString(variable):
 # InvalidFixture
 #===================================================================================================
 class InvalidFixture(KeyError):
-    '''
+    """
     Exception raised when an unknown argument is added to a command-function.
-    '''
+    """
     pass
 
 
@@ -30,9 +29,9 @@ class InvalidFixture(KeyError):
 # MissingArgument
 #===================================================================================================
 class MissingArgument(KeyError):
-    '''
+    """
     Exception raised when an unknown argument is added to a command-function.
-    '''
+    """
     pass
 
 
@@ -41,17 +40,17 @@ class MissingArgument(KeyError):
 # Command
 #===================================================================================================
 class Command:
-    '''
+    """
     Holds the information for a command, directly associated with a function that implements it.
-    '''
+    """
 
     class Arg:
-        '''
+        """
         Holds meta-information about the associated function argument.
 
         I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside
         @argparse@ to print help message.
-        '''
+        """
         NO_DEFAULT = object()
 
         def __init__(self, name, default=NO_DEFAULT, fixture=False, trail=False):
@@ -80,11 +79,11 @@ class Command:
                 return '%s=%s' % (self.name, self.default)
 
         def ConfigureArgumentParser(self, parser):
-            '''
+            """
             Configures the given parser with an argument matching the information in this class.
 
             :param parser: argparse.ArgumentParser
-            '''
+            """
             if self.fixture:
                 pass
             elif self.trail:
@@ -139,7 +138,7 @@ class Command:
 
 
     def _ParseFunctionArguments(self, func):
-        '''
+        """
         Parses function arguments returning meta information about it.
 
         :return tuple:
@@ -147,7 +146,7 @@ class Command:
             [1]: trail?
             [2]: kwargs: if the function is using it, otherwise None.
             [3]: defaults: The defaults value for the argument (if given any)
-        '''
+        """
         import inspect
         args, trail, kwargs, defaults = inspect.getargspec(func)
         defaults = defaults or []
@@ -157,7 +156,7 @@ class Command:
     PARAM_RE = re.compile(':param (.*):(.*)$')
 
     def _ParseDocString(self, docstring):
-        '''
+        """
         Parses the (function) docstring for the genral and arguments descriptions.
 
         :param docstring: A well formed docstring of a function.
@@ -165,7 +164,7 @@ class Command:
         :returns:
             Returns the function description (doc's first line) and the description of each
             argument (sphinx doc style).
-        '''
+        """
         description = None
         arg_descriptions = {}
 
@@ -186,11 +185,11 @@ class Command:
 
 
     def FormatHelp(self):
-        '''
+        """
         Format help for this command.
 
         :return str:
-        '''
+        """
         console = BufferedConsole()
         console.Print('Usage:')
         positionals = [i for i in self.args.values() if i.positional]
@@ -214,17 +213,17 @@ class Command:
 
 
     def ConfigureArgumentParser(self, parser):
-        '''
+        """
         Configures the given parser with all arguments of this command.
 
         :param parser: argparse.ArgumentParser
-        '''
+        """
         for i_arg in self.args.itervalues():
             i_arg.ConfigureArgumentParser(parser)
 
 
     def Call(self, fixtures, argd):
-        '''
+        """
         Executes the function filling the fixtures and options parameters.
 
         :param fixtures:
@@ -235,7 +234,7 @@ class Command:
 
         :return:
             Returns the command function result.
-        '''
+        """
         args = []
         for i_arg in self.args.itervalues():
             if i_arg.fixture:

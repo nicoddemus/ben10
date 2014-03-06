@@ -1,6 +1,6 @@
-'''
+"""
 The Console is a class that makes it easier to generate colored output.
-'''
+"""
 import os
 import re
 import sys
@@ -11,9 +11,9 @@ import sys
 # CreateColorMap
 #===================================================================================================
 def _CreateColorMap():
-    '''
+    """
     Creates a map from color to ESC color codes.
-    '''
+    """
 
     codes = {}
 
@@ -52,7 +52,7 @@ def _CreateColorMap():
 # Console
 #===================================================================================================
 class Console(object):
-    '''
+    """
     Verbosity
     ---------
 
@@ -72,10 +72,10 @@ class Console(object):
 
     If true prints using colors on the stdout and stderr. On Windows we convert all ANSI color codes
     to appropriate calls using @colorama@ library.
-    '''
+    """
 
-    def __init__(self, verbosity=1, color=None, colorama=True, stdout=sys.stdout, stdin=sys.stdin):
-        '''
+    def __init__(self, verbosity=1, color=False, colorama=True, stdout=sys.stdout, stdin=sys.stdin):
+        """
         :param bool|None color:
             Define whether to generate colored output or not.
             If None try to guess whether to use color based on the output capabilities.
@@ -83,59 +83,61 @@ class Console(object):
         :param bool colorama:
             Enables/disbales the use of colorama.
             This is necessary because colorama is incompatible with pytest.
-        '''
-        self.verbosity = verbosity
-        self.color = color
-        self.colorama = colorama
+        """
+        self.__stderr = stdout
         self.__stdin = stdin
         self.__stdout = stdout
-        self.__stderr = stdout
+        self.colorama = colorama
+
+        self._verbosity = None
+        self._SetVerbosity(verbosity)
+
+        self._color = None
+        self._SetColor(color)
 
 
     def SetStdOut(self, stdout):
-        '''
+        """
         Configure output streams, both for normal (stdout) and PrintError (stderr) outputs.
 
         :param stdout: A file-like object.
-        '''
+        """
         self.__stdout = stdout
         self.__stderr = stdout
 
 
     def _CreateMarkupRe(self):
-        '''
+        """
         Creates markup regular-expression.
         Defined in a function because it uses COLOR_CODES constants.
-        '''
-        markup_re = re.compile(r'<(%s|/)>' % ('|'.join(self.COLOR_CODES)))
-        self.__class__.MARKUP_RE = markup_re
-        return markup_re
+        """
+        return re.compile(r'<(%s|/)>' % ('|'.join(self.COLOR_CODES)))
 
 
     def _SetVerbosity(self, value):
-        '''
+        """
         Verbosity property set method.
-        '''
+        """
         if value not in (0, 1, 2):
             raise ValueError('console.verbosity must be 0, 1 or 2')
         self._verbosity = value
 
 
     def _GetVerbosity(self):
-        '''
+        """
         Verbosity property get method.
-        '''
+        """
         return self._verbosity
 
 
     @classmethod
     def _AutoColor(cls):
-        '''
+        """
         Try to guess color value (bool) from the environment:
             * sys.stdout.isatty
             * $COLORTERM
             * $TERM
-        '''
+        """
         # From Sphinx's console.py
         if not hasattr(sys.stdout, 'isatty') or not sys.stdout.isatty():
             return False
@@ -148,18 +150,18 @@ class Console(object):
 
 
     def _SetColor(self, value):
-        '''
+        """
         Color property set method.
-        '''
+        """
         if value is None:
             self._color = self._AutoColor()
         else:
             self._color = bool(value)
 
     def _GetColor(self):
-        '''
+        """
         Color property get method.
-        '''
+        """
         return self._color
 
     verbosity = property(_GetVerbosity, _SetVerbosity)
@@ -173,14 +175,14 @@ class Console(object):
     DEFAULT_INDENT = 0
 
     def Print(self, message='', verbosity=DEFAULT_VERBOSITY, newlines=DEFAULT_NEWLINES, indent=DEFAULT_INDENT, stderr=False):
-        '''
+        """
         Prints a message to the output.
 
         :param int verbosity:
         :param int newlines:
         :param int indent:
         :paran bool stderr:
-        '''
+        """
         if self.verbosity < verbosity:
             return
 
@@ -241,77 +243,77 @@ class Console(object):
 
 
     def PrintError(self, message, newlines=1, indent=0):
-        '''
+        """
         Shortcut to Print using stderr.
-        '''
+        """
         message = str(message)
         return self.Print(message, verbosity=0, newlines=newlines, indent=indent, stderr=True)
 
 
     def PrintQuiet(self, message='', newlines=1, indent=0):
-        '''
+        """
         Shortcut to Print using 'quiet' verbosity.
-        '''
+        """
         return self.Print(message, verbosity=0, newlines=newlines, indent=indent)
 
 
     def PrintVerbose(self, message='', newlines=1, indent=0):
-        '''
+        """
         Shortcut to Print using 'verbose' verbosity.
-        '''
+        """
         return self.Print(message, verbosity=2, newlines=newlines, indent=indent)
 
 
     def Ask(self, message):
-        '''
+        """
         Ask the users for a value.
 
         :param str message: Message to print before asking for the value
         :return str: A value entered by the user.
-        '''
+        """
         self.PrintQuiet(message + ' ', newlines=0)
         return self.__stdin.readline().strip()
 
 
     def Progress(self, message, verbosity=DEFAULT_VERBOSITY, indent=DEFAULT_INDENT, format_='%s: '):
-        '''
+        """
         Starts a progree message, without the eol.
         Use one of the "finishers" methods to finish the progress:
         * ProgressOk
         * ProgressError
-        '''
+        """
         self.Print(format_ % message, verbosity=verbosity, newlines=0, indent=indent)
 
 
     def ProgressOk(self, message='OK', verbosity=DEFAULT_VERBOSITY, format_='<green>%s</>'):
-        '''
+        """
         Ends a progress "successfully" with a message
 
         :param str message: Message to finish the progress. Default to "OK"
-        '''
+        """
         self.Print(format_ % message, verbosity=verbosity)
 
 
     def ProgressError(self, message, verbosity=DEFAULT_VERBOSITY, format_='<red>%s</>'):
-        '''
+        """
         Ends a progress "with failure" message
 
         :param str message: (Error) message to finish the progress.
-        '''
+        """
         self.Print(format_ % message, verbosity=verbosity)
 
 
     def ProgressWarning(self, message, verbosity=DEFAULT_VERBOSITY, format_='<yellow>%s</>'):
-        '''
+        """
         Ends a progress "with a warning" message
 
         :param str message: (Warning) message to finish the progress.
-        '''
+        """
         self.Print(format_ % message, verbosity=verbosity)
 
 
     def Item(self, message, verbosity=DEFAULT_VERBOSITY, newlines=1, indent=0, stderr=False, format_='- %s'):
-        '''
+        """
         Prints an item.
 
         :param str message:
@@ -319,7 +321,7 @@ class Console(object):
         :param int newlines:
         :param int indent:
         :paran bool stderr:
-        '''
+        """
         return self.Print(format_ % message, verbosity, newlines, indent, stderr)
 
 
@@ -328,24 +330,24 @@ class Console(object):
 # BufferedConsole
 #===================================================================================================
 class BufferedConsole(Console):
-    '''
+    """
     The same as console, but defaults output to a buffer.
-    '''
+    """
 
     def __init__(self, verbosity=1, color=None, stdin=None):
-        '''
+        """
         :param (1|2|3) verbosity:
         :param bool color:
-        '''
+        """
         from StringIO import StringIO
         self.__buffer = StringIO()
-        Console.__init__(self, verbosity=1, color=color, colorama=False, stdout=self.__buffer, stdin=stdin)
+        Console.__init__(self, verbosity=verbosity, color=color, colorama=False, stdout=self.__buffer, stdin=stdin)
 
 
     def GetOutput(self):
-        '''
+        """
         Returns the current value of the output buffer and resets it.
-        '''
+        """
         from StringIO import StringIO
 
         result = self.__buffer.getvalue()

@@ -1,6 +1,4 @@
 from .command import Command
-from .console import BufferedConsole, Console
-from ben10.foundation.pushpop import PushPopAttr
 import ConfigParser
 import argparse
 import os
@@ -14,9 +12,9 @@ import types
 #===================================================================================================
 
 class InvalidCommand(KeyError):
-    '''
+    """
     Exception raised when an unknown command is requested for execution.
-    '''
+    """
     pass
 
 
@@ -87,12 +85,12 @@ class ConsolePlugin():
 # ConfPlugin
 #===================================================================================================
 class ConfPlugin():
-    '''
+    """
     Adds global configuration fixture to App.
-    '''
+    """
 
     def __init__(self, name, conf_defaults=None, conf_filename=None):
-        '''
+        """
         :param str name:
             The application name, used to deduce the configuration filename.
         :param dict conf_defaults:
@@ -101,36 +99,36 @@ class ConfPlugin():
             as keys. The inner dictionary maps names to values inside a group.
         :param str conf_filename:
             The configuration filename. If None generates a default name.
-        '''
+        """
         self.__name = name
         self.conf_defaults = conf_defaults or {}
         self.conf_filename = conf_filename or '~/.%(name)s'
 
 
     def ConfigureOptions(self, parser):
-        '''
+        """
         Implements IClikitPlugin.ConfigureOptions
-        '''
+        """
         return
 
 
     def HandleOptions(self, opts):
-        '''
+        """
         Implements IClikitPlugin.HandleOptions
-        '''
+        """
         pass
 
 
     def GetFixtures(self):
-        '''
+        """
         Implements IClikitPlugin.GetFixtures
-        '''
+        """
 
         class MyConfigParser(ConfigParser.SafeConfigParser):
-            '''
+            """
             Adds:
             * Filename, so it can "Save" the configuration file.
-            '''
+            """
 
             def __init__(self, filename):
                 ConfigParser.SafeConfigParser.__init__(self)
@@ -138,35 +136,35 @@ class ConfPlugin():
                 self.read(self.filename)
 
             def Get(self, section, name):
-                '''
+                """
                 Returns a value from a section/name.
-                '''
+                """
                 return self.get(section, name)
 
             def Set(self, section, name, value):
-                '''
+                """
                 Sets a value on a section.
-                '''
+                """
                 return self.set(section, name, value)
 
             def Save(self):
-                '''
+                """
                 Saves the configuration file.
-                '''
+                """
                 self.write(file(self.filename, 'w'))
 
 
         def GetConfFilename():
-            '''
+            """
             Returns the full configuration file expanding users (~) and names (%(name)s).
-            '''
+            """
             return os.path.expanduser(self.conf_filename % {'name' : self.__name})
 
 
         def CreateConf():
-            '''
+            """
             Creates the configuration file applying the defaults values from self.conf_default.
-            '''
+            """
             filename = GetConfFilename()
             conf = MyConfigParser(filename)
 
@@ -194,10 +192,10 @@ class TooFewArgumentError(RuntimeError):
 class MyArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
-        '''
+        """
         Overrides original implementation to avoid printing stuff on errors.
         All help and printing is done by clikit. "No soup for you", argparse.
-        '''
+        """
         if message == 'too few arguments':
             raise TooFewArgumentError()
 
@@ -206,9 +204,9 @@ class MyArgumentParser(argparse.ArgumentParser):
 # App
 #===================================================================================================
 class App(object):
-    '''
+    """
     Command Line Interface Application.
-    '''
+    """
 
     def __init__(
             self,
@@ -219,6 +217,8 @@ class App(object):
             conf_filename=None,
             buffered_console=False,
         ):
+        from .console import BufferedConsole, Console
+
         self.__name = name
         self.__commands = []
         self.__custom_fixtures = {}
@@ -234,7 +234,7 @@ class App(object):
 
 
     def __call__(self, func=None, **kwargs):
-        '''
+        """
         Implement the decorator behavior for App.
 
         There are two use cases:
@@ -254,19 +254,17 @@ class App(object):
         :return:
             Case 1: Returns a replacement for the function.
             Case 2: Returns a "functor", which in turn returns a replacement for the function.
-        '''
+        """
         if func is None:
             def Decorator(func):
-                '''
+                """
                 In "Case 1" we return a simple callable that registers the function then returns it
                 unchanged.
-                '''
+                """
                 return self.Add(func, **kwargs)
-                return func
             return Decorator
         else:
             return self.Add(func)
-            return func
 
 
     def Add(
@@ -274,21 +272,21 @@ class App(object):
             func,
             alias=None,
         ):
-        '''
+        """
         Adds a function as a subcommand to the application.
 
         :param <funcion> func: The function to add.
         :param list(str) alias: A list of valid aliases for the same command.
         :return Command:
             Command instance for the given function.
-        '''
+        """
         def _GetNames(func, alias):
-            '''
+            """
             Returns a list of names considering the function and all aliases.
 
             :param funcion func:
             :param list(str) alias:
-            '''
+            """
             result = [self.ConvertToCommandName(func.__name__)]
             if alias is None:
                 alias = []
@@ -322,12 +320,12 @@ class App(object):
 
 
     def Fixture(self, func=None, name=None):
-        '''
+        """
         This is a decorator that registers a function as a custom fixture.
 
         Once registered, a command can request the fixture by adding its name as a parameter.
 
-        '''
+        """
         def _AddFixture(name, func):
             name = name or self.ConvertToFixtureName(func.__name__)
             if not name.endswith('_'):
@@ -359,12 +357,12 @@ class App(object):
 
 
     def GetCommandByName(self, name):
-        '''
+        """
         Returns a command instance from the given __name.
 
         :param str __name:
         :return self._Command:
-        '''
+        """
         for j_command in self.__commands:
             if name in j_command.names:
                 return j_command
@@ -372,11 +370,11 @@ class App(object):
 
 
     def ListAllCommandNames(self):
-        '''
+        """
         Lists all commands names, including all aliases.
 
         :return list(str):
-        '''
+        """
         result = []
         for j_command in self.__commands:
             result += j_command.names
@@ -384,10 +382,10 @@ class App(object):
 
 
     def GetFixtures(self, argv):
-        '''
+        """
         :return dict:
             Returns a dictionary mapping each available fixture to its implementation.
-        '''
+        """
         result = {
             'argv_' : argv,
         }
@@ -438,7 +436,7 @@ class App(object):
             # Parse parameters/options
             try:
                 opts = parser.parse_args(args)
-            except TooFewArgumentError as exception:
+            except TooFewArgumentError:
                 self.console.PrintError('<red>ERROR: Too few arguments.</>', newlines=2)
                 self.PrintHelp(command)
                 return self.RETCODE_ERROR
@@ -456,9 +454,9 @@ class App(object):
 
 
     def CreateArgumentParser(self):
-        '''
+        """
         Create a argument parser adding options from all plugins (ConfigureOptions)
-        '''
+        """
         r_parser = MyArgumentParser(
             prog=self.__name,
             add_help=False,
@@ -470,11 +468,11 @@ class App(object):
 
 
     def PrintHelp(self, command=None):
-        '''
+        """
         Print help for all registered commands or an specific one.
 
         :param Command command: A command to print help or None to print the application help.
-        '''
+        """
         if command is None:
             self.console.PrintQuiet()
             self.console.PrintQuiet('Usage:')
@@ -498,13 +496,28 @@ class App(object):
                 spaces = ' ' * ((max_width - i_width) + 3)
                 self.console.PrintQuiet('%s%s%s' % (i_names, spaces, i_description), indent=1)
         else:
-            help = command.FormatHelp()
             self.console.PrintQuiet(command.description)
             self.console.PrintQuiet()
-            self.console.Print(help)
+            self.console.Print(command.FormatHelp())
 
 
     def ExecuteCommand(self, cmd, *args, **kwargs):
+        """
+        Executes a command using normal parameters.
+
+        :param str cmd:
+            The name of a previously registered command to execute.
+
+        :param *args:
+            Arguments passed to the command function "as is".
+
+        :param *kwargs:
+            Keyword arguments passed to the command function "as is".
+
+        TODO: This is not handling fixtures. It ALWAYS passes console as the first parameter.
+        """
+        from .console import BufferedConsole
+
         command = self.GetCommandByName(cmd)
         console = BufferedConsole()
         retcode = command(console, *args, **kwargs)
@@ -516,6 +529,9 @@ class App(object):
     def TestScript(self, script):
 
         def Execute(cmd, output):
+            from .console import BufferedConsole
+            from ben10.foundation.pushpop import PushPopAttr
+
             with PushPopAttr(self, 'console', BufferedConsole()):
                 retcode = self.Main(cmd.split())
                 assert retcode == App.RETCODE_OK
@@ -528,7 +544,6 @@ class App(object):
             if i_line.startswith('>'):
                 if cmd is not None:
                     Execute(cmd, output)
-                    cmd = None
                     output = ''
                 cmd = i_line[1:]
             else:
