@@ -1,4 +1,4 @@
-from ben10.foundation.string import Dedent
+from ben10.foundation.string import Dedent, SafeSplit
 import pytest
 import sys
 
@@ -138,3 +138,22 @@ class Test:
             '''
         )
         assert string == 'alpha\n\n'
+
+
+    def testSafeSplit(self):
+        assert SafeSplit('alpha', ' ') == ['alpha']
+        assert SafeSplit('alpha bravo', ' ') == ['alpha', 'bravo']
+        assert SafeSplit('alpha bravo charlie', ' ') == ['alpha', 'bravo', 'charlie']
+
+        assert SafeSplit('alpha', ' ', 1) == ['alpha', '']
+        assert SafeSplit('alpha bravo', ' ', 1) == ['alpha', 'bravo']
+        assert SafeSplit('alpha bravo charlie', ' ', 1) == ['alpha', 'bravo charlie']
+
+        assert SafeSplit('alpha', ' ', 1, default=9) == ['alpha', 9]
+        assert SafeSplit('alpha bravo', ' ', 1, default=9) == ['alpha', 'bravo']
+        assert SafeSplit('alpha bravo charlie', ' ', 1, default=9) == ['alpha', 'bravo charlie']
+
+        assert SafeSplit('alpha', ' ', 2) == ['alpha', '', '']
+        assert SafeSplit('alpha bravo', ' ', 2) == ['alpha', 'bravo', '']
+        assert SafeSplit('alpha bravo charlie', ' ', 2) == ['alpha', 'bravo', 'charlie']
+

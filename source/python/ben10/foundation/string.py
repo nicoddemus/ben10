@@ -82,3 +82,26 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
     if margin:
         text = re.sub(r'(?m)^' + margin, '', text)
     return text
+
+
+
+def SafeSplit(s, sep, maxsplit=None, default=''):
+    """
+    Perform a string split granting the size of the resulting list.
+
+    :param str s: The input string.
+    :param str sep: The separator.
+    :param int maxsplit: The max number of splits. The len of the resulting len is granted to be maxsplit + 1
+    :param default: The default value for filled values in the result.
+
+    :return list(str):
+        Returns a list with granted size of maxsplit + 1.
+    """
+    args = () if maxsplit is None else (maxsplit,)
+    result = s.split(sep, *args)
+    if maxsplit is not None:
+        result_len = maxsplit + 1
+        diff_len = result_len - len(result)
+        if diff_len > 0:
+            result += [default] * diff_len
+    return result
