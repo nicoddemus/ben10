@@ -531,12 +531,13 @@ class App(object):
         def Execute(cmd, output):
             from .console import BufferedConsole
             from ben10.foundation.pushpop import PushPopAttr
+            import shlex
 
             with PushPopAttr(self, 'console', BufferedConsole()):
-                retcode = self.Main(cmd.split())
+                retcode = self.Main(shlex.split(cmd))
                 assert retcode == App.RETCODE_OK
                 obtained = self.console.GetOutput()
-                assert  obtained == output
+                assert  obtained == output.rstrip('\n') + '\n'
 
         cmd = None
         output = ''
