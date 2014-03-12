@@ -25,3 +25,9 @@ class Ben10(EsssProject):
     NAMESPACE_VARIABLES = {
         '$PYTHON3PATH' : PATHLIST('`self.python_dir`')
     }
+
+
+    def _GetPackageFileMapping(self):
+        return [
+            ('`self.working_dirname`/source/python/', '+`self.python_dir`/*.py'),
+        ]

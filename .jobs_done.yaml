@@ -2,7 +2,10 @@ junit_patterns:
 - ben10/pytest.xml
 
 platform-windows:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.build ben10 --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform}"
+- |
+  "%AA_AASIMAR_AA% -t project.build ben10 --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform}"
+  "%AA_AASIMAR_AA% -t ar.pak        ben10 --projects-dir=%WORKSPACE% --dist-dirname=dist-development --dist={dist} --platform={platform} --branch={branch}"
+  
 
 platform-linux:build_shell_commands:
 - "$AA_AASIMAR_AA  -t project.build ben10 --projects-dir=$WORKSPACE  --dist-dirname=dist-development --dist={dist} --platform={platform}"
