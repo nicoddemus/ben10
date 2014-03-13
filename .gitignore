@@ -1,9 +1,11 @@
 *.pyc
 .coverage
 /.idea/
+/build/
+/dist/
 /docs/build/
+/source/python/ben10.egg-info/
 __pycache__
 coverage.xml
 pylint.out
 pytest.xml
-/build/
