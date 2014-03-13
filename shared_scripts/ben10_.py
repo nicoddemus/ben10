@@ -29,5 +29,6 @@ class Ben10(EsssProject):
 
     def _GetPackageFileMapping(self):
         return [
+            ('`self.working_dirname`/shared_scripts/', '+`self.working_dir`/shared_scripts/*.py'),
             ('`self.working_dirname`/source/python/', '+`self.python_dir`/*.py'),
         ]
