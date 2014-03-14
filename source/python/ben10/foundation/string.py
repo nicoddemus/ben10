@@ -95,11 +95,12 @@ def SafeSplit(s, sep, maxsplit=None, default=''):
     :param default: The default value for filled values in the result.
 
     :return list(str):
-        Returns a list with granted size of maxsplit + 1.
+        Returns a list with fixed size of maxsplit + 1.
     """
-    args = () if maxsplit is None else (maxsplit,)
-    result = s.split(sep, *args)
-    if maxsplit is not None:
+    if maxsplit is None:
+        result = s.split(sep)
+    else:
+        result = s.split(sep, maxsplit)
         result_len = maxsplit + 1
         diff_len = result_len - len(result)
         if diff_len > 0:
