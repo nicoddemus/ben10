@@ -46,14 +46,21 @@ class Command:
 
     class Arg:
         """
-        Holds meta-information about the associated function argument.
-
-        I'm using this meta class because it is easier to handle it than trying to figure out the attributes inside
-        @argparse@ to print help message.
+        Holds meta-information about the associated *function parameter*.
         """
         NO_DEFAULT = object()
 
         def __init__(self, name, default=NO_DEFAULT, fixture=False, trail=False):
+            """
+            :param str name:
+                The argument name.
+            :param object default:
+                The default value for this argument.
+            :param bool fixture:
+                This argument is a fixture.
+            :param bool trail:
+                This argument handles all the unamed free arguments passed in the command line.
+            """
             self.name = name
             self.default = default
             self.fixture = fixture
@@ -123,7 +130,7 @@ class Command:
                 self.args[i_arg] = self.Arg(i_arg, defaults[i - first_default])
 
         # Adds trail (*args) to the list of arguments.
-        # - Note that this arguments have a asterisk prefix.
+        # - Note that these arguments have a asterisk prefix.
         if trail is not None:
             self.args[trail] = self.Arg(trail, trail=True)
 
