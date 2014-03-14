@@ -297,7 +297,7 @@ class App(object):
             result.extend(alias)
             return result
 
-        assert not isinstance(func, Command)
+        assert not isinstance(func, Command), 'App.Add must receive a function/method, not a Command.'
 
         names = _GetNames(func, alias)
         command = Command(func, names)
@@ -328,8 +328,6 @@ class App(object):
         """
         def _AddFixture(name, func):
             name = name or self.ConvertToFixtureName(func.__name__)
-            if not name.endswith('_'):
-                name += '_'
             self.__custom_fixtures[name] = func()
 
         if func is None:
@@ -343,17 +341,52 @@ class App(object):
 
 
     @staticmethod
-    def ConvertToCommandName(name):
+    def ConvertToCommandName(func_name):
+        '''
+        Converts a function name to a command name:
+            - lower-case
+            - dashes separates words
+
+        The command name is used as the argument from the command line.
+
+        Ex.
+            CreateDb -> create-db
+
+        :param str func_name:
+            The function name, using camel cases standard.
+
+        :return str:
+        '''
         import re
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', func_name)
         return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
 
 
     @staticmethod
-    def ConvertToFixtureName(name):
+    def ConvertToFixtureName(func_name):
+        '''
+        Converts a function name to a fixture name:
+            - lower-case
+            - underscores separates words
+            - ends with an underscore
+
+        The fixture name is used as a parameter of a Command function.
+
+        Ex.
+            MyDb -> my_db_
+
+        :param str func_name:
+            The function name, using camel cases standard.
+
+        :return str:
+        '''
         import re
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', func_name)
+        result = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        if not result.endswith('_'):
+            result += '_'
+        return result
+
 
 
     def GetCommandByName(self, name):
@@ -527,6 +560,12 @@ class App(object):
 
 
     def TestScript(self, script):
+        """
+        Executes a test script, containing command calls (prefixed by ">") and expected results.
+
+        :param str string:
+            A multi-line string with command calls and expected results.
+        """
 
         def Execute(cmd, output):
             from .console import BufferedConsole
