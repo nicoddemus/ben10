@@ -576,7 +576,7 @@ class App(object):
                 retcode = self.Main(shlex.split(cmd))
                 assert retcode == App.RETCODE_OK
                 obtained = self.console.GetOutput()
-                assert  obtained == output.rstrip('\n') + '\n'
+                assert obtained == output.rstrip('\n') + '\n'
 
         cmd = None
         output = ''
@@ -591,4 +591,3 @@ class App(object):
 
         if cmd is not None:
             Execute(cmd, output)
-
