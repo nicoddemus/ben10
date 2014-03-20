@@ -327,7 +327,7 @@ class App(object):
 
         """
         def _AddFixture(name, func):
-            name = name or self.ConvertToFixtureName(func.__name__)
+            name = self.ConvertToFixtureName(name or func.__name__)
             self.__custom_fixtures[name] = func()
 
         if func is None:
