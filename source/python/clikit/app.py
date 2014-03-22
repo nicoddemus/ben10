@@ -568,15 +568,8 @@ class App(object):
         """
 
         def Execute(cmd, output):
-            from .console import BufferedConsole
-            from ben10.foundation.pushpop import PushPopAttr
-            import shlex
-
-            with PushPopAttr(self, 'console', BufferedConsole()):
-                retcode = self.Main(shlex.split(cmd))
-                assert retcode == App.RETCODE_OK
-                obtained = self.console.GetOutput()
-                assert obtained == output.rstrip('\n') + '\n'
+            retcode, obtained = self.TestCall(cmd)
+            assert obtained.rstrip('\n') + '\n' == output.rstrip('\n') + '\n'
 
         cmd = None
         output = ''
@@ -591,3 +584,14 @@ class App(object):
 
         if cmd is not None:
             Execute(cmd, output)
+
+
+    def TestCall(self, cmd):
+        from .console import BufferedConsole
+        from ben10.foundation.pushpop import PushPopAttr
+        import shlex
+
+        with PushPopAttr(self, 'console', BufferedConsole()):
+            retcode = self.Main(shlex.split(cmd))
+            assert retcode == App.RETCODE_OK
+            return retcode, self.console.GetOutput()
