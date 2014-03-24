@@ -270,12 +270,14 @@ class App(object):
     def Add(
             self,
             func,
+            name=None,
             alias=None,
         ):
         """
         Adds a function as a subcommand to the application.
 
         :param <funcion> func: The function to add.
+        :param str name: The name of the command. If not given (None) uses the function name.
         :param list(str) alias: A list of valid aliases for the same command.
         :return Command:
             Command instance for the given function.
@@ -287,7 +289,7 @@ class App(object):
             :param funcion func:
             :param list(str) alias:
             """
-            result = [self.ConvertToCommandName(func.__name__)]
+            result = [self.ConvertToCommandName(name or func.__name__)]
             if alias is None:
                 alias = []
             elif isinstance(alias, types.StringTypes):

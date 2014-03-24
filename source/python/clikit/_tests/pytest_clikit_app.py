@@ -162,17 +162,21 @@ class Test:
         def Case3(console_):
             console_.Print('Hello from case 3')
 
+        def Case4(console_):
+            console_.Print('Hello from case 4 (AKA: four)')
+
         app = App('test', color=False, buffered_console=True)
         app.Add(Case1, alias='cs')
         app.Add(Case2)
         case3_cmd = app.Add(Case3, alias=('c3', 'cs3'))
+        app.Add(Case4, name='four')
 
         # Test duplicate name
         with pytest.raises(ValueError):
             app.Add(case3_cmd.func, alias='cs')
 
         # Test commands listing
-        assert app.ListAllCommandNames() == ['case1', 'cs', 'case2', 'case3', 'c3', 'cs3']
+        assert app.ListAllCommandNames() == ['case1', 'cs', 'case2', 'case3', 'c3', 'cs3', 'four']
 
         # Tests all commands output
         self._TestMain(app, 'case1', 'Hello from case 1\n')
@@ -194,6 +198,7 @@ class Test:
                 case1, cs        A "hello" message from case 1
                 case2            A "hello" message from case 2
                 case3, c3, cs3   (no description)
+                four             (no description)
 
             """),
             app.RETCODE_ERROR
@@ -269,7 +274,7 @@ class Test:
 
     def testPositionalArgs(self):
         """
-        >command alpha bravo
+        >test command alpha bravo
         alpha..bravo
         """
         app = App('test', color=False, buffered_console=True)
@@ -284,9 +289,9 @@ class Test:
 
     def testOptionArgs(self):
         """
-        >command
+        >test command
         1..2
-        >command --first=alpha --second=bravo
+        >test command --first=alpha --second=bravo
         alpha..bravo
         """
         app = App('test', color=False, buffered_console=True)
