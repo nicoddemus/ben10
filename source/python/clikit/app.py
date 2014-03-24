@@ -388,7 +388,6 @@ class App(object):
         return result
 
 
-
     def GetCommandByName(self, name):
         """
         Returns a command instance from the given __name.
@@ -586,12 +585,43 @@ class App(object):
             Execute(cmd, output)
 
 
-    def TestCall(self, cmd):
+    def TestCall(self, cmd, extra_apps={}):
         from .console import BufferedConsole
         from ben10.foundation.pushpop import PushPopAttr
         import shlex
 
+        shell = App('shell')
+
+        class Sheel(object):
+
+            @shell
+            def Dir(self, console_, path='.'):
+                for i in os.listdir(path):
+                    console_.Print(i)
+
+            @shell
+            def CreateFile(self, console_, filename, content):
+                CreateFile(filename, content)
+
+        apps = {
+            self.__name : self,
+            'shell' : shell,
+        }
+        apps.update(extra_apps)
+
+        class UnknownApp(RuntimeError):
+
+            def __init__(self, app, apps):
+                RuntimeError.__init__(self, 'Unknown app "%s". Valid apps are: %s' % (app, ', '.join(apps)))
+
+
         with PushPopAttr(self, 'console', BufferedConsole()):
-            retcode = self.Main(shlex.split(cmd))
+            cmd = shlex.split(cmd)
+            app_name, cmd = cmd[0], cmd[1:]
+            app = apps.get(app_name)
+            if app is None:
+                raise UnknownApp(app_name, apps.keys())
+
+            retcode = app.Main(cmd)
             assert retcode == App.RETCODE_OK
             return retcode, self.console.GetOutput()
