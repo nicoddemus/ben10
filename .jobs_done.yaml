@@ -25,3 +25,6 @@ matrix:
 
 display_name: "[{branch}] {name} {dist}-{platform}"
 
+branch_patterns:
+- master
+
