@@ -444,30 +444,47 @@ class Test:
         '''
         No FTP function supports non-ascii filenames / paths
         '''
-        unicode_filename = ftpserver.GetFTPUrl(embed_data['a\xe7\xe3o.txt']).decode('latin1')
-        _unicode_filename2 = ftpserver.GetFTPUrl(embed_data['file.txt']).decode('latin1')
+        filename1 = embed_data['a\xe7\xe3o.txt']
+        CreateFile(filename1, 'action in portuguese')
+        unicode_filename1 = ftpserver.GetFTPUrl(filename1).decode('latin1')
 
-        unicode_dirname = ftpserver.GetFTPUrl(embed_data['a\xe7\xe3o_dir']).decode('latin1')
-        unicode_dirname2 = ftpserver.GetFTPUrl(embed_data['complex_tree']).decode('latin1')
+        #filename2 = embed_data['file.txt']
+        #unicode_filename2 = ftpserver.GetFTPUrl(filename2).decode('latin1')
 
-        def _TestUnicode(func, *args, **kwargs):
-            with pytest.raises(UnicodeEncodeError) as e:
+        dirname1 = embed_data['a\xe7\xe3o_dir']
+        CreateDirectory(dirname1)
+        unicode_dirname1 = ftpserver.GetFTPUrl(dirname1).decode('latin1')
+
+        dirname2 = embed_data['target_directory']
+        CreateDirectory(dirname2)
+        unicode_dirname2 = ftpserver.GetFTPUrl(dirname2).decode('latin1')
+
+        dirname3 = embed_data['moved_directory']
+        unicode_dirname3 = ftpserver.GetFTPUrl(dirname3).decode('latin1')
+
+        def _TestUnicode(exception, func, *args, **kwargs):
+            if exception:
+                with pytest.raises(exception) as e:
+                    func(*args, **kwargs)
+                    if exception == UnicodeEncodeError:
+                        assert "No support for non-ascii filenames in FTP" in str(e.value)
+            else:
                 func(*args, **kwargs)
-            assert "No support for non-ascii filenames in FTP" in str(e.value)
 
-        _TestUnicode(CheckIsDir, unicode_dirname)
-        _TestUnicode(CheckIsFile, unicode_filename)
-        _TestUnicode(CopyFiles, unicode_dirname2, unicode_dirname)
-        _TestUnicode(CreateDirectory, unicode_dirname)
-        _TestUnicode(CreateFile, unicode_filename, 'contents')
-        _TestUnicode(CreateMD5, unicode_filename)
-        _TestUnicode(GetFileContents, unicode_filename)
-        _TestUnicode(GetFileLines, unicode_filename)
-        _TestUnicode(IsDir, unicode_dirname)
-        _TestUnicode(IsFile, unicode_filename)
-        _TestUnicode(ListFiles, unicode_dirname)
-        _TestUnicode(MoveDirectory, unicode_dirname2, unicode_dirname)
-        _TestUnicode(OpenFile, unicode_filename)
+
+        _TestUnicode(None, CheckIsDir, unicode_dirname1)
+        _TestUnicode(None, CheckIsFile, unicode_filename1)
+        _TestUnicode(UnicodeEncodeError, CopyFiles, unicode_dirname1, unicode_dirname2)
+        _TestUnicode(UnicodeEncodeError, CreateDirectory, unicode_dirname1)
+        _TestUnicode(UnicodeEncodeError, CreateFile, unicode_filename1, 'contents')
+        _TestUnicode(UnicodeEncodeError, CreateMD5, unicode_filename1)
+        _TestUnicode(UnicodeEncodeError, GetFileContents, unicode_filename1)
+        _TestUnicode(UnicodeEncodeError, GetFileLines, unicode_filename1)
+        _TestUnicode(None, IsDir, unicode_dirname1)
+        _TestUnicode(None, IsFile, unicode_filename1)
+        _TestUnicode(UnicodeEncodeError, ListFiles, unicode_dirname1)
+        _TestUnicode(UnicodeEncodeError, MoveDirectory, unicode_dirname1, unicode_dirname3)
+        _TestUnicode(UnicodeEncodeError, OpenFile, unicode_filename1)
 
         # No support for remote
         # _TestUnicode(AppendToFile, unicode_filename, 'contents')
@@ -515,7 +532,7 @@ class Test:
 
 
     def testCreateFileInMissingDirectory(self, monkeypatch, embed_data, ftpserver):
-        from ftputil.ftp_error import FTPIOError
+        from ftputil.error import FTPIOError
 
         # Trying to create a file in a directory that does not exist should raise an error
         target_file = embed_data['missing_dir/sub_dir/file.txt']

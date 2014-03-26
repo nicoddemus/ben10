@@ -1,10 +1,7 @@
 from __future__ import with_statement
-from ftputil.ftp_error import FTPOSError
-from ftputil.ftp_error import FTPIOError  # @UnusedImport
-try:  # import for dist <= 1104
-    from ftputil import PermanentError  # @UnresolvedImport @UnusedImport
-except:  # import for dist >= 12.0
-    from ftputil.ftp_error import PermanentError  # @UnresolvedImport @UnusedImport @Reimport
+from ftputil.error import FTPOSError
+from ftputil.error import PermanentError  # @UnresolvedImport @UnusedImport @Reimport
+from ftputil.error import FTPIOError  # @UnusedImport
 
 
 
@@ -48,7 +45,7 @@ def FTPHost(url):
 
     :rtype: ftputil.FTPHost
     '''
-    from ftputil.ftputil import FTPHost as ftputil_host
+    from ftputil import FTPHost as ftputil_host
     import ftplib
 
     class DefaultFTP(ftplib.FTP):
@@ -238,7 +235,7 @@ def _FTPDownload(source_url, target_filename):
         .. see:: DownloadUrlToFile
     '''
     with FTPHost(source_url) as ftp_host:
-        ftp_host.download(source=source_url.path, target=target_filename, mode='b')
+        ftp_host.download(source=source_url.path, target=target_filename)
 
 
 def _FTPOpenFile(filename_url):
@@ -287,9 +284,9 @@ def FTPCreateFile(url, contents):
     :param text contents:
         The file contents.
     '''
-    with FTPHost(url) as ftp_host:
-        with ftp_host.file(url.path, 'w') as oss:
-            oss.write(contents)
+    with FTPHost(url) as host:
+        with host.open(url.path, 'w') as oss:
+            oss.write(contents.decode('latin1'))
 
 
 #===================================================================================================
