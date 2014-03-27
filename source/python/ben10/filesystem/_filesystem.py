@@ -14,8 +14,6 @@ These functions abstract file location, most of them work for either local, ftp 
 
     Keep in mind that this process can be slow if you perform many of such operations in sequence.
 '''
-from __future__ import with_statement
-from ._filesystem_exceptions import UnknownPlatformError
 import contextlib
 import os
 import re
@@ -42,6 +40,7 @@ def _GetNativeEolStyle(platform=sys.platform):
     result = _NATIVE_EOL_STYLE_MAP.get(platform)
 
     if result is None:
+        from ._filesystem_exceptions import UnknownPlatformError
         raise UnknownPlatformError(platform)
 
     return result
@@ -249,34 +248,43 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
     :returns:
         MD5_SKIP if the file was not copied because there was a matching .md5 file
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
+    from ben10.filesystem import FileNotFoundError
+
     # Check override
     if not override and Exists(target_filename):
         from _filesystem_exceptions import FileAlreadyExistsError
         raise FileAlreadyExistsError(target_filename)
 
+    # Don't do md5 check for md5 files themselves.
+    md5_check = md5_check and not target_filename.endswith('.md5')
+
     # If we enabled md5 checks, ignore copy of files that haven't changed their md5 contents.
     if md5_check:
         source_md5_filename = source_filename + '.md5'
         target_md5_filename = target_filename + '.md5'
+        try:
+            source_md5_contents = GetFileContents(source_md5_filename)
+        except FileNotFoundError:
+            source_md5_contents = None
 
-        # If all files already exist, and md5's are the same, skip this copy
-        files = [source_filename, source_md5_filename, target_filename, target_md5_filename]
-        if all(map(Exists, files)):
-            if GetFileContents(source_md5_filename) == GetFileContents(target_md5_filename):
-                return MD5_SKIP
+        try:
+            target_md5_contents = GetFileContents(target_md5_filename)
+        except FileNotFoundError:
+            target_md5_contents = None
+
+        if source_md5_contents is not None and \
+           source_md5_contents == target_md5_contents and \
+           Exists(target_filename):
+            return MD5_SKIP
 
     # Copy source file
     _DoCopyFile(source_filename, target_filename, copy_symlink=copy_symlink)
 
-    # Copy md5 file after the file itself was copied, for safety
-    if md5_check:
-        from ben10.filesystem import FileNotFoundError
-        try:
-            _DoCopyFile(source_md5_filename, target_md5_filename)
-        except FileNotFoundError:
-            pass  # Md5 does not exist, ignore it
+    # If we have a source_md5, but no target_md5, create the target_md5 file
+    if md5_check and source_md5_contents is not None and source_md5_contents != target_md5_contents:
+        CreateFile(target_md5_filename, source_md5_contents)
 
 
 def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
@@ -353,19 +361,24 @@ def _CopyFileLocal(source_filename, target_filename, copy_symlink=True):
         if dir_name and not os.path.isdir(dir_name):
             os.makedirs(dir_name)
 
-        if copy_symlink and os.path.islink(source_filename):
+        if copy_symlink and IsLink(source_filename):
             # >>> Delete the target_filename if it already exists
-            if os.path.isfile(target_filename) or os.path.islink(target_filename):
+            if os.path.isfile(target_filename) or IsLink(target_filename):
                 DeleteFile(target_filename)
 
             # >>> Obtain the relative path from link to source_filename (linkto)
-            from path import path
-            source_filename = path(source_filename)
-            linkto = source_filename.readlink()
-
-            # >>> Create the target_filename as a sym-link
-            linkto.symlink(target_filename)
+            source_filename = ReadLink(source_filename)
+            CreateLink(source_filename, target_filename)
         else:
+            # shutil can't copy links in Windows, so we must find the real file manually
+            if sys.platform == 'win32':
+                while IsLink(source_filename):
+                    link = ReadLink(source_filename)
+                    if os.path.isabs(link):
+                        source_filename = link
+                    else:
+                        source_filename = os.path.join(os.path.dirname(source_filename), link)
+
             shutil.copyfile(source_filename, target_filename)
             shutil.copymode(source_filename, target_filename)
     except Exception, e:
@@ -377,7 +390,7 @@ def _CopyFileLocal(source_filename, target_filename, copy_symlink=True):
 #===================================================================================================
 # CopyFiles
 #===================================================================================================
-def CopyFiles(source_dir, target_dir, create_target_dir=False):
+def CopyFiles(source_dir, target_dir, create_target_dir=False, md5_check=False):
     '''
     Copy files from the given source to the target.
 
@@ -399,13 +412,15 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
     :param bool create_target_dir:
         If True, creates the target path if it doesn't exists.
 
+    :param bool md5_check:
+        .. seealso:: CopyFile
 
     :raises DirectoryNotFoundError:
         If target_dir does not exist, and create_target_dir is False
 
-    .. see:: CopyFile for documentation on accepted protocols
+    .. seealso:: CopyFile for documentation on accepted protocols
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     import fnmatch
 
@@ -434,15 +449,18 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False):
 
     # Copy files
     for i_filename in filenames:
+        if md5_check and i_filename.endswith('.md5'):
+            continue  # md5 files will be copied by CopyFile when copying their associated files
+
         if fnmatch.fnmatch(i_filename, source_mask):
             source_path = source_dir + '/' + i_filename
             target_path = target_dir + '/' + i_filename
 
             if IsDir(source_path):
                 # If we found a directory, copy it recursively
-                CopyFiles(source_path, target_path, create_target_dir=True)
+                CopyFiles(source_path, target_path, create_target_dir=True, md5_check=md5_check)
             else:
-                CopyFile(source_path, target_path)
+                CopyFile(source_path, target_path, md5_check=md5_check)
 
 
 
@@ -461,10 +479,9 @@ def CopyFilesX(file_mapping):
     :returns:
         List of files copied. (source_filename, target_filename)
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
-    from _duplicates import FindFiles
-    from ._duplicates import ExtendedPathMask
+    from ._duplicates import ExtendedPathMask, FindFiles
 
     # List files that match the mapping
     files = []
@@ -515,12 +532,14 @@ def IsFile(path):
     :returns:
         True if the file exists
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
     url = urlparse(path)
 
     if _UrlIsLocal(url):
+        if IsLink(path):
+            return IsFile(ReadLink(path))
         return os.path.isfile(path)
 
     elif url.scheme == 'ftp':
@@ -547,7 +566,7 @@ def IsDir(directory):
     :raises NotImplementedProtocol:
         If the path protocol is not local or ftp
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
     directory_url = urlparse(directory)
@@ -572,8 +591,14 @@ def Exists(path):
     :returns:
         True if the path already exists (either a file or a directory)
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
+    from urlparse import urlparse
+    path_url = urlparse(path)
+
+    # Handle local
+    if _UrlIsLocal(path_url):
+        return IsFile(path) or IsDir(path) or IsLink(path)
     return IsFile(path) or IsDir(path)
 
 
@@ -629,7 +654,9 @@ def DeleteFile(target_filename):
     _AssertIsLocal(target_filename)
 
     try:
-        if os.path.isfile(target_filename):
+        if IsLink(target_filename):
+            DeleteLink(target_filename)
+        elif IsFile(target_filename):
             os.remove(target_filename)
         elif IsDir(target_filename):
             from _filesystem_exceptions import FileOnlyActionError
@@ -775,7 +802,7 @@ def GetFileContents(filename, binary=False, encoding=None):
         The file's contents.
         Returns unicode string when `encoding` is not None.
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     source_file = OpenFile(filename, binary=binary)
     try:
@@ -801,7 +828,7 @@ def GetFileLines(filename):
     :returns:
         The file's lines
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     return GetFileContents(filename, binary=False).split('\n')
 
@@ -824,7 +851,7 @@ def OpenFile(filename, binary=False):
     @raise: FileNotFoundError
         When the given filename cannot be found
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
     filename_url = urlparse(filename)
@@ -868,7 +895,7 @@ def ListFiles(directory):
     :raises NotImplementedProtocol:
         If file protocol is not local or FTP
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
     directory_url = urlparse(directory)
@@ -952,6 +979,9 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
     :param str encoding:
         Target file's content encoding.
 
+    :return str:
+        Returns the name of the file created.
+
     :raises NotImplementedProtocol:
         If file protocol is not local or FTP
 
@@ -959,7 +989,7 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
         If trying to mix unicode `contents` without `encoding`, or `encoding` without
         unicode `contents`
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     # Unicode
     unicode_contents = isinstance(contents, unicode)
@@ -996,6 +1026,8 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
         from _filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(filename_url.scheme)
 
+    return filename
+
 
 
 #===================================================================================================
@@ -1013,7 +1045,7 @@ def CreateDirectory(directory):
     :raises NotImplementedProtocol:
         If protocol is not local or FTP.
 
-    .. see:: FTP LIMITATIONS at this module's doc for performance issues information
+    .. seealso:: FTP LIMITATIONS at this module's doc for performance issues information
     '''
     from urlparse import urlparse
 
@@ -1051,7 +1083,7 @@ class CreateTemporaryDirectory(object):
         :param str prefix:
             A prefix to add in the name of the created directory
 
-        :param str base_dir
+        :param str base_dir:
             A path to use as base in the created directory (if any). The temp directory will be a
             child of the given base dir
 
@@ -1076,12 +1108,16 @@ class CreateTemporaryDirectory(object):
             import tempfile
             self._directory_name = tempfile.mkdtemp(self._suffix, self._prefix)
         else:
+
+            # Listing the files found in the base dir
+            existing_files = set(ListFiles(self._base_dir))
+
             # If a base dir was given, let us generate a unique directory name there and use it
             for _index in xrange(self._maximum_number_of_attempts):
                 random_component = random.randrange(16 ** 7)
                 candidate_name = '%stemp_dir_%07X%s' % (self._prefix, random_component, self._suffix)
                 candidate_path = os.path.join(self._base_dir, candidate_name)
-                if not Exists(candidate_path):
+                if candidate_path not in existing_files:
                     self._directory_name = candidate_path
                     CreateDirectory(self._directory_name)
                     break
@@ -1090,7 +1126,6 @@ class CreateTemporaryDirectory(object):
                     'It was not possible to obtain a temporary filename from %s' % self._base_dir)
 
         return self._directory_name
-
 
 
     def __exit__(self, *args):
@@ -1124,10 +1159,13 @@ def DeleteDirectory(directory, skip_on_error=False):
         Another case: Read-only directories return True in os.access test. It seems that read-only
         directories has it own flag (looking at the property windows on Explorer).
         '''
+        if IsLink(path):
+            return
+
         if fn is os.remove and os.access(path, os.W_OK):
             raise
 
-        # Make the file WRITEBLE and executes the original delete funcion (osfunc)
+        # Make the file WRITEABLE and executes the original delete function (osfunc)
         import stat
         os.chmod(path, stat.S_IWRITE)
         fn(path)
@@ -1163,7 +1201,7 @@ def GetMTime(path):
     _AssertIsLocal(path)
 
     if os.path.isdir(path):
-        from _duplicates import FindFiles
+        from ._duplicates import FindFiles
         files = FindFiles(path)
 
         if len(files) > 0:
@@ -1196,6 +1234,133 @@ def ListMappedNetworkDrives():
             drives_list.append((match.group(2), match.group(3), match.group(1) == 'OK'))
     return drives_list
 
+
+
+#===================================================================================================
+# DeleteLink
+#===================================================================================================
+def DeleteLink(path):
+    if sys.platform != 'win32':
+            os.unlink(path)
+    else:
+        import win32file
+        if IsDir(path):
+            win32file.RemoveDirectory(path)
+        else:
+            win32file.DeleteFile(path)
+
+
+
+#===================================================================================================
+# CreateLink
+#===================================================================================================
+def CreateLink(target_path, link_path, override=True):
+    '''
+    Create a symbolic link at `link_path` pointing to `target_path`.
+
+    :param str target_path:
+        Link target
+
+    :param str link_path:
+        Fullpath to link name
+
+    :param bool override:
+        If True and `link_path` already exists as a link, that link is overridden.
+    '''
+    _AssertIsLocal(target_path)
+    _AssertIsLocal(link_path)
+
+    if override and IsLink(link_path):
+        DeleteLink(link_path)
+
+    # Create directories leading up to link
+    dirname = os.path.dirname(link_path)
+    if dirname:
+        CreateDirectory(dirname)
+
+    if sys.platform != 'win32':
+        return os.symlink(target_path, link_path)  # @UndefinedVariable
+
+    else:
+        import win32file
+        try:
+            win32file.CreateSymbolicLink(link_path, target_path, 1)
+        except Exception, e:
+            from ben10.foundation.reraise import Reraise
+            Reraise(e, 'Creating link "%(link_path)s" pointing to "%(target_path)s"' % locals())
+
+
+
+#===================================================================================================
+# IsLink
+#===================================================================================================
+def IsLink(path):
+    '''
+    :param str path:
+        Path being tested
+
+    :returns bool:
+        True if `path` is a link
+    '''
+    _AssertIsLocal(path)
+
+    if sys.platform != 'win32':
+        return os.path.islink(path)
+
+    # Code taken from http://stackoverflow.com/a/7924557/1209622
+    import win32file
+    REPARSE_FOLDER = (win32file.FILE_ATTRIBUTE_DIRECTORY | 1024)
+    file_attrs = win32file.GetFileAttributes(path)
+    if file_attrs < 0:
+        return False
+    return file_attrs & REPARSE_FOLDER == REPARSE_FOLDER
+
+
+
+#===================================================================================================
+# ReadLink
+#===================================================================================================
+def ReadLink(path):
+    '''
+    Read the target of the symbolic link at `path`.
+
+    :param str path:
+        Path to a symbolic link
+
+    :returns str:
+        Target of a symbolic link
+    '''
+    _AssertIsLocal(path)
+
+    if sys.platform != 'win32':
+        return os.readlink(path)  # @UndefinedVariable
+
+    import win32file
+    import winioctlcon
+    handle = win32file.CreateFile(
+        path,  # fileName
+        win32file.GENERIC_READ,  # desiredAccess
+        0,  # shareMode
+        None,  # attributes
+        win32file.OPEN_EXISTING,  # creationDisposition
+        win32file.FILE_FLAG_OPEN_REPARSE_POINT | win32file.FILE_FLAG_BACKUP_SEMANTICS,  # flagsAndAttributes
+        None  # hTemplateFile
+    )
+
+    try:
+        buf = win32file.DeviceIoControl(
+            handle,  # hFile
+            winioctlcon.FSCTL_GET_REPARSE_POINT,  # dwIoControlCode
+            None,  # data
+            1024,  # readSize
+        )
+        buf = buf[20::2].encode('latin1', errors='replace')
+        if '\\??\\' in buf:
+            return StandardizePath(buf.split('\\??\\')[0])
+        else:
+            return StandardizePath(buf[:len(buf) / 2])
+    finally:
+        handle.Close()
 
 
 #===================================================================================================

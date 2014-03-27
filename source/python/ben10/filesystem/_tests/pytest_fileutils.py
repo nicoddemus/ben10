@@ -34,9 +34,8 @@ class Test:
                 return self.original_open(filename, flags)
 
 
-            monkeypatch.setattr(os, 'open', MockOpen)
-
             self.open_file = None
+            monkeypatch.setattr(os, 'open', MockOpen)
             try:
                 # Check text, random
                 ResetFlags()

@@ -1,27 +1,20 @@
-from __future__ import with_statement
+# -*- coding: latin-1 -*-
 from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFile, CopyDirectory,
-    CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateMD5,
-    CreateTemporaryDirectory, Cwd, DeleteDirectory, DeleteFile, DirectoryAlreadyExistsError,
-    DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS,
-    ExtendedPathMask, FileAlreadyExistsError, FileError, FileNotFoundError, FileOnlyActionError,
-    FindFiles, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile, ListFiles,
-    ListMappedNetworkDrives, MD5_SKIP, MatchMasks, MoveDirectory, MoveFile, NormStandardPath,
-    NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile,
-    ServerTimeoutError, StandardizePath, UnknownPlatformError)
-from ben10.filesystem._duplicates import CheckForUpdate
-from ben10.filesystem._filesystem import _GetNativeEolStyle, _HandleContentsEol
-from socket import errno
+    CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateLink, CreateMD5,
+    CreateTemporaryDirectory, Cwd, DeleteDirectory, DeleteFile, DeleteLink,
+    DirectoryAlreadyExistsError, DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE,
+    EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError, FileError, FileNotFoundError,
+    FileOnlyActionError, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile, IsLink,
+    ListFiles, ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile, NormStandardPath,
+    NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile, ReadLink,
+    ServerTimeoutError, StandardizePath)
+import errno
 import logging
 import os
 import pytest
 import subprocess
 import sys
-import time
 import urllib
-
-
-
-pytest_plugins = ["ben10.fixtures"]
 
 
 
@@ -34,10 +27,58 @@ class Test:
         assert set(a) == set(b)
 
 
-    def testUnknownPlatform(self, monkeypatch, embed_data):
+    def testLinkDirectory(self, embed_data):
+        # Missing directories are not links
+        assert not IsLink('missing_dir')
 
-        with pytest.raises(UnknownPlatformError):
-            _GetNativeEolStyle('iOS')
+        # Real directories are not links
+        target = os.path.abspath(embed_data['complex_tree'])
+        assert not IsLink(target)
+
+        # Create a link
+        link_name = embed_data['link_to_complex_tree']
+        CreateLink(target, link_name)
+
+        # Creating it again should simply override
+        CreateLink(target, link_name, override=True)
+
+        # CreateDirectory(os.path.join(link_name, 'dirname/more'))
+
+        # It counts as a dir, and a link
+        assert IsDir(link_name)
+        assert IsLink(link_name)
+
+        # Points to the correct place
+        assert CanonicalPath(ReadLink(link_name)) == CanonicalPath(os.path.abspath(target))
+
+        # File are in there
+        assert ListFiles(link_name) == ListFiles(target)
+
+        # Deleting it should work too
+        DeleteLink(link_name)
+
+        assert IsDir(target)
+        assert not IsDir(link_name)
+        assert not IsLink(link_name)
+
+
+    def testLinkFiles(self, embed_data):
+        target = embed_data['file.txt']
+
+        # Create a link
+        link_name = embed_data['link_to_file.txt']
+        CreateLink(target, link_name)
+        assert IsLink(link_name)
+
+        # Points to the correct place
+        assert CanonicalPath(ReadLink(link_name)) == CanonicalPath(os.path.abspath(target))
+
+        # Deleting it should work too
+        DeleteLink(link_name)
+
+        # Old file still exists
+        assert IsFile(target)
+        assert not IsLink(link_name)
 
 
     def testCwd(self, embed_data):
@@ -73,7 +114,7 @@ class Test:
 
         # Testing with unicode
         # Create non-ascii files in runtime, to make sure git won't complain
-        filename = embed_data['files/source/a\xe7\xe3o.txt'].decode('latin1')
+        filename = embed_data['files/source/áéíõu.txt'].decode('latin1')
         CreateFile(filename, contents='test')
         CreateMD5(filename)
         assert GetFileContents(filename + '.md5') == '098f6bcd4621d373cade4e832627b4f6'
@@ -154,8 +195,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/1', 'data_filesystem__testCopyFilesX/A/1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/2', 'data_filesystem__testCopyFilesX/A/2'),
+                (embed_data['complex_tree/1'], embed_data['A/1']),
+                (embed_data['complex_tree/2'], embed_data['A/2']),
             ]
         )
         CheckFiles(copied_files)
@@ -168,8 +209,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree//subdir_1/subsubdir_1/1.1.1', 'data_filesystem__testCopyFilesX/B/subsubdir_1/1.1.1'),
-                ('data_filesystem__testCopyFilesX/complex_tree//subdir_1/subsubdir_1/1.1.2', 'data_filesystem__testCopyFilesX/B/subsubdir_1/1.1.2')
+                (embed_data['complex_tree//subdir_1/subsubdir_1/1.1.1'], embed_data['B/subsubdir_1/1.1.1']),
+                (embed_data['complex_tree//subdir_1/subsubdir_1/1.1.2'], embed_data['B/subsubdir_1/1.1.2'])
             ]
         )
         CheckFiles(copied_files)
@@ -182,7 +223,7 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/1', 'data_filesystem__testCopyFilesX/shallow/1'),
+                (embed_data['complex_tree/1'], embed_data['shallow/1']),
             ]
         )
         CheckFiles(copied_files)
@@ -195,8 +236,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/1', 'data_filesystem__testCopyFilesX/shallow/1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/2', 'data_filesystem__testCopyFilesX/shallow/2'),
+                (embed_data['complex_tree/1'], embed_data['shallow/1']),
+                (embed_data['complex_tree/2'], embed_data['shallow/2']),
             ]
         )
         CheckFiles(copied_files)
@@ -209,11 +250,11 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/1', 'data_filesystem__testCopyFilesX/all/1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/2', 'data_filesystem__testCopyFilesX/all/2'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.1', 'data_filesystem__testCopyFilesX/all/subdir_1/subsubdir_1/1.1.1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.2', 'data_filesystem__testCopyFilesX/all/subdir_1/subsubdir_1/1.1.2'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_2/2.1', 'data_filesystem__testCopyFilesX/all/subdir_2/2.1')
+                (embed_data['complex_tree/1'], embed_data['all/1']),
+                (embed_data['complex_tree/2'], embed_data['all/2']),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.1'], embed_data['all/subdir_1/subsubdir_1/1.1.1']),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.2'], embed_data['all/subdir_1/subsubdir_1/1.1.2']),
+                (embed_data['complex_tree/subdir_2/2.1'], embed_data['all/subdir_2/2.1'])
             ]
         )
         CheckFiles(copied_files)
@@ -226,8 +267,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.1', 'data_filesystem__testCopyFilesX/all/subdir_1/subsubdir_1/1.1.1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.2', 'data_filesystem__testCopyFilesX/all/subdir_1/subsubdir_1/1.1.2'),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.1'], embed_data['all/subdir_1/subsubdir_1/1.1.1']),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.2'], embed_data['all/subdir_1/subsubdir_1/1.1.2']),
             ]
         )
         CheckFiles(copied_files)
@@ -240,8 +281,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/1', 'data_filesystem__testCopyFilesX/all/1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.1', 'data_filesystem__testCopyFilesX/all/subdir_1/subsubdir_1/1.1.1'),
+                (embed_data['complex_tree/1'], embed_data['all/1']),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.1'], embed_data['all/subdir_1/subsubdir_1/1.1.1']),
             ]
         )
         CheckFiles(copied_files)
@@ -254,8 +295,8 @@ class Test:
         self.assertSetEqual(
             copied_files,
             [
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.1', 'data_filesystem__testCopyFilesX/all/1.1.1'),
-                ('data_filesystem__testCopyFilesX/complex_tree/subdir_1/subsubdir_1/1.1.2', 'data_filesystem__testCopyFilesX/all/1.1.2'),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.1'], embed_data['all/1.1.1']),
+                (embed_data['complex_tree/subdir_1/subsubdir_1/1.1.2'], embed_data['all/1.1.2']),
             ]
         )
         CheckFiles(copied_files)
@@ -288,29 +329,29 @@ class Test:
             CopyFiles(embed_data['source'], 'ERROR://target')
 
 
-    @pytest.mark.skipif("sys.platform == 'win32'")
     def testCopyFileSymlink(self, embed_data):
         # Create a file
-        original = embed_data['original_file.txt']
+        original_filename = 'original_file.txt'
+        original = embed_data[original_filename]
         CreateFile(original, contents='original')
 
         # Create symlink to that file
         symlink = embed_data['symlink.txt']
-        os.symlink(os.path.abspath(original), symlink)
+        CreateLink(original_filename, symlink)  # Use path relative to symlink.txt
 
-        assert os.path.islink(symlink)
+        assert IsLink(symlink)
 
         # Copy link
         copied_symlink = embed_data['copied_symlink.txt']
         CopyFile(symlink, copied_symlink, copy_symlink=True)
 
-        assert os.path.islink(copied_symlink)
+        assert IsLink(copied_symlink)
 
         # Copy real file
         real_file = embed_data['real_file.txt']
         CopyFile(symlink, real_file, copy_symlink=False)
 
-        assert not os.path.islink(real_file)
+        assert not IsLink(real_file)
 
 
     def testOpenFile(self, embed_data, monkeypatch):
@@ -433,7 +474,7 @@ class Test:
         '''
         Creates a dummy file with a non-ascii filename and checks its existance.
         '''
-        target_file = embed_data['a\xe7\xe3o.txt'].decode('latin1')
+        target_file = embed_data['éáóãçí.txt'].decode('latin1')
         CreateFile(target_file, 'contents')
         assert os.path.isfile(target_file.encode(sys.getfilesystemencoding()))
         assert os.path.isfile(target_file)
@@ -471,7 +512,6 @@ class Test:
             else:
                 func(*args, **kwargs)
 
-
         _TestUnicode(None, CheckIsDir, unicode_dirname1)
         _TestUnicode(None, CheckIsFile, unicode_filename1)
         _TestUnicode(UnicodeEncodeError, CopyFiles, unicode_dirname1, unicode_dirname2)
@@ -498,21 +538,21 @@ class Test:
 
     def testUnicodeFileContents(self, embed_data):
         target_file = embed_data['file.txt']
-        unicode_contents = 'unicode a\xe7\xe3o'.decode('latin1')
+        unicode_contents = 'unicode ãéí'.decode('latin1')
 
         # If given unicode contents, must also receive an encoding
         with pytest.raises(ValueError):
             CreateFile(target_file, contents=unicode_contents)
         # If given encoding, must receive unicode contents
         with pytest.raises(ValueError):
-            CreateFile(target_file, contents='string acao', encoding='utf8')
+            CreateFile(target_file, contents='string', encoding='utf8')
 
         CreateFile(target_file, unicode_contents, encoding='utf8')
         assert IsFile(target_file)
 
         # GetFileContents will usually return a byte array
         byte_array = GetFileContents(target_file)
-        assert byte_array == 'unicode a\xc3\xa7\xc3\xa3o'
+        assert byte_array == 'unicode \xc3\xa3\xc3\xa9\xc3\xad'
 
         # When receiving an encoding, it will return a unicode string
         obtained_contents = GetFileContents(target_file, encoding='utf8')
@@ -607,8 +647,7 @@ class Test:
 
         # Cannot rename a directory if the target dir already exists
         some_dir = embed_data['some_directory']
-        result = CreateDirectory(some_dir)
-        assert result == some_dir
+        CreateDirectory(some_dir)
         with pytest.raises(DirectoryAlreadyExistsError):
             MoveDirectory(some_dir, target)
 
@@ -620,7 +659,7 @@ class Test:
         assert IsFile(embed_data['files/doesnt_exist']) == False
 
         # Create non-ascii files in runtime, to make sure git won't complain
-        filename = embed_data['files/source/a\xe7\xe3o.txt'].decode('latin1')
+        filename = embed_data['files/source/áéíõu.txt'].decode('latin1')
         CreateFile(filename, contents='test')
         assert IsFile(filename) == True
 
@@ -711,11 +750,13 @@ class Test:
         assert os.path.isdir(embed_data['dir1']) == False
 
         # Dir created
-        CreateDirectory(embed_data['dir1'])
+        result = CreateDirectory(embed_data['dir1'])
+        assert result == embed_data['dir1']
         assert os.path.isdir(embed_data['dir1']) == True
 
         # Creating it again will not raise an error
-        CreateDirectory(embed_data['dir1'])
+        result = CreateDirectory(embed_data['dir1'])
+        assert result == embed_data['dir1']
 
         # Creating long sequence
         CreateDirectory(embed_data['dir1/dir2/dir3'])
@@ -726,6 +767,7 @@ class Test:
 
     def testCreateTempDirectory(self, embed_data, monkeypatch):
         from ben10.filesystem import _filesystem
+        import random
 
         with CreateTemporaryDirectory(prefix='my_prefix', suffix='my_suffix') as first_temp_dir:
             assert isinstance(first_temp_dir, str)
@@ -766,10 +808,16 @@ class Test:
             # requesting another temp dir with the same parameters but executing just one attempt
             with pytest.raises(RuntimeError):
 
-                # Installing a mock just to simulate the event that our random generated filename
-                # already exists.
-                monkeypatch.setattr(_filesystem, 'Exists', lambda *args:True)
-                with CreateTemporaryDirectory(prefix='my_prefix', suffix='my_suffix', base_dir=base_dir, maximum_attempts=1) as _any_name:
+                # Eliminating the random component in the generation of the candidate filename
+                # so that we have a better controlled environment in the test
+                target_filename = os.path.join(embed_data.GetDataDirectory(), "temp_dir_0000004")
+
+                monkeypatch.setattr(random, 'randrange', lambda *args, **kwargs:  4)
+                monkeypatch.setattr(_filesystem, 'ListFiles', lambda *args, **kwargs:  [target_filename])
+
+                # If the generated name already exists, we will attempt another one. If the maximum
+                # number of attempts is done (1 in this case) an error is expected to raise
+                with CreateTemporaryDirectory(prefix='', suffix='', base_dir=base_dir, maximum_attempts=1) as _any_name:
                     pass
 
 
@@ -778,9 +826,9 @@ class Test:
         Creates a directory with a non-ascii name checks its existance.
         '''
         # Creating dir with slightly more complex name
-        assert os.path.isdir(embed_data['a\xe7\xe3o'].decode('latin1').encode(sys.getfilesystemencoding())) == False
-        CreateDirectory(embed_data['a\xe7\xe3o'].decode('latin1'))
-        assert os.path.isdir(embed_data['a\xe7\xe3o'].decode('latin1').encode(sys.getfilesystemencoding())) == True
+        assert os.path.isdir(embed_data['póço'].decode('latin1').encode(sys.getfilesystemencoding())) == False
+        CreateDirectory(embed_data['póço'].decode('latin1'))
+        assert os.path.isdir(embed_data['póço'].decode('latin1').encode(sys.getfilesystemencoding())) == True
 
 
     def testListFiles(self, embed_data):
@@ -825,12 +873,13 @@ class Test:
         with pytest.raises(NotImplementedProtocol):
             CopyFile('ERROR://source', 'ERROR://target')
 
+
     def testCopyFileNonAscii(self, embed_data):
         '''
             Creates files with non-ascii filenames and copies them.
         '''
-        source_file = embed_data['alpha-a\xe7\xe3o.txt']
-        target_file = embed_data['alpha-a\xe7\xe3o_copy.txt']
+        source_file = embed_data['álça.txt']
+        target_file = embed_data['álça_copy.txt']
 
         # Sanity check
         assert not os.path.isfile(target_file.decode('latin1').encode(sys.getfilesystemencoding()))
@@ -841,7 +890,7 @@ class Test:
         embed_data.AssertEqualFiles(source_file, target_file)
 
         # Copy again... overrides with no error.
-        source_file = embed_data['bravo-a\xe7\xe3o.txt']
+        source_file = embed_data['brãvó.txt']
         CreateFile(source_file, 'fake_content_2')
         CopyFile(source_file, target_file)
         embed_data.AssertEqualFiles(source_file, target_file)
@@ -856,6 +905,7 @@ class Test:
         with pytest.raises(NotImplementedProtocol):
             CopyFile('ERROR://source', 'ERROR://target')
 
+
     def testIsDir(self, embed_data):
         assert IsDir('.')
         assert not IsDir(embed_data['missing_dir'])
@@ -864,6 +914,7 @@ class Test:
     def testFTPIsDir(self, monkeypatch, embed_data, ftpserver):
         assert IsDir(ftpserver.GetFTPUrl(embed_data.GetDataDirectory()))
         assert not IsDir(ftpserver.GetFTPUrl(embed_data['missing_dir']))
+        assert not IsDir(ftpserver.GetFTPUrl(embed_data['missing_dir/missing_sub_dir']))
 
 
     def testFTPCopyFiles(self, monkeypatch, embed_data, ftpserver):
@@ -954,6 +1005,7 @@ class Test:
         assert IsFile(ftpserver.GetFTPUrl(embed_data['file.txt']))
         assert IsFile(ftpserver.GetFTPUrl(embed_data['files/source/alpha.txt']))
         assert not IsFile(ftpserver.GetFTPUrl(embed_data['doesnt_exist']))
+        assert not IsFile(ftpserver.GetFTPUrl(embed_data['doesnt_exist/doesnt_exist']))
         assert not IsFile(ftpserver.GetFTPUrl(embed_data['files/doesnt_exist']))
 
 
@@ -1082,9 +1134,6 @@ class Test:
             # Some linux distros cannot differentiate mtimes within a 1 second resolution
             sleep_time = 1
 
-        # Make sure our data dir doesn't have leftovers from previous tests
-        assert not os.path.isdir(embed_data.GetDataDirectory(create_dir=False))
-
         # GetMTime works for files and directories
         # For files, it is basically the same as os.path.getmtime
         some_file = embed_data['file']
@@ -1123,6 +1172,8 @@ class Test:
 
 
     def testHandleContents(self):
+        from ben10.filesystem._filesystem import _HandleContentsEol
+
         HandleContents = _HandleContentsEol
         assert 'a\r\nb' == HandleContents('a\nb', EOL_STYLE_WINDOWS)
         assert 'a\r\nb' == HandleContents('a\r\nb', EOL_STYLE_WINDOWS)
@@ -1170,317 +1221,6 @@ class Test:
         assert mapped_drives[2][0] == 'P:'
 
 
-    def testMatchMasks(self):
-        assert MatchMasks('alpha.txt', '*.txt')
-        assert MatchMasks('alpha.txt', ('*.txt',))
-        assert MatchMasks('alpha.txt', ['*.txt'])
-
-
-    def testFindFiles(self, embed_data):
-        '''
-        Test folder organization:
-            testFindFiles/  --> FILES: testRoot.bmp, mytestRoot.txt
-              A/            --> FILES: testA.bmp, mytestA.txt
-                B/          --> FILES: testB.bmp, mytestB.txt
-                C/          --> FILES: testC.bmp, mytestC.txt
-        '''
-
-        def PATH(p_path):
-            return os.path.normpath(p_path)
-
-        def Compare(p_obtained, p_expected):
-            obtained = set(map(PATH, p_obtained))
-            expected = set(map(PATH, p_expected))
-            assert obtained == expected
-
-        def TestFilename(*args):
-            return embed_data.GetDataFilename('testFindFiles', *args)
-
-        CreateDirectory(TestFilename('A/B'))
-        CreateDirectory(TestFilename('A/C'))
-        CreateFile(TestFilename('testRoot.bmp'), '')
-        CreateFile(TestFilename('mytestRoot.txt'), '')
-        CreateFile(TestFilename('A/testA.bmp'), '')
-        CreateFile(TestFilename('A/mytestA.txt'), '')
-        CreateFile(TestFilename('A/B/testB.bmp'), '')
-        CreateFile(TestFilename('A/B/mytestB.txt'), '')
-        CreateFile(TestFilename('A/C/testC.bmp'), '')
-        CreateFile(TestFilename('A/C/mytestC.txt'), '')
-
-        # no recursion, must return only .bmp files
-        in_filter = ['*.bmp']
-        out_filter = []
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
-        Compare(found_files, [TestFilename('testRoot.bmp')])
-
-        # no recursion, must return all files
-        in_filter = ['*']
-        out_filter = []
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
-        assert_found_files = ['A', 'mytestRoot.txt', 'testRoot.bmp', ]
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # no recursion, return all files, except *.bmp
-        in_filter = ['*']
-        out_filter = ['*.bmp', ]
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter, False))
-        assert_found_files = ['A', 'mytestRoot.txt']
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion, to get just directories
-        in_filter = ['*']
-        out_filter = ['*.bmp', '*.txt']
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
-        assert_found_files = ['A', 'A/B', 'A/C', ]
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion with no out_filters, must return all files
-        in_filter = ['*']
-        out_filter = []
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
-        assert_found_files = [
-            'A',
-            'mytestRoot.txt',
-            'testRoot.bmp',
-            'A/B',
-            'A/C',
-            'A/mytestA.txt',
-            'A/testA.bmp',
-            'A/B/mytestB.txt',
-            'A/B/testB.bmp',
-            'A/C/mytestC.txt',
-            'A/C/testC.bmp',
-        ]
-        assert_found_files = map(PATH, assert_found_files)
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion with no out_filters, must return all files
-        # include_root_dir is False, it will be omitted from the found files
-        in_filter = ['*']
-        out_filter = []
-        found_files = list(FindFiles(TestFilename(), include_root_dir=False))
-        assert_found_files = [
-            'A',
-            'mytestRoot.txt',
-            'testRoot.bmp',
-            'A/B',
-            'A/C',
-            'A/mytestA.txt',
-            'A/testA.bmp',
-            'A/B/mytestB.txt',
-            'A/B/testB.bmp',
-            'A/C/mytestC.txt',
-            'A/C/testC.bmp',
-        ]
-        assert_found_files = map(PATH, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion must return just .txt files
-        in_filter = ['*.txt']
-        out_filter = []
-        found_files = list(FindFiles(TestFilename('A'), in_filter, out_filter))
-        assert_found_files = [
-            'A/mytestA.txt',
-            'A/B/mytestB.txt',
-            'A/C/mytestC.txt',
-        ]
-        assert_found_files = map(PATH, assert_found_files)
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion must return just .txt files
-        in_filter = ['*.txt']
-        out_filter = ['*A*']
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
-        assert_found_files = ['mytestRoot.txt', ]
-        assert_found_files = map(PATH, assert_found_files)
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-        # recursion must ignore everyting below a directory that match the out_filter
-        in_filter = ['*']
-        out_filter = ['B', 'C']
-        found_files = list(FindFiles(TestFilename(), in_filter, out_filter))
-        assert_found_files = [
-            'A',
-            'A/mytestA.txt',
-            'A/testA.bmp',
-            'mytestRoot.txt',
-            'testRoot.bmp',
-        ]
-        assert_found_files = map(TestFilename, assert_found_files)
-        Compare(found_files, assert_found_files)
-
-
-    def testFindFilesWithStandardPath(self, embed_data):
-        CreateDirectory(embed_data['A/B'])
-        CreateDirectory(embed_data['A/C'])
-        CreateFile(embed_data['A/B/b.file'], '')
-        CreateFile(embed_data['A/C/c.file'], '')
-
-        # Check all files
-        in_filter = ['*.*']
-        out_filter = []
-        found_files = list(FindFiles(
-            embed_data['A'],
-            in_filter,
-            out_filter,
-            recursive=True,
-            standard_paths=True
-        ))
-
-        # Since we use standard paths, the result should use unix slashes (in theory this test can
-        # only fail in windows)
-        assert set(found_files) == set([
-            'data_filesystem__testFindFilesWithStandardPath/A/B/b.file',
-            'data_filesystem__testFindFilesWithStandardPath/A/C/c.file'
-        ])
-
-
-    def testCheckForUpdate(self, embed_data):
-        def touch(filename):
-            time.sleep(1.1)
-            f = file(filename, 'w')
-            f.write('xx')
-            f.close()
-
-        embed_data.CreateDataDir()
-        input_filename = embed_data.GetDataFilename('input.txt')
-        output_filename = embed_data.GetDataFilename('output.txt')
-        CreateFile(input_filename, '')
-
-        assert CheckForUpdate(input_filename, output_filename) == True
-
-        touch(output_filename)
-        assert CheckForUpdate(input_filename, output_filename) == False
-
-        touch(input_filename)
-        assert CheckForUpdate(input_filename, output_filename) == True
-
-        touch(output_filename)
-        assert CheckForUpdate(input_filename, output_filename) == False
-
-
-    def testExtendedPathMask(self):
-        assert ExtendedPathMask.Split('+Sources/*.py;*.pyd') \
-            == (True, False, 'Sources', ['*.py', '*.pyd'], [])
-
-
-
-#===================================================================================================
-# PhonyFtpServer
-#===================================================================================================
-class _PhonyFtpServer(object):
-    '''
-    Creates a phony ftp-server in the given port serving the given directory. Register
-    two users:
-        - anonymous
-        - dev (password: 123)
-
-    Both users map to the given directory.
-    '''
-
-    def __init__(self, directory):
-        self._directory = directory
-
-
-    def Start(self, port=0):
-        '''
-        :param int port:
-            The port to serve.
-            Default to zero with selects an available port (return value)
-
-        :rtype: int
-        :returns:
-            The port the ftp-server is serving
-        '''
-        from pyftpdlib import ftpserver
-        from threading import Thread
-
-        class MyFtpServer(ftpserver.FTPServer):
-            '''
-            Add the feature to stop the server-forever graceously.
-            '''
-
-            def __init__(self, address, handler):
-                self.__serve_forever = False
-                ftpserver.FTPServer.__init__(self, address, handler)
-
-            def ServeForever(self, timeout=1.0, use_poll=False, count=None):
-                """A wrap around asyncore.loop(); starts the asyncore polling
-                loop including running the scheduler.
-                The arguments are the same expected by original asyncore.loop()
-                function:
-
-                 - (float) timeout: the timeout passed to select() or poll()
-                   system calls expressed in seconds (default 1.0).
-
-                 - (bool) use_poll: when True use poll() instead of select()
-                   (default False).
-
-                 - (int) count: how many times the polling loop gets called
-                   before returning.  If None loops forever (default None).
-                """
-                from pyftpdlib.ftpserver import _scheduler, _tasks, log
-                import asyncore
-
-                if use_poll and hasattr(asyncore.select, 'poll'):
-                    poll_fun = asyncore.poll2
-                else:
-                    poll_fun = asyncore.poll
-
-                self.__serve_forever = True
-                try:
-                    if count is None:
-                        log("Serving FTP on %s:%s" % self.socket.getsockname()[:2])
-                        try:
-                            while self.__serve_forever and (asyncore.socket_map or _tasks):
-                                poll_fun(timeout)
-                                _scheduler()
-                        except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
-                            log("Shutting down FTP server.")
-                            self.close_all()
-                    else:
-                        while self.__serve_forever and (asyncore.socket_map or _tasks) and count > 0:
-                            if asyncore.socket_map:
-                                poll_fun(timeout)
-                            if _tasks:
-                                _scheduler()
-                            count = count - 1
-                finally:
-                    self.__serve_forever = False
-
-            def StopServeForever(self):
-                self.__serve_forever = False
-
-
-        authorizer = ftpserver.DummyAuthorizer()
-        authorizer.add_user("dev", "123", self._directory, perm="elradfmw")
-        authorizer.add_anonymous(self._directory)
-
-        handler = ftpserver.FTPHandler
-        handler.authorizer = authorizer
-
-        address = ("127.0.0.1", port)
-        self.ftpd = MyFtpServer(address, handler)
-        if port == 0:
-            _address, port = self.ftpd.getsockname()
-
-        self.thread = Thread(target=self.ftpd.ServeForever)
-        self.thread.start()
-
-        return port
-
-
-    def Stop(self):
-        self.ftpd.StopServeForever()
-        self.thread.join()
-
-
 
 #===================================================================================================
 # Fixtures
@@ -1513,13 +1253,6 @@ def ftpserver(monkeypatch, embed_data, request):
         def Serve(self, directory):
             '''
             Starts a phony ftp-server for testing purpose.
-
-            Usage:
-                self._StartFtpServer()
-                try:
-                    # ...
-                finally:
-                    self._StopFtpServer()
 
             :param str directory:
                 The directory to serve in the ftp-server.
@@ -1559,3 +1292,103 @@ def ftpserver(monkeypatch, embed_data, request):
     r_ftpserver.Serve('.')
     request.addfinalizer(r_ftpserver.StopServing)
     return r_ftpserver
+
+
+class _PhonyFtpServer(object):
+    '''
+    Creates a phony ftp-server in the given port serving the given directory. Register
+    two users:
+        - anonymous
+        - dev (password: 123)
+
+    Both users map to the given directory.
+    '''
+
+    def __init__(self, directory):
+        self._directory = directory
+
+
+    def Start(self, port=0):
+        '''
+        :param int port:
+            The port to serve.
+            Default to zero with selects an available port (return value)
+
+        :rtype: int
+        :returns:
+            The port the ftp-server is serving
+        '''
+        from pyftpdlib import ftpserver
+        from threading import Thread
+
+
+        class MyFTPServer(ftpserver.FTPServer):
+
+            def ServeForever(self, timeout=1.0, use_poll=False, count=None):
+                """A wrap around asyncore.loop(); starts the asyncore polling
+                loop including running the scheduler.
+                The arguments are the same expected by original asyncore.loop()
+                function:
+
+                 - (float) timeout: the timeout passed to select() or poll()
+                   system calls expressed in seconds (default 1.0).
+
+                 - (bool) use_poll: when True use poll() instead of select()
+                   (default False).
+
+                 - (int) count: how many times the polling loop gets called
+                   before returning.  If None loops forever (default None).
+                """
+                import asyncore
+
+                if use_poll and hasattr(asyncore.select, 'poll'):
+                    poll_fun = asyncore.poll2
+                else:
+                    poll_fun = asyncore.poll
+
+                self.__running = True
+                try:
+                    if count is None:
+                        ftpserver.log("Serving FTP on %s:%s" % self.socket.getsockname()[:2])
+                        try:
+                            while self.__running and (asyncore.socket_map or ftpserver._tasks):
+                                poll_fun(timeout)
+                                ftpserver._scheduler()
+                        except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
+                            log("Shutting down FTP server.")
+                            self.close_all()
+                    else:
+                        while self.__running and (asyncore.socket_map or ftpserver._tasks) and count > 0:
+                            if asyncore.socket_map:
+                                poll_fun(timeout)
+                            if ftpserver._tasks:
+                                ftpserver._scheduler()
+                            count = count - 1
+                finally:
+                    self.__running = False
+
+            def StopServing(self):
+                self.__running = False
+
+
+        authorizer = ftpserver.DummyAuthorizer()
+        authorizer.add_user("dev", "123", self._directory, perm="elradfmw")
+        authorizer.add_anonymous(self._directory)
+
+        handler = ftpserver.FTPHandler
+        handler.authorizer = authorizer
+
+        address = ("127.0.0.1", port)
+        self.ftpd = MyFTPServer(address, handler)
+        if port == 0:
+            _address, port = self.ftpd.getsockname()
+
+        self.thread = Thread(target=self.ftpd.ServeForever)
+        self.thread.start()
+
+        return port
+
+
+    def Stop(self):
+        self.ftpd.StopServing()
+        self.thread.join()

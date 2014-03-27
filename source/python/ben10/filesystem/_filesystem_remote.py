@@ -1,7 +1,4 @@
-from __future__ import with_statement
-from ftputil.error import FTPOSError
-from ftputil.error import PermanentError  # @UnresolvedImport @UnusedImport @Reimport
-from ftputil.error import FTPIOError  # @UnusedImport
+from ftputil.error import FTPIOError, FTPOSError, PermanentError
 
 
 
@@ -284,8 +281,8 @@ def FTPCreateFile(url, contents):
     :param text contents:
         The file contents.
     '''
-    with FTPHost(url) as host:
-        with host.open(url.path, 'w') as oss:
+    with FTPHost(url) as ftp_host:
+        with ftp_host.open(url.path, 'w') as oss:
             oss.write(contents.decode('latin1'))
 
 
@@ -303,7 +300,14 @@ def FTPIsFile(url):
         True if file exists.
     '''
     with FTPHost(url) as ftp_host:
-        return ftp_host.path.isfile(url.path)
+        try:
+            return ftp_host.path.isfile(url.path)
+        except PermanentError, e:
+            if e.errno == 550:
+                # "No such file or directory"
+                return False
+            else:
+                raise
 
 
 
@@ -357,7 +361,14 @@ def FTPIsDir(url):
         True if url is an existing dir
     '''
     with FTPHost(url) as ftp_host:
-        return ftp_host.path.isdir(url.path)
+        try:
+            return ftp_host.path.isdir(url.path)
+        except PermanentError, e:
+            if e.errno == 550:
+                # "No such file or directory"
+                return False
+            else:
+                raise
 
 
 
