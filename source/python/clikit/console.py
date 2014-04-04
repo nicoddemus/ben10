@@ -87,6 +87,11 @@ class Console(object):
         self.__stderr = stdout
         self.__stdin = stdin
         self.__stdout = stdout
+        if colorama:
+            try:
+                import colorama
+            except ImportError:
+                colorama = False
         self.colorama = colorama
 
         self._verbosity = None
