@@ -211,6 +211,7 @@ class App(object):
     def __init__(
             self,
             name,
+            description='',
             color=True,
             colorama=True,
             conf_defaults=None,
@@ -220,6 +221,7 @@ class App(object):
         from .console import BufferedConsole, Console
 
         self.__name = name
+        self.description = description
         self.__commands = []
         self.__custom_fixtures = {}
 
@@ -592,30 +594,15 @@ class App(object):
         from ben10.foundation.pushpop import PushPopAttr
         import shlex
 
-        shell = App('shell')
-
-        class Sheel(object):
-
-            @shell
-            def Dir(self, console_, path='.'):
-                for i in os.listdir(path):
-                    console_.Print(i)
-
-            @shell
-            def CreateFile(self, console_, filename, content):
-                CreateFile(filename, content)
-
-        apps = {
-            self.__name : self,
-            'shell' : shell,
-        }
-        apps.update(extra_apps)
-
         class UnknownApp(RuntimeError):
 
             def __init__(self, app, apps):
                 RuntimeError.__init__(self, 'Unknown app "%s". Valid apps are: %s' % (app, ', '.join(apps)))
 
+        apps = {
+            self.__name : self,
+        }
+        apps.update(extra_apps)
 
         with PushPopAttr(self, 'console', BufferedConsole()):
             cmd = shlex.split(cmd)
