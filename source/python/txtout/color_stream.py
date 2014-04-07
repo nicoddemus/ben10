@@ -262,6 +262,10 @@ class ColorStream(object):
         self._stream.writeln(p_contents)
 
 
+    def flush(self):
+        self._stream.flush()
+
+
     def SetColor(self, p_foreground, p_background=''):
         self.__console.SetColor(p_foreground, p_background)
 

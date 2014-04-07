@@ -180,56 +180,56 @@ class AbstractTextOutput(object):
         raise NotImplementedError()
 
 
-# TODO: Remove this code
-# #===================================================================================================
-# # HtmlTextOutput
-# #===================================================================================================
-# class HtmlTextOutput(AbstractTextOutput):
-#
-#
-#     # Hi-level writing methods ---------------------------------------------------------------------
-#
-#     def LINE(self, p_char, **kargs):
-#         self.write('---')
-#
-#
-#     def P(self, *args, **kargs):
-#         self.write('<P>' + ' '.join(args) + '</P>\n')
-#
-#
-#     def I(self, *args, **kargs):
-#         self.write('<I>' + ' '.join(args) + '</I>\n')
-#
-#
-#     def DT(self, *args, **kargs):
-#         self.write('<DT>' + ' '.join(args) + '</DT>\n')
-#
-#
-#     def DD(self, p_caption, p_text, **kargs):
-#         self.DT(p_caption)
-#         self.write('<DD>' + p_text + '</DD>\n')
-#
-#
-#     def PROCESSING(self, state, text=None, **kargs):
-#         self.write(state)
-#         if text is not None:
-#             self.write(text)
-#
-#
-#     def ERROR(self, p_text, **kargs):
-#         return
-#
-#
-#     def HEADER(self, *args, **kargs):
-#         return
-#
-#
-#     def EXCEPTION(self, **kargs):
-#         return
-#
-#
-#     def TABLE(self, **kwargs):
-#         return
+
+#===================================================================================================
+# HtmlTextOutput
+#===================================================================================================
+class HtmlTextOutput(AbstractTextOutput):
+
+
+    # Hi-level writing methods ---------------------------------------------------------------------
+
+    def LINE(self, p_char, **kargs):
+        self.write('---')
+
+
+    def P(self, *args, **kargs):
+        self.write('<P>' + ' '.join(args) + '</P>\n')
+
+
+    def I(self, *args, **kargs):
+        self.write('<I>' + ' '.join(args) + '</I>\n')
+
+
+    def DT(self, *args, **kargs):
+        self.write('<DT>' + ' '.join(args) + '</DT>\n')
+
+
+    def DD(self, p_caption, p_text, **kargs):
+        self.DT(p_caption)
+        self.write('<DD>' + p_text + '</DD>\n')
+
+
+    def PROCESSING(self, state, text=None, **kargs):
+        self.write(state)
+        if text is not None:
+            self.write(text)
+
+
+    def ERROR(self, p_text, **kargs):
+        return
+
+
+    def HEADER(self, *args, **kargs):
+        return
+
+
+    def EXCEPTION(self, **kargs):
+        return
+
+
+    def TABLE(self, **kwargs):
+        return
 
 
 #===================================================================================================
@@ -238,11 +238,23 @@ class AbstractTextOutput(object):
 class TextOutput(AbstractTextOutput):
     '''
     Text output formatter.
+
+    :cvar bool WRAP_LINES:
+        If enabled, this class will use `c_page_width` to determine the size of lines printed.
+        This determines how many chars are printed in `self.LINE`, and at what length text will be
+        wrapped
+            .. seealso:: textwrap.wrap
+
+        If disabled, text lines will have no limit (meaning that even very long lines of text will
+        be printed in a single line in a console), and will also cap `self.LINE` characters to 80
+        (useful for testing, when we don't want output length to vary)
     '''
+    DEFAULT_PAGE_WIDTH = 80
+    WRAP_LINES = True
 
     c_indent_len = 4
     c_indent_str = ' ' * c_indent_len
-    c_page_width = int(os.environ.get('ESSS_WIDTH', 80))
+    c_page_width = int(os.environ.get('ESSS_WIDTH', DEFAULT_PAGE_WIDTH))
 
 
     def __init__(self, stream=None, verbose_level=1):
@@ -385,7 +397,11 @@ class TextOutput(AbstractTextOutput):
         '''
         import textwrap
 
-        if page_width is None:
+        if not self.WRAP_LINES:
+            # When fixed width is disabled, pass a large size to textwrap, to ignore wrapping
+            # (we still use it to handle indents)
+            page_width = sys.maxint
+        elif page_width is None:
             page_width = self.c_page_width
 
         result = []
@@ -450,8 +466,7 @@ class TextOutput(AbstractTextOutput):
         return p_kargs.get(p_key, None)
 
 
-    # Hi-level writing methods ---------------------------------------------------------------------
-
+    # High-level writing methods -------------------------------------------------------------------
     def LINE(self, p_char, **kargs):
         '''
         Draw a line, using the given character, obeserving indentation and page width.
@@ -466,8 +481,15 @@ class TextOutput(AbstractTextOutput):
             return
 
         indent = self._HandleIndent(kargs)[0]
-        size = self.c_page_width - len(indent)
+
+        if self.WRAP_LINES:
+            size = self.c_page_width - len(indent)
+        else:
+            size = self.DEFAULT_PAGE_WIDTH
+
+        self._HandleTopMargin(kargs)
         self.ColorWrite(kargs.get('color'), '%s%s\n' % (indent, p_char * size))
+        self._HandleBottomMargin(kargs)
 
 
     def P(self, *args, **kargs):
@@ -803,38 +825,37 @@ class TextOutput(AbstractTextOutput):
 
 
 
-# TODO: Remove since is not used by Aasimar.
-# #===================================================================================================
-# # TextOutputWrapper
-# #===================================================================================================
-# class TextOutputWrapper(object):
-#
-#     def __init__(self, text_output, keywords):
-#         self.text_output = text_output
-#         self.keywords = keywords
-#
-#
-#     def Indent(self, *args, **kargs):
-#         kargs.setdefault('keywords', self.keywords)
-#         return self.text_output.Indent(*args, **kargs)
-#
-#
-#     def Dedent(self, *args, **kargs):
-#         kargs.setdefault('keywords', self.keywords)
-#         return self.text_output.Dedent(*args, **kargs)
-#
-#
-#     def I(self, *args, **kargs):
-#         kargs.setdefault('keywords', self.keywords)
-#         id_tag = '[%s]' % ','.join(self.keywords)
-#         args = list(args)
-#         args.append(id_tag)
-#         return self.text_output.I(*args, **kargs)
-#
-#
-#     def P(self, *args, **kargs):
-#         kargs.setdefault('keywords', self.keywords)
-#         args = list(args)
-#         args.append('  [%s]' % ','.join(self.keywords))
-#         return self.text_output.P(*args, **kargs)
+#===================================================================================================
+# TextOutputWrapper
+#===================================================================================================
+class TextOutputWrapper(object):
+
+    def __init__(self, text_output, keywords):
+        self.text_output = text_output
+        self.keywords = keywords
+
+
+    def Indent(self, *args, **kargs):
+        kargs.setdefault('keywords', self.keywords)
+        return self.text_output.Indent(*args, **kargs)
+
+
+    def Dedent(self, *args, **kargs):
+        kargs.setdefault('keywords', self.keywords)
+        return self.text_output.Dedent(*args, **kargs)
+
+
+    def I(self, *args, **kargs):
+        kargs.setdefault('keywords', self.keywords)
+        id_tag = '[%s]' % ','.join(self.keywords)
+        args = list(args)
+        args.append(id_tag)
+        return self.text_output.I(*args, **kargs)
+
+
+    def P(self, *args, **kargs):
+        kargs.setdefault('keywords', self.keywords)
+        args = list(args)
+        args.append('  [%s]' % ','.join(self.keywords))
+        return self.text_output.P(*args, **kargs)
 

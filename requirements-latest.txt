@@ -1,0 +1,12 @@
+colorama
+ftputil
+path.py
+pyftpdlib
+pytest
+pytest-cov
+pytest-localserver
+pytest-timeout
+pytest-xdist
+rarfile
+wheel
+pywin32
