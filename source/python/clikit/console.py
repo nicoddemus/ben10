@@ -74,7 +74,7 @@ class Console(object):
     to appropriate calls using @colorama@ library.
     """
 
-    def __init__(self, verbosity=1, color=False, colorama=True, stdout=sys.stdout, stdin=sys.stdin):
+    def __init__(self, verbosity=1, color=False, colorama=None, stdout=sys.stdout, stdin=sys.stdin):
         """
         :param bool|None color:
             Define whether to generate colored output or not.
@@ -82,17 +82,26 @@ class Console(object):
 
         :param bool colorama:
             Enables/disbales the use of colorama.
+                None: Tries to use it if available.
+                True: Tries to use and fails if not available
+                False: Do not use it.
             This is necessary because colorama is incompatible with pytest.
         """
         self.__stderr = stdout
         self.__stdin = stdin
         self.__stdout = stdout
-        if colorama:
+        if colorama is True:
+            import colorama
+            self.colorama = True
+        elif colorama is None:
             try:
                 import colorama
             except ImportError:
-                colorama = False
-        self.colorama = colorama
+                self.colorama = False
+            else:
+                self.colorama = True
+        else:
+            self.colorama = False
 
         self._verbosity = None
         self._SetVerbosity(verbosity)

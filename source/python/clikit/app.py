@@ -213,7 +213,7 @@ class App(object):
             name,
             description='',
             color=True,
-            colorama=True,
+            colorama=None,
             conf_defaults=None,
             conf_filename=None,
             buffered_console=False,
