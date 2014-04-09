@@ -566,6 +566,16 @@ class App(object):
         """
         Executes a test script, containing command calls (prefixed by ">") and expected results.
 
+        Example:
+            app = App('ii')
+            app = TestScript(Dedent(
+                '''
+                > ii list
+                - alpha
+                - bravo
+                '''
+            )
+
         :param str string:
             A multi-line string with command calls and expected results.
         """
@@ -589,7 +599,26 @@ class App(object):
             Execute(cmd, output)
 
 
-    def TestCall(self, cmd, extra_apps={}):
+    def TestCall(self, cmd_line, extra_apps={}):
+        '''
+        Executes the given command line for test purposes.
+
+        Example:
+            app = App('ii')
+            retcode, output = app.TestCall('ii list')
+
+        :param str cmd_line:
+            A command line to execute.
+            The first parameter must be the app name as declared in this App instance constructor.
+
+        :param dict(str : App):
+            A list of extra-apps available for execution.
+            By default only this App instance is available for executing in the command line. With
+            this parameter one can add others utilitarian apps for testing.
+
+        :return tuple(int, str):
+            Returns the command return code and output.
+        '''
         from .console import BufferedConsole
         from ben10.foundation.pushpop import PushPopAttr
         import shlex
@@ -605,12 +634,11 @@ class App(object):
         apps.update(extra_apps)
 
         with PushPopAttr(self, 'console', BufferedConsole()):
-            cmd = shlex.split(cmd)
-            app_name, cmd = cmd[0], cmd[1:]
+            cmd_line = shlex.split(cmd_line)
+            app_name, cmd_line = cmd_line[0], cmd_line[1:]
             app = apps.get(app_name)
             if app is None:
                 raise UnknownApp(app_name, apps.keys())
 
-            retcode = app.Main(cmd)
-            assert retcode == App.RETCODE_OK
+            retcode = app.Main(cmd_line)
             return retcode, self.console.GetOutput()
