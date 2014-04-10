@@ -8,6 +8,7 @@ from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFi
     ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile, NormStandardPath, NormalizePath,
     NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile, ReadLink,
     ServerTimeoutError, StandardizePath)
+from ben10.filesystem._filesystem import CreateTemporaryFile
 import errno
 import logging
 import os
@@ -23,8 +24,12 @@ import urllib
 #===================================================================================================
 class Test:
 
-    def assertSetEqual(self, a, b):
-        assert set(a) == set(b)
+    def testCreateTemporaryFile(self):
+        with CreateTemporaryFile(contents='something') as filename:
+            assert IsFile(filename)
+            assert GetFileContents(filename) == 'something'
+
+        assert not IsFile(filename)
 
 
     def testLinkDirectory(self, embed_data):
@@ -489,9 +494,6 @@ class Test:
         CreateFile(filename1, 'action in portuguese')
         unicode_filename1 = ftpserver.GetFTPUrl(filename1).decode('latin1')
 
-        #filename2 = embed_data['file.txt']
-        #unicode_filename2 = ftpserver.GetFTPUrl(filename2).decode('latin1')
-
         dirname1 = embed_data['a\xe7\xe3o_dir']
         CreateDirectory(dirname1)
         unicode_dirname1 = ftpserver.GetFTPUrl(dirname1).decode('latin1')
@@ -507,8 +509,8 @@ class Test:
             if exception:
                 with pytest.raises(exception) as e:
                     func(*args, **kwargs)
-                    if exception == UnicodeEncodeError:
-                        assert "No support for non-ascii filenames in FTP" in str(e.value)
+                if exception == UnicodeEncodeError:
+                    assert "No support for non-ascii filenames in FTP" in str(e.value)
             else:
                 func(*args, **kwargs)
 
@@ -1219,6 +1221,10 @@ class Test:
         assert mapped_drives[1][0] == 'O:'
         assert mapped_drives[1][2] == False
         assert mapped_drives[2][0] == 'P:'
+
+
+    def assertSetEqual(self, a, b):
+        assert set(a) == set(b)
 
 
 

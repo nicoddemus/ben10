@@ -120,7 +120,7 @@ def FTPUploadFileToUrl(source_filename, target_url):
         A parsed url as returned by urlparse.urlparse
     '''
     with FTPHost(target_url) as ftp_host:
-        ftp_host.upload(source_filename, target_url.path, 'b')
+        ftp_host.upload(source_filename, target_url.path)
 
 
 
@@ -244,7 +244,8 @@ def _FTPOpenFile(filename_url):
     '''
     ftp_host = FTPHost(filename_url)
     try:
-        open_file = ftp_host.open(filename_url.path)
+        # Open remote file in binary mode to maintain the original encoding and end of line.
+        open_file = ftp_host.open(filename_url.path, 'rb')
 
         # Set it up so when open_file is closed, ftp_host closes too
         def FTPClose():

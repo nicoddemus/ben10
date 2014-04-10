@@ -32,6 +32,10 @@ EOL_STYLE_WINDOWS = '\r\n'
 EOL_STYLE_MAC = '\r'
 
 def _GetNativeEolStyle(platform=sys.platform):
+    '''
+    Internal function that determines EOL_STYLE_NATIVE constant with the proper value for the
+    current platform.
+    '''
     _NATIVE_EOL_STYLE_MAP = {
         'win32' : EOL_STYLE_WINDOWS,
         'linux2' : EOL_STYLE_UNIX,
@@ -1068,12 +1072,16 @@ def CreateDirectory(directory):
         raise NotImplementedProtocol(directory_url.scheme)
 
 
+
 #===================================================================================================
 # CreateTemporaryDirectory
 #===================================================================================================
 class CreateTemporaryDirectory(object):
     '''
     Context manager to create a temporary file and remove if at the context end.
+
+    :ivar str dirname:
+        Name of the created directory
     '''
     def __init__(self, suffix='', prefix='tmp', base_dir=None, maximum_attempts=100):
         '''
@@ -1091,46 +1099,130 @@ class CreateTemporaryDirectory(object):
             The maximum number of attempts to obtain the temp dir name.
 
         '''
-        self._suffix = suffix
-        self._prefix = prefix
-        self._base_dir = base_dir
-        self._maximum_number_of_attempts = maximum_attempts
+        self.suffix = suffix
+        self.prefix = prefix
+        self.base_dir = base_dir
+        self.maximum_attempts = maximum_attempts
+
+        self.dirname = None
+
 
     def __enter__(self):
         '''
         :return str:
             The path to the created temp file.
         '''
-        import random
-        self._directory_name = None
-        if self._base_dir is None:
+        if self.base_dir is None:
             # If no base directoy was given, let us create a dir in system temp area
             import tempfile
-            self._directory_name = tempfile.mkdtemp(self._suffix, self._prefix)
-        else:
+            self.dirname = tempfile.mkdtemp(self.suffix, self.prefix)
+            return self.dirname
 
-            # Listing the files found in the base dir
-            existing_files = set(ListFiles(self._base_dir))
 
-            # If a base dir was given, let us generate a unique directory name there and use it
-            for _index in xrange(self._maximum_number_of_attempts):
-                random_component = random.randrange(16 ** 7)
-                candidate_name = '%stemp_dir_%07X%s' % (self._prefix, random_component, self._suffix)
-                candidate_path = os.path.join(self._base_dir, candidate_name)
-                if candidate_path not in existing_files:
-                    self._directory_name = candidate_path
-                    CreateDirectory(self._directory_name)
-                    break
-            else:
-                raise RuntimeError(
-                    'It was not possible to obtain a temporary filename from %s' % self._base_dir)
+        # Listing the files found in the base dir
+        existing_files = set(ListFiles(self.base_dir))
 
-        return self._directory_name
+        # If a base dir was given, let us generate a unique directory name there and use it
+        from ben10.foundation.hash import IterHashes
+        for random_component in IterHashes(iterator_size=self.maximum_attempts):
+            candidate_name = '%stemp_dir_%s%s' % (self.prefix, random_component, self.suffix)
+            candidate_path = os.path.join(self.base_dir, candidate_name)
+            if candidate_path not in existing_files:
+                CreateDirectory(candidate_path)
+                self.dirname = candidate_path
+                return self.dirname
+
+        raise RuntimeError(
+            'It was not possible to obtain a temporary dirname from %s' % self.base_dir)
 
 
     def __exit__(self, *args):
-        if self._directory_name is not None:
-            DeleteDirectory(self._directory_name, skip_on_error=False)
+        if self.dirname is not None:
+            DeleteDirectory(self.dirname, skip_on_error=False)
+
+
+
+#===================================================================================================
+# CreateTemporaryFile
+#===================================================================================================
+class CreateTemporaryFile(object):
+    '''
+    Context manager to create a temporary file and remove if at the context end.
+
+    :ivar str filename:
+        Name of the created file
+    '''
+    def __init__(
+        self,
+        contents,
+        eol_style=EOL_STYLE_NATIVE,
+        encoding=None,
+        suffix='',
+        prefix='tmp',
+        base_dir=None,
+        maximum_attempts=100):
+        '''
+        :param contents: .. seealso:: CreateFile
+        :param eol_style: .. seealso:: CreateFile
+        :param encoding: .. seealso:: CreateFile
+
+        :param str suffix:
+            A suffix to add in the name of the created file
+
+        :param str prefix:
+            A prefix to add in the name of the created file
+
+        :param str base_dir:
+            A path to use as base in the created file. Uses temp dir if not given.
+
+        :param int maximum_attemps:
+            The maximum number of attempts to obtain the temp file name.
+        '''
+
+        import tempfile
+
+        self.contents = contents
+        self.eol_style = eol_style
+        self.encoding = encoding
+        self.suffix = suffix
+        self.prefix = prefix
+        self.base_dir = base_dir or tempfile.gettempdir()
+        self.maximum_attempts = maximum_attempts
+
+        self.filename = None
+
+
+    def __enter__(self):
+        '''
+        :return str:
+            The path to the created temp file.
+        '''
+        from ben10.foundation.hash import IterHashes
+        from coilib50.filesystem._filesystem_exceptions import FileAlreadyExistsError
+
+        for random_component in IterHashes(iterator_size=self.maximum_attempts):
+            filename = os.path.join(self.base_dir, self.prefix + random_component + self.suffix)
+
+            try:
+                CreateFile(
+                    filename=filename,
+                    contents=self.contents,
+                    eol_style=self.eol_style,
+                    encoding=self.encoding,
+                )
+                self.filename = filename
+                return filename
+
+            except FileAlreadyExistsError:
+                pass
+
+        raise RuntimeError('It was not possible to obtain a temporary filename in "%s"' % self.base_dir)
+
+
+    def __exit__(self, *args):
+        if self.filename is not None:
+            DeleteFile(self.filename)
+
 
 
 #===================================================================================================
