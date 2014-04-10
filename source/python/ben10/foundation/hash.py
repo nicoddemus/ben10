@@ -1,4 +1,3 @@
-
 #===================================================================================================
 # DumpDirHashToStringIO
 #===================================================================================================
@@ -23,17 +22,15 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
         Pattern to match files to include in the hashing. E.g.: *.zip
     '''
     from path import path
-
-
-
+    import fnmatch
     p = path(directory)
-    for f in sorted(p.files()):
+    for f in p.files():
         if include is not None:
-            if not f.fnmatch(include):
+            if not fnmatch.fnmatch(f, include):
                 continue
 
         if exclude is not None:
-            if f.fnmatch(exclude):
+            if fnmatch.fnmatch(f, exclude):
                 continue
 
         md5 = Md5Hex(f)
@@ -41,6 +38,7 @@ def DumpDirHashToStringIO(directory, stringio, base='', exclude=None, include=No
             stringio.write('%s/%s=%s\n' % (base, f.name, md5))
         else:
             stringio.write('%s=%s\n' % (f.name, md5))
+
 
 
 #===================================================================================================
@@ -60,6 +58,7 @@ def Md5Hex(filename=None, contents=None):
     :returns:
         Returns a string with the hex digest of the stream.
     '''
+    # TODO: 0060634: Allow Md5Hex to receive a file-like object as parameter
     import hashlib
     md5 = hashlib.md5()
 
@@ -78,3 +77,45 @@ def Md5Hex(filename=None, contents=None):
         md5.update(contents)
 
     return md5.hexdigest()
+
+
+
+#===================================================================================================
+# GetRandomHash
+#===================================================================================================
+def GetRandomHash(length=7):
+    '''
+    :param length:
+        Length of hash returned.
+
+    :return str:
+        A random hexadecimal hash of the given length
+    '''
+    import random
+    return ('%0' + str(length) + 'x') % random.randrange(16 ** length)
+
+
+
+#===================================================================================================
+# IterHashes
+#===================================================================================================
+def IterHashes(iterator_size, hash_length=7):
+    '''
+    Iterator for random hexadecimal hashes
+
+    :param iterator_size:
+        Amount of hashes return before this iterator stops.
+        Goes on forever if `iterator_size` is negative.
+
+    :param int hash_length:
+        Size of each hash returned.
+
+    :return generator(str):
+    '''
+    if not isinstance(iterator_size, int):
+        raise TypeError('iterator_size must be integer.')
+
+    count = 0
+    while count != iterator_size:
+        count += 1
+        yield GetRandomHash(hash_length)

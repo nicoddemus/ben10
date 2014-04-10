@@ -1197,8 +1197,8 @@ class CreateTemporaryFile(object):
         :return str:
             The path to the created temp file.
         '''
+        from ._filesystem_exceptions import FileAlreadyExistsError
         from ben10.foundation.hash import IterHashes
-        from coilib50.filesystem._filesystem_exceptions import FileAlreadyExistsError
 
         for random_component in IterHashes(iterator_size=self.maximum_attempts):
             filename = os.path.join(self.base_dir, self.prefix + random_component + self.suffix)
