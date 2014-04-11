@@ -79,3 +79,7 @@ class Test:
                 'file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
             ])
         )
+
+
+    def testMd5Hex(self):
+        assert Md5Hex(contents='alpha, bravo') == '2c0d78abb6e32d1614a17c6d0e4391c0'
