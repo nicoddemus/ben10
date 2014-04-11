@@ -1,5 +1,5 @@
 from ben10.foundation.string import Dedent
-from clikit.app import App
+from clikit.app import App, UnknownApp
 from clikit.console import BufferedConsole, Console
 import inspect
 import pytest
@@ -287,6 +287,24 @@ class Test:
         app.TestScript(inspect.getdoc(self.testPositionalArgs))
 
 
+    def testPositionalArgsWithDefaults(self):
+        """
+        >test hello
+        NOTHING
+
+        >test hello something
+        something
+        """
+        app = App('test', color=False, buffered_console=True)
+
+        def Hello(console_, message=App.DEFAULT('NOTHING')):
+            console_.Print(message)
+
+        app.Add(Hello)
+
+        app.TestScript(inspect.getdoc(self.testPositionalArgsWithDefaults))
+
+
     def testOptionArgs(self):
         """
         >test command
@@ -443,3 +461,10 @@ class Test:
                 """
             )
         )
+
+
+    def testUnknownApp(self):
+        app = App('test', color=False, buffered_console=True)
+
+        with pytest.raises(UnknownApp):
+            app.TestCall('UNKNOWN')

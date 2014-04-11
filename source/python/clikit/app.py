@@ -10,12 +10,20 @@ import types
 #===================================================================================================
 # Exceptions
 #===================================================================================================
-
 class InvalidCommand(KeyError):
     """
     Exception raised when an unknown command is requested for execution.
     """
     pass
+
+
+class UnknownApp(RuntimeError):
+    """
+    Exception raised when trying to perform a TestCall with an unknown app.
+    """
+
+    def __init__(self, app, apps):
+        RuntimeError.__init__(self, 'Unknown app "%s". Valid apps are: %s' % (app, ', '.join(apps)))
 
 
 
@@ -207,6 +215,9 @@ class App(object):
     """
     Command Line Interface Application.
     """
+
+    # Use DEFAULT for positional arguments with default values. see Command.DEFAULT.
+    DEFAULT = Command.DEFAULT
 
     def __init__(
             self,
@@ -622,11 +633,6 @@ class App(object):
         from .console import BufferedConsole
         from ben10.foundation.pushpop import PushPopAttr
         import shlex
-
-        class UnknownApp(RuntimeError):
-
-            def __init__(self, app, apps):
-                RuntimeError.__init__(self, 'Unknown app "%s". Valid apps are: %s' % (app, ', '.join(apps)))
 
         apps = {
             self.__name : self,
