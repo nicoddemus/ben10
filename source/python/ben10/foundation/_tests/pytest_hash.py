@@ -1,5 +1,5 @@
 from StringIO import StringIO
-from ben10.foundation.hash import DumpDirHashToStringIO, GetRandomHash, IterHashes
+from ben10.foundation.hash import DumpDirHashToStringIO, GetRandomHash, IterHashes, Md5Hex
 import pytest
 
 
@@ -54,10 +54,10 @@ class Test:
         val = stringio.getvalue()
         assert (
             set(val.splitlines())
-            == set([
+            == {
                 'bin/file1.txt=4124bc0a9335c27f086f24ba207a4912',
-                'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
-            ])
+                'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31',
+            }
         )
 
         stringio = StringIO()
@@ -65,9 +65,9 @@ class Test:
         val = stringio.getvalue()
         assert (
             set(val.splitlines())
-            == set([
-                'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
-            ])
+            == {
+                'bin/file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31',
+            }
         )
 
         stringio = StringIO()
@@ -75,9 +75,9 @@ class Test:
         val = stringio.getvalue()
         assert (
             set(val.splitlines())
-            == set([
-                'file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31'
-            ])
+            == {
+                'file2.txt=633de4b0c14ca52ea2432a3c8a5c4c31',
+            }
         )
 
 
