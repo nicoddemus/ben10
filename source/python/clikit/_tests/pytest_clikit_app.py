@@ -288,13 +288,13 @@ class Test:
 
 
     def testPositionalArgsWithDefaults(self):
-        """
+        '''
         >test hello
         NOTHING
 
         >test hello something
         something
-        """
+        '''
         app = App('test', color=False, buffered_console=True)
 
         def Hello(console_, message=App.DEFAULT('NOTHING')):

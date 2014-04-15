@@ -18,9 +18,9 @@ class InvalidCommand(KeyError):
 
 
 class UnknownApp(RuntimeError):
-    """
+    '''
     Exception raised when trying to perform a TestCall with an unknown app.
-    """
+    '''
 
     def __init__(self, app, apps):
         RuntimeError.__init__(self, 'Unknown app "%s". Valid apps are: %s' % (app, ', '.join(apps)))

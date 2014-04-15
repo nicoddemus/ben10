@@ -155,9 +155,9 @@ optional arguments:
         '''
 
         def Hello(console_, first=Command.DEFAULT('one')):
-            """
+            '''
             Hello function.
-            """
+            '''
             console_.Print(first)
 
         cmd = Command(Hello)
