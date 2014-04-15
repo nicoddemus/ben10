@@ -12,7 +12,7 @@ import cPickle
 class RegistryDict(object):
 
     def __init__(self, keyhandle=_winreg.HKEY_LOCAL_MACHINE, keypath=[], flags=_winreg.KEY_READ):
-        """If flags=None, then it will create the key.. otherwise pass a _winreg.KEY_* sam"""
+        '''If flags=None, then it will create the key.. otherwise pass a _winreg.KEY_* sam'''
         self.keyhandle = None
         self.open(keyhandle, keypath, flags)
 

@@ -1331,7 +1331,7 @@ class _PhonyFtpServer(object):
         class MyFTPServer(ftpserver.FTPServer):
 
             def ServeForever(self, timeout=1.0, use_poll=False, count=None):
-                """A wrap around asyncore.loop(); starts the asyncore polling
+                '''A wrap around asyncore.loop(); starts the asyncore polling
                 loop including running the scheduler.
                 The arguments are the same expected by original asyncore.loop()
                 function:
@@ -1344,7 +1344,7 @@ class _PhonyFtpServer(object):
 
                  - (int) count: how many times the polling loop gets called
                    before returning.  If None loops forever (default None).
-                """
+                '''
                 import asyncore
 
                 if use_poll and hasattr(asyncore.select, 'poll'):
