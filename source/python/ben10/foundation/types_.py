@@ -448,7 +448,7 @@ class Method(object):
 # Null
 #===================================================================================================
 class Null(object):
-    """
+    '''
     This is a sample implementation of the 'Null Object' design pattern.
 
     Roughly, the goal with Null objects is to provide an 'intelligent'
@@ -498,7 +498,7 @@ class Null(object):
     the respective methods' implementation will depend very much
     on the environment and, hence, these special methods are not
     provided here.
-    """
+    '''
 
     # object constructing
 

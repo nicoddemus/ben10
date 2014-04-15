@@ -37,12 +37,12 @@ from operator import itemgetter
 # EnumValue
 #===================================================================================================
 class EnumValue(tuple):
-    """
+    '''
     Base class for the representation of all enumeration values.
 
     EnumValue(Color, 'red', 12) prints as 'Color.red' and can be converted
     to the integer 12.
-    """
+    '''
 
     __slots__ = ()
 

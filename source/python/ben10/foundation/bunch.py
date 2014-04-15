@@ -16,7 +16,7 @@ import copy
 # MetaBunch
 #===================================================================================================
 class MetaBunch(type):
-    """
+    '''
     metaclass for new and improved "Bunch": implicitly defines
     __slots__, __init__ and __repr__ from variables bound in class scope.
 
@@ -30,12 +30,12 @@ class MetaBunch(type):
     a __repr__ that shows the repr of each attribute that differs from its
     default value (the output of __repr__ can be passed to __eval__ to make
     an equal instance, as per the usual convention in the matter).
-    """
+    '''
 
     def __new__(cls, classname, bases, classdict):
-        """ Everything needs to be done in __new__, since type.__new__ is
+        ''' Everything needs to be done in __new__, since type.__new__ is
             where __slots__ are taken into account.
-        """
+        '''
         from types import NoneType
         import inspect
 
@@ -43,9 +43,9 @@ class MetaBunch(type):
         # use in the new class
 
         def __init__(self, **kw):
-            """ Simplistic __init__: first set all attributes to default
+            ''' Simplistic __init__: first set all attributes to default
                 values, then override those explicitly passed in kw.
-            """
+            '''
             for k, (value, copy_op) in self.__defaults__.iteritems():
                 if k not in kw:  # No need to set value to be overridden later on.
                     if copy_op is None:
@@ -57,9 +57,9 @@ class MetaBunch(type):
                 setattr(self, k, value)
 
         def __repr__(self):
-            """
+            '''
             repr operator.
-            """
+            '''
             rep = ['%s=%r' % (k, getattr(self, k)) for k in sorted(self.__defaults__)]
             return '%s(%s)' % (classname, ', '.join(rep))
 
@@ -148,9 +148,9 @@ class MetaBunch(type):
 # Bunch
 #===================================================================================================
 class Bunch(object):
-    """ For convenience: inheriting from Bunch can be used to get
+    ''' For convenience: inheriting from Bunch can be used to get
         the new metaclass (same as defining __metaclass__ yourself).
-    """
+    '''
     __metaclass__ = MetaBunch
 
 
@@ -158,7 +158,7 @@ class Bunch(object):
 # MetaHashableBunch
 #===================================================================================================
 class MetaHashableBunch(MetaBunch):
-    """
+    '''
     Implements a hashable Bunch.
 
     A hashable bunch is created exactly the same as a normal bunch, but the attributes are read-only
@@ -170,17 +170,17 @@ class MetaHashableBunch(MetaBunch):
     @note: take care when creating methods for hashable bunches, they should not change the internal
         attributes, because this way the hash will change and will create chaos if those bunches are
         being used as keys in dicts or sets.
-    """
+    '''
 
     @Override(MetaBunch.__new__)
     def __new__(cls, classname, bases, classdict):
         import inspect
 
         def __init__(self, **kw):
-            """
+            '''
             Overwrite Bunch's __init__ to initialize the private attributes instead of the public
             ones.
-            """
+            '''
             self._p_hash_value = None
             newkw = dict(('_' + k, v) for (k, v) in kw.iteritems())
             original_init(self, **newkw)
@@ -197,9 +197,9 @@ class MetaHashableBunch(MetaBunch):
 
 
         def __repr__(self):
-            """
+            '''
             repr operator. Overwritten to generate the string using the public name
-            """
+            '''
             # strip "_" from the attr names
             rep = ['%s=%r' % (k[1:], getattr(self, k)) for k in sorted(self.__defaults__)]
             return '%s(%s)' % (classname, ', '.join(rep))

@@ -12,9 +12,9 @@ class Test:
 
     def testConstructor(self):
         def Hello():
-            """
+            '''
             Hello function.
-            """
+            '''
 
         cmd = Command(Hello)
         assert cmd.names == ['Hello']
@@ -34,10 +34,18 @@ class Test:
         assert cmd.description == '(no description)'
 
 
+    def testArg(self):
+
+        arg = Command.Arg('arg', 'INVALID_ARG_TYPE')
+
+        with pytest.raises(TypeError):
+            arg.ConfigureArgumentParser(None)
+
+
     def testArguments(self):
 
         def Hello(console_, filename, option='yes', dependency=True, no_setup=False, no_default=None, *config):
-            """
+            '''
             Hello function.
 
             :param filename: The name of the file.
@@ -45,7 +53,7 @@ class Test:
             :param no_setup: False if set
             :param no_default: Receives None
             :param config: Configurations
-            """
+            '''
             console_.Print('%s - %s' % (filename, option))
             [console_.Item(i) for i in config]
 
@@ -54,7 +62,24 @@ class Test:
         assert cmd.description == 'Hello function.'
 
         assert cmd.args.keys() == ['console_', 'filename', 'option', 'dependency', 'no_setup', 'no_default', 'config']
-        assert map(str, cmd.args.values()) == ['console_', 'filename', 'option=yes', 'dependency', 'no_setup', 'no_default=VALUE', '*config']
+        assert map(str, cmd.args.values()) == [
+            'console_',
+            'filename',
+            'option=yes',
+            'dependency',
+            'no_setup',
+            'no_default=VALUE',
+            '*config'
+        ]
+        assert map(repr, cmd.args.values()) == [
+            '<Arg console_>',
+            '<Arg filename>',
+            '<Arg option=yes>',
+            '<Arg dependency>',
+            '<Arg no_setup>',
+            '<Arg no_default=VALUE>',
+            '<Arg *config>',
+        ]
         assert cmd.kwargs is None
 
         console = BufferedConsole()
@@ -78,7 +103,7 @@ class Test:
         with pytest.raises(TypeError):
             cmd.Call({'console_' : console}, {})
 
-        assert cmd.FormatHelp() == """Usage:
+        assert cmd.FormatHelp() == '''Usage:
     Hello <filename> <*config> [--option=yes],[--dependency],[--no_setup],[--no_default=VALUE]
 
 Parameters:
@@ -90,12 +115,12 @@ Options:
     --dependency   True if set
     --no_setup   False if set
     --no_default   Receives None
-"""
+'''
 
         import argparse
         parser = argparse.ArgumentParser('TEST')
         cmd.ConfigureArgumentParser(parser)
-        assert parser.format_help() == """usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
+        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
             [--no_default NO_DEFAULT]
             filename config [config ...]
 
@@ -109,17 +134,50 @@ optional arguments:
   --dependency
   --no_setup
   --no_default NO_DEFAULT
-"""
+'''
 
     def testNoArgument(self):
 
         def Hello():
-            """
+            '''
             Hello function.
 
             :param noargument: This argument does not exist.
-            """
+            '''
 
         with pytest.raises(RuntimeError):
             Command(Hello)
 
+
+    def testDEFAULT(self):
+        '''
+        Tests the DEFAULT argument type to declare a positional argument with a default value.
+        '''
+
+        def Hello(console_, first=Command.DEFAULT('one')):
+            '''
+            Hello function.
+            '''
+            console_.Print(first)
+
+        cmd = Command(Hello)
+        assert cmd.names == ['Hello']
+        assert cmd.description == 'Hello function.'
+
+        assert cmd.args.keys() == ['console_', 'first']
+        assert map(str, cmd.args.values()) == ['console_', "first=one"]
+        assert cmd.kwargs is None
+
+        console = BufferedConsole()
+        cmd.Call(
+            fixtures={'console_' : console},
+            argd={}
+        )
+        assert console.GetOutput() == 'one\n'
+
+        console = BufferedConsole()
+        cmd.Call(
+            fixtures={'console_' : console},
+            argd={'first' : 'two'}
+        )
+        assert console.GetOutput() == 'two\n'

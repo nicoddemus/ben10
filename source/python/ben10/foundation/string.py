@@ -4,25 +4,25 @@ Module for string manipulation functions
 
 
 def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
-    """
+    '''
     Heavily inspired by textwrap.dedent, with a few changes (as of python 2.7)
         - No longer transforming all-whitespace lines into ''
         - Options to ignore first and last linebreaks of `text`.
 
     The last option is particularly useful because of ESSS coding standards.
     For example, using the default textwrap.dedent to create a 3-line string would look like this:
-        textwrap.dedent('''    line1
+        textwrap.dedent("""    line1
             line2
-            line3'''
+            line3"""
         )
 
     With these options, you can create a better looking code with:
         Dedent(
-            '''
+            """
             line1
             line2
             line3
-            '''
+            """
         )
 
     :param str text:
@@ -45,7 +45,7 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
         "  hello" and "\thello" are  considered to have no common leading whitespace.  (This
         behaviour is new in Python 2.5; older versions of this module incorrectly expanded tabs
         before searching for common leading whitespace.)
-    """
+    '''
     if ignore_first_linebreak:
         text = text.split('\n', 1)[1]
     if ignore_last_linebreak:
@@ -86,7 +86,7 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
 
 
 def SafeSplit(s, sep, maxsplit=None, default=''):
-    """
+    '''
     Perform a string split granting the size of the resulting list.
 
     :param str s: The input string.
@@ -96,7 +96,7 @@ def SafeSplit(s, sep, maxsplit=None, default=''):
 
     :return list(str):
         Returns a list with fixed size of maxsplit + 1.
-    """
+    '''
     if maxsplit is None:
         result = s.split(sep)
     else:

@@ -1,5 +1,5 @@
 from ben10.foundation.string import Dedent
-from clikit.app import App
+from clikit.app import App, UnknownApp
 from clikit.console import BufferedConsole, Console
 import inspect
 import pytest
@@ -12,9 +12,9 @@ import sys
 #===================================================================================================
 
 class Test:
-    """
+    '''
     Tests for App class using py.test
-    """
+    '''
 
     def _TestMain(self, app, args, output, retcode=App.RETCODE_OK):
         assert app.Main(args.split()) == retcode
@@ -49,7 +49,7 @@ class Test:
     def testHelp(self):
 
         def TestCmd(console_, first, second, option=1, option_yes=True, option_no=False):
-            """
+            '''
             This is a test.
 
             :param first: This is the first parameter.
@@ -57,13 +57,13 @@ class Test:
             :param option: This must be a number.
             :param option_yes: If set, says yes.
             :param option_no: If set, says nop.
-            """
+            '''
 
         app = App('test', color=False, buffered_console=True)
         app.Add(TestCmd)
 
         self._TestMain(app, '', Dedent(
-            """
+            '''
 
             Usage:
                 test <subcommand> [options]
@@ -71,12 +71,12 @@ class Test:
             Commands:
                 test-cmd   This is a test.
 
-            """
+            '''
             )
         )
 
         self._TestMain(app, '--help', Dedent(
-            """
+            '''
 
             Usage:
                 test <subcommand> [options]
@@ -84,7 +84,7 @@ class Test:
             Commands:
                 test-cmd   This is a test.
 
-            """
+            '''
             )
         )
 
@@ -92,7 +92,7 @@ class Test:
             app,
             'test-cmd --help',
             Dedent(
-                """
+                '''
                     This is a test.
 
                     Usage:
@@ -108,7 +108,7 @@ class Test:
                         --option_no   If set, says nop.
 
 
-                """
+                '''
             )
         )
 
@@ -116,7 +116,7 @@ class Test:
             app,
             'test-cmd',
             Dedent(
-                """
+                '''
                     ERROR: Too few arguments.
 
                     This is a test.
@@ -134,29 +134,29 @@ class Test:
                         --option_no   If set, says nop.
 
 
-                """
+                '''
             ),
             app.RETCODE_ERROR
         )
 
 
     def testApp(self):
-        """
+        '''
         Tests App usage and features.
-        """
+        '''
 
         def Case1(console_):
-            """
+            '''
             A "hello" message from case 1
-            """
+            '''
             console_.Print('Hello from case 1')
 
         def Case2(console_):
-            """
+            '''
             A "hello" message from case 2
 
             Additional help for this function is available.
-            """
+            '''
             console_.Print('Hello from case 2')
 
         def Case3(console_):
@@ -188,7 +188,7 @@ class Test:
 
         # Tests output when an invalid command is requested
         self._TestMain(app, 'INVALID', Dedent(
-            """
+            '''
             ERROR: Unknown command 'INVALID'
 
             Usage:
@@ -200,15 +200,15 @@ class Test:
                 case3, c3, cs3   (no description)
                 four             (no description)
 
-            """),
+            '''),
             app.RETCODE_ERROR
     )
 
 
     def testConf(self, tmpdir):
-        """
+        '''
         Tests the configuration plugin (ConfPlugin)
-        """
+        '''
         conf_filename = tmpdir.join('ConfigurationCmd.conf')
 
         app = App(
@@ -224,9 +224,9 @@ class Test:
         )
 
         def ConfigurationCmd(console_, conf_):
-            """
+            '''
             Test Set/Get methods from configuration object.
-            """
+            '''
             console_.Print('conf_.filename: %s' % conf_.filename)
             console_.Print('group.value: %s' % conf_.Get('group', 'value'))
 
@@ -273,10 +273,10 @@ class Test:
 
 
     def testPositionalArgs(self):
-        """
+        '''
         >test command alpha bravo
         alpha..bravo
-        """
+        '''
         app = App('test', color=False, buffered_console=True)
 
         def Command(console_, first, second):
@@ -287,13 +287,31 @@ class Test:
         app.TestScript(inspect.getdoc(self.testPositionalArgs))
 
 
+    def testPositionalArgsWithDefaults(self):
+        '''
+        >test hello
+        NOTHING
+
+        >test hello something
+        something
+        '''
+        app = App('test', color=False, buffered_console=True)
+
+        def Hello(console_, message=App.DEFAULT('NOTHING')):
+            console_.Print(message)
+
+        app.Add(Hello)
+
+        app.TestScript(inspect.getdoc(self.testPositionalArgsWithDefaults))
+
+
     def testOptionArgs(self):
-        """
+        '''
         >test command
         1..2
         >test command --first=alpha --second=bravo
         alpha..bravo
-        """
+        '''
         app = App('test', color=False, buffered_console=True)
 
         def Command(console_, first='1', second='2'):
@@ -310,9 +328,9 @@ class Test:
         assert app.console.color == True
 
         def Case():
-            """
+            '''
             This is Case.
-            """
+            '''
 
         app.Add(Case)
 
@@ -320,7 +338,7 @@ class Test:
             app,
             '',
             Dedent(
-                """
+                '''
 
                     Usage:
                         test <subcommand> [options]
@@ -328,13 +346,13 @@ class Test:
                     Commands:
                         %(teal)scase%(reset)s   This is Case.
 
-                """ % Console.COLOR_CODES
+                ''' % Console.COLOR_CODES
             )
         )
 
 
     def testColorama(self):
-        """
+        '''
         Importing colorama from inside pytest USED TO raise an exception:
 
             File "D:\Kaniabi\EDEn\dist\12.0-all\colorama-0.2.5\lib\site-packages\colorama\win32.py", line 64
@@ -342,7 +360,7 @@ class Test:
             >           handle, byref(csbi))
             E       ArgumentError: argument 2: <type 'exceptions.TypeError'>: expected LP_CONSOLE_SCREEN_BUFFER_INFO
                                    instance instead of pointer to CONSOLE_SCREEN_BUFFER_INFO
-        """
+        '''
         import colorama
 
 
@@ -437,9 +455,16 @@ class Test:
             app,
             'command',
             Dedent(
-                """
+                '''
                     The names are: alpha and bravo.
 
-                """
+                '''
             )
         )
+
+
+    def testUnknownApp(self):
+        app = App('test', color=False, buffered_console=True)
+
+        with pytest.raises(UnknownApp):
+            app.TestCall('UNKNOWN')
