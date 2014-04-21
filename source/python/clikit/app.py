@@ -482,14 +482,14 @@ class App(object):
 
             # Parse parameters/options
             try:
-                opts = parser.parse_args(args)
+                command_opts = parser.parse_args(args)
             except TooFewArgumentError:
                 self.console.PrintError('<red>ERROR: Too few arguments.</>', newlines=2)
                 self.PrintHelp(command)
                 return self.RETCODE_ERROR
 
             fixtures = self.GetFixtures(argv)
-            result = command.Call(fixtures, opts.__dict__)
+            result = command.Call(fixtures, command_opts.__dict__)
             if result is None:
                 result = self.RETCODE_OK
             return result
@@ -592,7 +592,7 @@ class App(object):
         '''
 
         def Execute(cmd, output):
-            retcode, obtained = self.TestCall(cmd)
+            _retcode, obtained = self.TestCall(cmd)
             assert obtained.rstrip('\n') + '\n' == output.rstrip('\n') + '\n'
 
         cmd = None

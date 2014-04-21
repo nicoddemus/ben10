@@ -44,12 +44,11 @@ class Test:
 
     def testArguments(self):
 
-        def Hello(console_, filename, option='yes', dependency=True, no_setup=False, no_default=None, *config):
+        def Hello(console_, filename, option='yes', no_setup=False, no_default=None, *config):
             '''
             Hello function.
 
             :param filename: The name of the file.
-            :param dependency: True if set
             :param no_setup: False if set
             :param no_default: Receives None
             :param config: Configurations
@@ -61,12 +60,11 @@ class Test:
         assert cmd.names == ['Hello']
         assert cmd.description == 'Hello function.'
 
-        assert cmd.args.keys() == ['console_', 'filename', 'option', 'dependency', 'no_setup', 'no_default', 'config']
+        assert cmd.args.keys() == ['console_', 'filename', 'option', 'no_setup', 'no_default', 'config']
         assert map(str, cmd.args.values()) == [
             'console_',
             'filename',
             'option=yes',
-            'dependency',
             'no_setup',
             'no_default=VALUE',
             '*config'
@@ -75,7 +73,6 @@ class Test:
             '<Arg console_>',
             '<Arg filename>',
             '<Arg option=yes>',
-            '<Arg dependency>',
             '<Arg no_setup>',
             '<Arg no_default=VALUE>',
             '<Arg *config>',
@@ -104,7 +101,7 @@ class Test:
             cmd.Call({'console_' : console}, {})
 
         assert cmd.FormatHelp() == '''Usage:
-    Hello <filename> <*config> [--option=yes],[--dependency],[--no_setup],[--no_default=VALUE]
+    Hello <filename> <*config> [--option=yes],[--no_setup],[--no_default=VALUE]
 
 Parameters:
     filename   The name of the file.
@@ -112,7 +109,6 @@ Parameters:
 
 Options:
     --option   (no description) [default: yes]
-    --dependency   True if set
     --no_setup   False if set
     --no_default   Receives None
 '''
@@ -120,9 +116,8 @@ Options:
         import argparse
         parser = argparse.ArgumentParser('TEST')
         cmd.ConfigureArgumentParser(parser)
-        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
-            [--no_default NO_DEFAULT]
-            filename [config [config ...]]
+        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--no_setup] [--no_default NO_DEFAULT]
+            filename config [config ...]
 
 positional arguments:
   filename
@@ -131,7 +126,6 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --option OPTION
-  --dependency
   --no_setup
   --no_default NO_DEFAULT
 '''

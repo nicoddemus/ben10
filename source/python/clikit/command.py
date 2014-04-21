@@ -46,7 +46,7 @@ class Command:
 
     class DEFAULT(object):
         '''
-        Placeholder for posititional arguments with default value.
+        Placeholder for positional arguments with default value.
 
         Usage:
 
@@ -84,9 +84,9 @@ class Command:
         '''
         NO_DEFAULT = object()
 
-        ARG_TYPE_POSITIONAL = 'P'
-        ARG_TYPE_OPTION = "O"
         ARG_TYPE_FIXTURE = "F"
+        ARG_TYPE_OPTION = "O"
+        ARG_TYPE_POSITIONAL = 'P'
         ARG_TYPE_TRAIL = "T"
 
         def __init__(self, name, arg_type, default=NO_DEFAULT):
@@ -130,23 +130,36 @@ class Command:
             :param parser: argparse.ArgumentParser
             '''
             if self.arg_type == self.ARG_TYPE_FIXTURE:
-                pass
-            elif self.arg_type == self.ARG_TYPE_TRAIL:
-                parser.add_argument(self.name, nargs='*')
-            elif self.arg_type == self.ARG_TYPE_OPTION:
-                if self.default is True:
-                    parser.add_argument('--%s' % self.name, action='store_true')
-                elif self.default is False:
-                    parser.add_argument('--%s' % self.name, action='store_false')
+                return
+
+            if self.arg_type == self.ARG_TYPE_TRAIL:
+                parser.add_argument(self.name, nargs='+')
+                return
+
+            if self.arg_type == self.ARG_TYPE_OPTION:
+                if isinstance(self.default, bool):
+                    # Boolean arguments have a special treatment, since they create a 'store_true'
+                    # parameters type that has no arguments. For example, instead of passing
+                    # --param=True in the command line, using --param should have the same effect
+
+                    # Boolean options with default=True make no sense to the command line, since
+                    # either setting or not setting them would lead to the same effect.
+                    assert self.default is not True, 'Can\'t handle boolean options with default=True'
+
+                    parser.add_argument('--%s' % self.name, action='store_true', default=self.default)
                 else:
+                    # All other parameter types work as usual and must receive a value
                     parser.add_argument('--%s' % self.name, default=self.default)
-            elif self.arg_type is self.ARG_TYPE_POSITIONAL:
+                return
+
+            if self.arg_type is self.ARG_TYPE_POSITIONAL:
                 if self.default is self.NO_DEFAULT:
                     parser.add_argument(self.name)
                 else:
                     parser.add_argument(self.name, nargs='?', default=self.default)
-            else:
-                raise TypeError('Unknown arg_type==%r' % self.arg_type)
+                return
+
+            raise TypeError('Unknown arg_type==%r' % self.arg_type)
 
 
     def __init__(self, func, names=None):
@@ -181,8 +194,18 @@ class Command:
                 self.args[i_arg] = self.Arg(i_arg, self.Arg.ARG_TYPE_POSITIONAL)
             else:
                 default = defaults[i - first_default]
+
                 if isinstance(default, Command.DEFAULT):
                     self.args[i_arg] = default.CreateArg(i_arg)
+
+                elif default is True:
+                    # I couldn't find a reasonable way to handle bool args with default=True since
+                    # Passing --option or not would have the same result, therefore, these args
+                    # cannot be used in clikit commands.
+                    raise RuntimeError(
+                        "Clikit commands are not allowed to have " + \
+                        "boolean parameters that default to True."
+                    )
                 else:
                     self.args[i_arg] = self.Arg(i_arg, self.Arg.ARG_TYPE_OPTION, default)
 
@@ -307,17 +330,24 @@ class Command:
                 except KeyError as exception:
                     raise InvalidFixture(str(exception))
                 args.append(arg)
-            elif i_arg.arg_type == i_arg.ARG_TYPE_TRAIL:
+                continue
+
+            if i_arg.arg_type == i_arg.ARG_TYPE_TRAIL:
                 args += argd.get(i_arg.name, ())
-            elif i_arg.arg_type == i_arg.ARG_TYPE_POSITIONAL:
+                continue
+
+            if i_arg.arg_type == i_arg.ARG_TYPE_POSITIONAL:
                 arg = argd.get(i_arg.name, i_arg.default)
                 if arg is self.Arg.NO_DEFAULT:
                     raise TypeError(i_arg.name)
                 else:
                     args.append(arg)
-            elif i_arg.arg_type == i_arg.ARG_TYPE_OPTION:
+                continue
+
+            if i_arg.arg_type == i_arg.ARG_TYPE_OPTION:
                 arg = argd.get(i_arg.name, i_arg.default)
                 args.append(arg)
+                continue
 
         return self.func(*args)
 
