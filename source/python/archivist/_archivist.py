@@ -50,8 +50,7 @@ class Archivist(object):
 
         for i_ext, i_cmd, i_mode in handles_table:
             if archive.endswith(i_ext):
-                i_cmd(archive, archive_mapping, mode=i_mode)
-                return
+                return i_cmd(archive, archive_mapping, mode=i_mode)
 
         raise RuntimeError('Unknown archive format: %s' % archive)
 
@@ -211,7 +210,9 @@ class Archivist(object):
             )
             for i_filename in filenames:
                 if not os.path.isdir(i_filename):
-                    archive_filename = i_filename[len(dirname) + 1:]
+                    archive_filename = i_filename[len(dirname):]
+                    if archive_filename.startswith('/') or archive_filename.startswith('\\'):
+                        archive_filename = archive_filename[1:]
                     archive_filename = os.path.join(i_zip_path, archive_filename)
                     result.append((archive_filename, i_filename))
 
@@ -232,21 +233,23 @@ class Archivist(object):
         from _archive_wrapper import CreateArchiveWrapper
         archive = CreateArchiveWrapper(archive_filename)
 
+
         # Create directories needed for target
         target_dir = os.path.normpath(target_dir)
         if not target_dir.endswith(':'):
             CreateDirectory(target_dir)
+
 
         # Create archive structure
         for sub_dir in archive.ListDirs():
             curdir = os.path.join(target_dir, sub_dir)
             CreateDirectory(curdir)
 
+
         # Extract archive
         for i_name in archive.ListFilenames():
-            assert \
-                not i_name.endswith('/'), \
-                "Filenames ending with '/' couldn't be reproduced on tests."
+            if i_name.endswith('/'):
+                continue
             target_filename = os.path.normpath(os.path.join(target_dir, i_name))
             if os.path.isdir(target_filename):
                 continue

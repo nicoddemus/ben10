@@ -1,5 +1,3 @@
-from __future__ import with_statement
-from ben10.filesystem import StandardizePath
 from ben10.foundation.decorators import Implements
 from ben10.interface import ImplementsInterface, Interface
 import os
@@ -63,15 +61,17 @@ class ZipWrapper(object):
 
     @Implements(IArchiveWrapper.ListFilenames)
     def ListFilenames(self):
-        return self.wrapped.namelist()
+        return [i for i in self.wrapped.namelist() if not i.endswith('/')]
 
 
     @Implements(IArchiveWrapper.ListDirs)
     def ListDirs(self):
-        result = []
-        for i in self.ListFilenames():
-            assert not i.endswith('/'), "Filenames ending with '/' couldn't be reproduced on tests."
-            result.append(os.path.dirname(i))
+        result = set()
+        for i in self.wrapped.namelist():
+            if i.endswith('/'):
+                result.add(i[:-1])
+            else:
+                result.add(os.path.dirname(i))
         return sorted(result)
 
 
@@ -97,6 +97,7 @@ class RarWrapper(object):
 
 
     def ListFilenames(self):
+        from ben10.filesystem import StandardizePath
         result = self.wrapped.namelist()
         result = [StandardizePath(i) for i in result]
         return result

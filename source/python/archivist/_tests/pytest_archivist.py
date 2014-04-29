@@ -1,5 +1,3 @@
-from archivist import Archivist
-from ben10.filesystem import CreateFile, FileAlreadyExistsError
 import os
 import pytest
 
@@ -8,6 +6,9 @@ import pytest
 #===================================================================================================
 # Test
 #===================================================================================================
+from ben10.filesystem import FileAlreadyExistsError
+
+
 class Test:
 
     def testExtractRar(self, embed_data):
@@ -35,6 +36,9 @@ class Test:
 
 
     def testExceptions(self, embed_data):
+        from archivist import Archivist
+        from ben10.filesystem import CreateFile
+
         CreateFile(embed_data['alpha.INVALID'], '')
 
         archive = Archivist()
@@ -76,6 +80,7 @@ class Test:
 
 
     def _TestArchive(self, embed_data, filename, extract_only=False):
+        from archivist import Archivist
         archive = Archivist()
 
         assert not os.path.isfile(embed_data['root_dir/alpha.txt'])
