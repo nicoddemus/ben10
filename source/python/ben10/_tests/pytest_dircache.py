@@ -1,6 +1,7 @@
-from ben10.dircache import DirCache
+from ben10.dircache import CacheDisabled, DirCache
 from ben10.filesystem import CreateFile, IsFile, IsLink
 import os
+import pytest
 
 
 
@@ -25,7 +26,7 @@ class Test:
         assert not dir_cache.CacheExists()
         assert not dir_cache.LocalExists()
 
-        dir_cache.DownloadRemote()
+        dir_cache.CreateCache()
         # DownloadRemote extracts the archive contents into a directory with the same basename of
         # the archive.
         assert os.path.isdir(embed_data['cache_dir/alpha'])
@@ -38,7 +39,7 @@ class Test:
         # Calling it twice does nothing.
         CreateFile(embed_data['cache_dir/alpha/new_file.txt'], 'This is new')
         assert IsFile(embed_data['cache_dir/alpha/new_file.txt'])
-        dir_cache.DownloadRemote()
+        dir_cache.CreateCache()
         assert IsFile(embed_data['cache_dir/alpha/new_file.txt'])
         assert dir_cache.RemoteExists()
         assert dir_cache.CacheExists()
@@ -47,7 +48,7 @@ class Test:
         # Forcing cache download will override new created file.
         CreateFile(embed_data['cache_dir/alpha/new_file.txt'], 'This is new')
         assert IsFile(embed_data['cache_dir/alpha/new_file.txt'])
-        dir_cache.DownloadRemote(force=True)
+        dir_cache.CreateCache(force=True)
         assert not IsFile(embed_data['cache_dir/alpha/new_file.txt'])
 
 
@@ -63,7 +64,7 @@ class Test:
         assert dir_cache.GetFilename() == 'alpha.zip'
         assert dir_cache.GetName() == 'alpha'
 
-        dir_cache.DownloadRemote()
+        dir_cache.CreateCache()
 
         # DownloadRemote copies the archive locally
         assert os.path.isfile(embed_data['cache_dir/alpha.zip'])
@@ -94,7 +95,7 @@ class Test:
         assert not dir_cache.LocalExists()
         assert not os.path.isdir(embed_data['local/zulu'])
 
-        dir_cache.MakeLocallyAvailable()
+        dir_cache.CreateLocal()
         assert dir_cache.CacheExists()
         assert os.path.isfile(embed_data['cache_dir/alpha/file.txt'])
 
@@ -107,4 +108,39 @@ class Test:
         dir_cache.DeleteLocal()
         assert dir_cache.RemoteExists()
         assert dir_cache.CacheExists()
+        assert not dir_cache.LocalExists()
+
+
+    def testMakeLocallyAvailableWithoutCache(self, embed_data):
+        '''
+        Tests the MakeLocallyAvailable method without cache.
+        '''
+        dir_cache = DirCache(
+            embed_data['remotes/alpha.zip'],
+            embed_data['local/zulu'],
+        )
+        assert dir_cache.RemoteExists()
+
+        # Local directory must NOT exist.
+        # The following assertions are equivalent
+        with pytest.raises(CacheDisabled):
+            assert not dir_cache.CacheExists()
+        assert not os.path.isdir(embed_data['cache_dir/alpha'])
+
+        # Local directory/link must NOT exist.
+        # The following assertions are equivalent
+        assert not dir_cache.LocalExists()
+        assert not os.path.isdir(embed_data['local/zulu'])
+
+        dir_cache.CreateLocal()
+        with pytest.raises(CacheDisabled):
+            assert not dir_cache.CacheExists()
+
+        assert dir_cache.LocalExists()
+        assert os.path.isdir(embed_data['local/zulu'])
+        assert not IsLink(embed_data['local/zulu'])
+        assert os.path.isfile(embed_data['local/zulu/file.txt'])
+
+        dir_cache.DeleteLocal()
+        assert dir_cache.RemoteExists()
         assert not dir_cache.LocalExists()

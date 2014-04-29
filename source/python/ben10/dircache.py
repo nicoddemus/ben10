@@ -1,7 +1,18 @@
 from archivist import Archivist
-from ben10.filesystem import (CopyDirectory, CopyFile, CreateLink, DeleteDirectory, DeleteLink,
-    Exists, IsLink)
+from ben10.filesystem import (CopyDirectory, CopyFile, CreateLink, CreateTemporaryDirectory,
+    DeleteDirectory, DeleteLink, Exists, IsLink)
 import os
+
+
+
+#===================================================================================================
+# CacheDisabled
+#===================================================================================================
+class CacheDisabled(RuntimeError):
+    '''
+    Exception raised when any cache operation is performed in a DirCache instance that have no cache
+    enabled.
+    '''
 
 
 
@@ -9,6 +20,7 @@ import os
 # DirCache
 #===================================================================================================
 class DirCache(object):
+
     '''
     DirCache is an utility that make a remote directory/archive available locally using a local
     cache.
@@ -39,7 +51,7 @@ class DirCache(object):
     execute many jobs that requires the same resources.
     '''
 
-    def __init__(self, remote, local_dir, cache_dir):
+    def __init__(self, remote, local_dir, cache_dir=None):
         '''
         :param str remote:
             A remote directory or archive.
@@ -55,14 +67,19 @@ class DirCache(object):
         '''
         self.__remote = remote
         self.__local_dir = local_dir
-        self.__cache_base_dir = os.path.abspath(cache_dir)
 
         self.__filename = os.path.basename(self.__remote)
         self.__name = os.path.splitext(self.__filename)[0]
-        self.__cache_dir = self.__cache_base_dir + '/' + self.__name
+
+        if cache_dir is None:
+            self.__cache_base_dir = None
+            self.__cache_dir = None
+        else:
+            self.__cache_base_dir = os.path.abspath(cache_dir)
+            self.__cache_dir = self.__cache_base_dir + '/' + self.__name
 
 
-    def DownloadRemote(self, force=False):
+    def CreateCache(self, force=False):
         '''
         Downloads the remote resource into the local cache.
         This method does not touch the local_dir.
@@ -75,21 +92,33 @@ class DirCache(object):
         if Exists(self.__cache_dir):
             DeleteDirectory(self.__cache_dir)
 
+        self._DownloadRemote(self.__cache_base_dir, self.__cache_dir)
+
+
+    def _DownloadRemote(self, extract_dir, target_dir):
         if os.path.splitext(self.__filename)[1] in ('.zip', '.tbz2'):
-            local_archive_filename = self.__cache_base_dir + '/' + self.__filename
+            local_archive_filename = extract_dir + '/' + self.__filename
             CopyFile(self.__remote, local_archive_filename)
             archivist = Archivist()
-            archivist.ExtractArchive(local_archive_filename, self.__cache_dir)
+            archivist.ExtractArchive(local_archive_filename, target_dir)
         else:
-            CopyDirectory(self.__remote, self.__cache_dir)
+            CopyDirectory(self.__remote, target_dir)
 
 
-    def MakeLocallyAvailable(self):
+    def CreateLocal(self):
         '''
         Makes a remote resource locally available, downloading it if necessary.
         '''
-        self.DownloadRemote()
         self.DeleteLocal()
+        if self.IsCacheEnabled():
+            self.CreateCache()
+            self._CreateLocal()
+        else:
+            with CreateTemporaryDirectory() as tmp_dir:
+                self._DownloadRemote(tmp_dir, self.__local_dir)
+
+
+    def _CreateLocal(self):
         CreateLink(self.__cache_dir, self.__local_dir)
 
 
@@ -100,8 +129,12 @@ class DirCache(object):
         The remote and cache content are not touched.
         '''
         if Exists(self.__local_dir):
-            assert IsLink(self.__local_dir), "%s: The local directory is expected to be a link." % self.__local
-            DeleteLink(self.__local_dir)
+            if self.IsCacheEnabled():
+                assert IsLink(self.__local_dir), "%s: The local directory is expected to be a link." % self.__local
+                DeleteLink(self.__local_dir)
+            else:
+                assert not IsLink(self.__local_dir), "%s: The local directory is expected to be a directory." % self.__local
+                DeleteDirectory(self.__local_dir)
 
 
     def GetFilename(self):
@@ -133,22 +166,6 @@ class DirCache(object):
         return self.__local_dir
 
 
-    def CacheBaseDir(self):
-        '''
-        Returns the cache base directory.
-
-        :returns str:
-        '''
-        return self.__cache_base_dir
-
-
-    def CacheDir(self):
-        '''
-        Returns this resource actual cache directory.
-        '''
-        return self.__cache_dir
-
-
     def RemoteExists(self):
         '''
         Checks if the remote resource exists.
@@ -158,15 +175,6 @@ class DirCache(object):
         return Exists(self.__remote)
 
 
-    def CacheExists(self):
-        '''
-        Checks if the local cache exists.
-
-        :returns bool:
-        '''
-        return Exists(self.__cache_dir)
-
-
     def LocalExists(self):
         '''
         Checks if the local resource exists.
@@ -174,3 +182,38 @@ class DirCache(object):
         :returns bool:
         '''
         return Exists(self.__local_dir)
+
+
+    def IsCacheEnabled(self):
+        return self.__cache_dir is not None
+
+
+    def CacheBaseDir(self):
+        '''
+        Returns the cache base directory.
+
+        :returns str:
+        '''
+        if not self.IsCacheEnabled():
+            raise CacheDisabled()
+        return self.__cache_base_dir
+
+
+    def CacheDir(self):
+        '''
+        Returns this resource actual cache directory.
+        '''
+        if not self.IsCacheEnabled():
+            raise CacheDisabled()
+        return self.__cache_dir
+
+
+    def CacheExists(self):
+        '''
+        Checks if the local cache exists.
+
+        :returns bool:
+        '''
+        if not self.IsCacheEnabled():
+            raise CacheDisabled()
+        return Exists(self.__cache_dir)
