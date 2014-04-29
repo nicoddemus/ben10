@@ -132,7 +132,7 @@ class Command:
             if self.arg_type == self.ARG_TYPE_FIXTURE:
                 pass
             elif self.arg_type == self.ARG_TYPE_TRAIL:
-                parser.add_argument(self.name, nargs='+')
+                parser.add_argument(self.name, nargs='*')
             elif self.arg_type == self.ARG_TYPE_OPTION:
                 if self.default is True:
                     parser.add_argument('--%s' % self.name, action='store_true')

@@ -122,7 +122,7 @@ Options:
         cmd.ConfigureArgumentParser(parser)
         assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--dependency] [--no_setup]
             [--no_default NO_DEFAULT]
-            filename config [config ...]
+            filename [config [config ...]]
 
 positional arguments:
   filename
