@@ -59,11 +59,13 @@ class DirCache(object):
 
         :param str local_dir:
             The local directory to place the remote contents into.
-            DirCache will actually create a link with this name pointing to the real contents
-            available on cache_dir.
+            If cache is enabled, DirCache will actually create a link with this name pointing to the
+            real contents available on cache_dir.
+            If cache is disabled, the remote contents are copied to the local directory.
 
         :param str cache_dir:
             A base directory to store the actual remote content.
+            If None disables the cache for this instance of DirCache.
         '''
         self.__remote = remote
         self.__local_dir = local_dir
@@ -155,6 +157,15 @@ class DirCache(object):
         :returns str:
         '''
         return self.__name
+
+
+    def Remote(self):
+        '''
+        Returns the local directory.
+
+        :returns str:
+        '''
+        return self.__remote
 
 
     def LocalDir(self):
