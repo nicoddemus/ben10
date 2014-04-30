@@ -1,5 +1,3 @@
-import os
-import pytest
 
 
 
@@ -38,6 +36,8 @@ class Test:
     def testExceptions(self, embed_data):
         from archivist import Archivist
         from ben10.filesystem import CreateFile
+        import os
+        import pytest
 
         CreateFile(embed_data['alpha.INVALID'], '')
 
@@ -81,6 +81,8 @@ class Test:
 
     def _TestArchive(self, embed_data, filename, extract_only=False):
         from archivist import Archivist
+        import os
+
         archive = Archivist()
 
         assert not os.path.isfile(embed_data['root_dir/alpha.txt'])
