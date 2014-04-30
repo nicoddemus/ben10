@@ -1,14 +1,15 @@
 # -*- coding: latin-1 -*-
 from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFile, CopyDirectory,
     CopyFile, CopyFiles, CopyFilesX, CreateDirectory, CreateFile, CreateLink, CreateMD5,
-    CreateTemporaryDirectory, Cwd, DeleteDirectory, DeleteFile, DeleteLink,
-    DirectoryAlreadyExistsError, DirectoryNotFoundError, EOL_STYLE_MAC, EOL_STYLE_NONE,
-    EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError, FileError, FileNotFoundError,
-    FileOnlyActionError, GetFileContents, GetFileLines, GetMTime, IsDir, IsFile, IsLink, ListFiles,
-    ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile, NormStandardPath, NormalizePath,
-    NotImplementedForRemotePathError, NotImplementedProtocol, OpenFile, ReadLink,
-    ServerTimeoutError, StandardizePath)
+    CreateTemporaryDirectory, Cwd, DRIVE_FIXED, DRIVE_NO_ROOT_DIR, DRIVE_REMOTE, DeleteDirectory,
+    DeleteFile, DeleteLink, DirectoryAlreadyExistsError, DirectoryNotFoundError, EOL_STYLE_MAC,
+    EOL_STYLE_NONE, EOL_STYLE_UNIX, EOL_STYLE_WINDOWS, FileAlreadyExistsError, FileError,
+    FileNotFoundError, FileOnlyActionError, GetDriveType, GetFileContents, GetFileLines, GetMTime,
+    IsDir, IsFile, IsLink, ListFiles, ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile,
+    NormStandardPath, NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol,
+    OpenFile, ReadLink, ServerTimeoutError, StandardizePath)
 from ben10.filesystem._filesystem import CreateTemporaryFile
+from mock import patch
 import errno
 import logging
 import os
@@ -1102,6 +1103,20 @@ class Test:
             CheckIsFile(ftpserver.GetFTPUrl(embed_data['.']))  # Not a file
 
 
+    @pytest.mark.skipif(not sys.platform.startswith('win'), reason="drives are only valid in windows filesystems")
+    def testCheckDriveType(self, monkeypatch, embed_data, ftpserver):
+        assert GetDriveType('') == DRIVE_FIXED
+        assert GetDriveType(embed_data['file.txt']) == DRIVE_FIXED
+        assert GetDriveType(os.path.abspath(embed_data['file.txt'])) == DRIVE_FIXED
+
+        assert GetDriveType(os.path.abspath('') + '\\') == DRIVE_FIXED
+
+        assert GetDriveType('non_existing.txt') == DRIVE_NO_ROOT_DIR
+
+        with patch('win32file.GetDriveType', return_value=DRIVE_REMOTE):
+            assert GetDriveType(r'\\fileserversc\dev') == DRIVE_REMOTE
+
+
     def testCheckIsDir(self, monkeypatch, embed_data, ftpserver):
         # assert not raises Exception
         CheckIsDir(embed_data.GetDataDirectory())
@@ -1331,7 +1346,7 @@ class _PhonyFtpServer(object):
         class MyFTPServer(ftpserver.FTPServer):
 
             def ServeForever(self, timeout=1.0, use_poll=False, count=None):
-                '''A wrap around asyncore.loop(); starts the asyncore polling
+                """A wrap around asyncore.loop(); starts the asyncore polling
                 loop including running the scheduler.
                 The arguments are the same expected by original asyncore.loop()
                 function:
@@ -1344,7 +1359,7 @@ class _PhonyFtpServer(object):
 
                  - (int) count: how many times the polling loop gets called
                    before returning.  If None loops forever (default None).
-                '''
+                """
                 import asyncore
 
                 if use_poll and hasattr(asyncore.select, 'poll'):
