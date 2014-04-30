@@ -185,3 +185,28 @@ def Abstract(func):
     AbstractWrapper.__doc__ = func.__doc__
     return AbstractWrapper
 
+
+def Comparable(cls):
+    '''
+    Class fixture that implements all rich comparison methods based on the implementation of
+    _cmpkey.
+    '''
+    def _compare(this, other, method):
+        try:
+            return method(this._cmpkey(), other._cmpkey())
+        except (AttributeError, TypeError):
+            # _cmpkey not implemented, or return different type,
+            # so I can't compare with "other".
+            return NotImplemented('_cmpkey')
+
+    def setter(cls, name, value):
+        value.__name__ = name
+        setattr(cls, name, value)
+
+    setter(cls, '__lt__', lambda s, o: _compare(s, o, lambda s,o: s < o))
+    setter(cls, '__le__', lambda s, o: _compare(s, o, lambda s,o: s <= o))
+    setter(cls, '__eq__', lambda s, o: _compare(s, o, lambda s,o: s == o))
+    setter(cls, '__ge__', lambda s, o: _compare(s, o, lambda s,o: s >= o))
+    setter(cls, '__gt__', lambda s, o: _compare(s, o, lambda s,o: s > o))
+    setter(cls, '__ne__', lambda s, o: _compare(s, o, lambda s,o: s != o))
+    return cls
