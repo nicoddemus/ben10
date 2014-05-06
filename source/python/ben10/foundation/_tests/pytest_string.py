@@ -1,4 +1,4 @@
-from ben10.foundation.string import Dedent, SafeSplit
+from ben10.foundation.string import Dedent, Indent, SafeSplit
 import pytest
 import sys
 
@@ -138,6 +138,29 @@ class Test:
             '''
         )
         assert string == 'alpha\n\n'
+
+
+    def testIndent(self):
+        assert Indent('alpha') == '    alpha'
+
+        assert Indent('alpha', indent=2) == '        alpha'
+        assert Indent('alpha', indentation='...') == '...alpha'
+
+        # If the original text ended with '\n' the resulting text must also end with '\n'
+        assert Indent('alpha\n') == '    alpha\n'
+
+        # If the original text ended with '\n\n' the resulting text must also end with '\n\n'
+        # Empty lines are not indented.
+        assert Indent('alpha\n\n') == '    alpha\n\n'
+
+        # Empty lines are not indented nor cleared.
+        assert Indent('alpha\n  \ncharlie') == '    alpha\n  \n    charlie'
+
+        # Empty lines are not indented nor cleared.
+        assert Indent(['alpha', 'bravo']) == '    alpha\n    bravo\n'
+
+        # Multi-line test.
+        assert Indent('alpha\nbravo\ncharlie') == '    alpha\n    bravo\n    charlie'
 
 
     def testSafeSplit(self):
