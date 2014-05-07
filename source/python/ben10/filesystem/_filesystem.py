@@ -1092,6 +1092,22 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
 
 
 
+def ReplaceInFile(filename, string, replace):
+    '''
+    Replaces the string found in the given filename with the replace string.
+
+    :param str filename: the name of the file.
+    :param str string: the string to search for.
+    :param str replace: replacement string.
+    :rtype: he new contents of the file
+    '''
+    content = GetFileContents(filename)
+    content = content.replace(string, replace)
+    CreateFile(filename, content)
+    return content
+
+
+
 #===================================================================================================
 # CreateDirectory
 #===================================================================================================
@@ -1255,8 +1271,8 @@ class CreateTemporaryFile(object):
         :return str:
             The path to the created temp file.
         '''
-        from ._filesystem_exceptions import FileAlreadyExistsError
         from ben10.foundation.hash import IterHashes
+        from coilib50.filesystem._filesystem_exceptions import FileAlreadyExistsError
 
         for random_component in IterHashes(iterator_size=self.maximum_attempts):
             filename = os.path.join(self.base_dir, self.prefix + random_component + self.suffix)

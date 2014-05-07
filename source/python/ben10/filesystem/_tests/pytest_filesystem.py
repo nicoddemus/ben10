@@ -7,7 +7,7 @@ from ben10.filesystem import (AppendToFile, CanonicalPath, CheckIsDir, CheckIsFi
     FileNotFoundError, FileOnlyActionError, GetDriveType, GetFileContents, GetFileLines, GetMTime,
     IsDir, IsFile, IsLink, ListFiles, ListMappedNetworkDrives, MD5_SKIP, MoveDirectory, MoveFile,
     NormStandardPath, NormalizePath, NotImplementedForRemotePathError, NotImplementedProtocol,
-    OpenFile, ReadLink, ServerTimeoutError, StandardizePath)
+    OpenFile, ReadLink, ReplaceInFile, ServerTimeoutError, StandardizePath)
 from ben10.filesystem._filesystem import CreateTemporaryFile
 from mock import patch
 import errno
@@ -485,6 +485,13 @@ class Test:
         assert os.path.isfile(target_file.encode(sys.getfilesystemencoding()))
         assert os.path.isfile(target_file)
         assert IsFile(target_file)
+
+
+    def testReplaceInFile(self, embed_data):
+        filename = embed_data['testReplaceInFile.txt']
+        CreateFile(filename, "alpha bravo zulu delta echo")
+        ReplaceInFile(filename, 'zulu', 'charlie')
+        assert GetFileContents(filename) == "alpha bravo charlie delta echo"
 
 
     def testUnicodeFTP(self, embed_data, ftpserver):
@@ -1413,3 +1420,4 @@ class _PhonyFtpServer(object):
     def Stop(self):
         self.ftpd.StopServing()
         self.thread.join()
+
