@@ -272,7 +272,7 @@ def CopyFile(source_filename, target_filename, override=True, md5_check=False, c
 
     # Check override
     if not override and Exists(target_filename):
-        from _filesystem_exceptions import FileAlreadyExistsError
+        from ._filesystem_exceptions import FileAlreadyExistsError
         raise FileAlreadyExistsError(target_filename)
 
     # Don't do md5 check for md5 files themselves.
@@ -339,7 +339,7 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
             from _filesystem_remote import FTPUploadFileToUrl
             FTPUploadFileToUrl(source_filename, target_url)
         else:
-            from _filesystem_exceptions import NotImplementedProtocol
+            from ._filesystem_exceptions import NotImplementedProtocol
             raise NotImplementedProtocol(target_url.scheme)
 
     elif source_url.scheme in ['http', 'ftp']:
@@ -349,10 +349,10 @@ def _DoCopyFile(source_filename, target_filename, copy_symlink=True):
             DownloadUrlToFile(source_url, target_filename)
         else:
             # HTTP/FTP to other ==> NotImplemented
-            from _filesystem_exceptions import NotImplementedProtocol
+            from ._filesystem_exceptions import NotImplementedProtocol
             raise NotImplementedProtocol(target_url.scheme)
     else:
-        from _filesystem_exceptions import NotImplementedProtocol  # @Reimport
+        from ._filesystem_exceptions import NotImplementedProtocol  # @Reimport
         raise NotImplementedProtocol(source_url.scheme)
 
 
@@ -455,7 +455,7 @@ def CopyFiles(source_dir, target_dir, create_target_dir=False, md5_check=False):
         if create_target_dir:
             CreateDirectory(target_dir)
         else:
-            from _filesystem_exceptions import DirectoryNotFoundError
+            from ._filesystem_exceptions import DirectoryNotFoundError
             raise DirectoryNotFoundError(target_dir)
 
     # List and match files
@@ -639,7 +639,7 @@ def IsDir(directory):
         from ben10.filesystem._filesystem_remote import FTPIsDir
         return FTPIsDir(directory_url)
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
+        from ._filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -721,7 +721,7 @@ def DeleteFile(target_filename):
         elif IsFile(target_filename):
             os.remove(target_filename)
         elif IsDir(target_filename):
-            from _filesystem_exceptions import FileOnlyActionError
+            from ._filesystem_exceptions import FileOnlyActionError
             raise FileOnlyActionError(target_filename)
     except Exception, e:
         from ben10.foundation.reraise import Reraise
@@ -921,7 +921,7 @@ def OpenFile(filename, binary=False):
     # Check if file is local
     if _UrlIsLocal(filename_url):
         if not os.path.isfile(filename):
-            from _filesystem_exceptions import FileNotFoundError
+            from ._filesystem_exceptions import FileNotFoundError
             raise FileNotFoundError(filename)
         mode = 'r'
         if binary:
@@ -974,7 +974,7 @@ def ListFiles(directory):
         return FTPListFiles(directory_url)
 
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
+        from ._filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -993,7 +993,7 @@ def CheckIsFile(filename):
         Raises if the file does not exist.
     '''
     if not IsFile(filename):
-        from _filesystem_exceptions import FileNotFoundError
+        from ._filesystem_exceptions import FileNotFoundError
         raise FileNotFoundError(filename)
 
 
@@ -1012,7 +1012,7 @@ def CheckIsDir(directory):
         Raises if the directory does not exist.
     '''
     if not IsDir(directory):
-        from _filesystem_exceptions import DirectoryNotFoundError
+        from ._filesystem_exceptions import DirectoryNotFoundError
         raise DirectoryNotFoundError(directory)
 
 
@@ -1085,7 +1085,7 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
         FTPCreateFile(filename_url, contents)
 
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
+        from ._filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(filename_url.scheme)
 
     return filename
@@ -1142,7 +1142,7 @@ def CreateDirectory(directory):
         return directory_url
 
     else:
-        from _filesystem_exceptions import NotImplementedProtocol
+        from ._filesystem_exceptions import NotImplementedProtocol
         raise NotImplementedProtocol(directory_url.scheme)
 
 
@@ -1271,8 +1271,8 @@ class CreateTemporaryFile(object):
         :return str:
             The path to the created temp file.
         '''
+        from ._filesystem_exceptions import FileAlreadyExistsError
         from ben10.foundation.hash import IterHashes
-        from coilib50.filesystem._filesystem_exceptions import FileAlreadyExistsError
 
         for random_component in IterHashes(iterator_size=self.maximum_attempts):
             filename = os.path.join(self.base_dir, self.prefix + random_component + self.suffix)
@@ -1561,7 +1561,7 @@ def _AssertIsLocal(path):
     '''
     from urlparse import urlparse
     if not _UrlIsLocal(urlparse(path)):
-        from _filesystem_exceptions import NotImplementedForRemotePathError
+        from ._filesystem_exceptions import NotImplementedForRemotePathError
         raise NotImplementedForRemotePathError
 
 
