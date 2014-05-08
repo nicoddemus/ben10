@@ -3,6 +3,10 @@ Module for string manipulation functions
 '''
 
 
+
+#===================================================================================================
+# Dedent
+#===================================================================================================
 def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
     '''
     Heavily inspired by textwrap.dedent, with a few changes (as of python 2.7)
@@ -84,6 +88,10 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
     return text
 
 
+
+#===================================================================================================
+# Indent
+#===================================================================================================
 def Indent(text, indent=1, indentation='    '):
     '''
     Indents multiple lines of text.
@@ -124,6 +132,10 @@ def Indent(text, indent=1, indentation='    '):
     return result
 
 
+
+#===================================================================================================
+# SafeSplit
+#===================================================================================================
 def SafeSplit(s, sep, maxsplit=None, default=''):
     '''
     Perform a string split granting the size of the resulting list.

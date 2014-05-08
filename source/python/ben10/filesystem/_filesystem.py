@@ -1092,17 +1092,21 @@ def CreateFile(filename, contents, eol_style=EOL_STYLE_NATIVE, create_dir=True, 
 
 
 
-def ReplaceInFile(filename, string, replace):
+def ReplaceInFile(filename, old, new):
     '''
-    Replaces the string found in the given filename with the replace string.
+    Replaces all occurrences of "old" by "new" in the given file.
 
-    :param str filename: the name of the file.
-    :param str string: the string to search for.
-    :param str replace: replacement string.
-    :rtype: he new contents of the file
+    :param str filename:
+        The name of the file.
+    :param str old:
+        The string to search for.
+    :param str new:
+        Replacement string.
+    :return str:
+        The new contents of the file.
     '''
     content = GetFileContents(filename)
-    content = content.replace(string, replace)
+    content = content.replace(old, new)
     CreateFile(filename, content)
     return content
 
