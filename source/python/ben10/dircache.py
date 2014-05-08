@@ -170,7 +170,7 @@ class DirCache(object):
 
     def Remote(self):
         '''
-        Returns the local directory.
+        Returns the remote resource full name.
 
         :returns str:
         '''
