@@ -1,7 +1,7 @@
 '''
-Inspired in a code obtained from the INTERNET.
-    http://www.thescripts.com/forum/thread46361.html
+Inspired in a code obtained from http://www.thescripts.com/forum/thread46361.html
 '''
+
 
 
 #===================================================================================================
@@ -9,7 +9,7 @@ Inspired in a code obtained from the INTERNET.
 #===================================================================================================
 class ReraiseKeyError(KeyError):
     '''
-        Replaces KeyError storing the original message. This is used to keep the EOL in the message
+    Replaces KeyError storing the original message. This is used to keep the EOL in the message
     '''
 
     def __init__(self, message):
@@ -42,38 +42,62 @@ class ReraiseSyntaxError(SyntaxError):
 #===================================================================================================
 # Reraise
 #===================================================================================================
-def Reraise(exception, message):
+def Reraise(exception, message, separator='\n'):
     '''
-    In Python 2.5 overriding the exception "__str__" has no effect in "str()". Instead, we must
-    change the "args" attribute which is used to build the string representation.
+    Raised the same exception given, with an additional message.
 
-    Even though the documentation says "args" will be deprecated, it uses its first argument in
-    str() implementation and not "message".
+    :param Exception exception:
+        Original exception being raised with additional messages
+
+    :param str message:
+        Message to be added to the given exception
+
+    :param str separator:
+        String separating `message` from the `exception`'s original message.
+
+    e.g.
+        try:
+            raise RuntimeError('original message')
+        except Exception, e:
+            Reraise(e, 'message')
+
+        >>> RuntimeError:
+        >>> message
+        >>> original message
+
+        try:
+            raise RuntimeError('original message')
+        except Exception, e:
+            Reraise(e, '[message]', separator=' ')
+
+        >>> RuntimeError:
+        >>> [message] original message
     '''
     import sys
 
-
-
-    # >>> Get the current message
+    # Get the current message
     current_message = str(exception)
-    if not current_message.startswith('\n'):
-        current_message = '\n' + current_message
 
-    # >>> Build the new message
+    # Build the new message
+    if not current_message.startswith(separator):
+        current_message = separator + current_message
     message = '\n' + message + current_message
 
-    # >>> Special case: OSError
-    #     Create a new exception, since OSError behaves differently from other exceptions
+    # Handling for special case, some exceptions have different behaviors.
     if isinstance(exception, OSError):
+        # Create a new exception, since OSError behaves differently from other exceptions
         exception = RuntimeError(message)
-    # >>> Replace KeyError by RuntimeError to keep the line-ends.
     if isinstance(exception, KeyError):
         exception = ReraiseKeyError(message)
     elif isinstance(exception, SyntaxError):
         exception = ReraiseSyntaxError(message)
     else:
+        # In Python 2.5 overriding the exception "__str__" has no effect in "str()". Instead, we
+        # must change the "args" attribute which is used to build the string representation.
+        # Even though the documentation says "args" will be deprecated, it uses its first argument
+        # in str() implementation and not "message".
         exception.message = message
         exception.args = (exception.message,)
 
-    # >>> Reraise the exception with the EXTRA message information
+    # Reraise the exception with the EXTRA message information
     raise exception, None, sys.exc_info()[-1]

@@ -3,6 +3,10 @@ Module for string manipulation functions
 '''
 
 
+
+#===================================================================================================
+# Dedent
+#===================================================================================================
 def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
     '''
     Heavily inspired by textwrap.dedent, with a few changes (as of python 2.7)
@@ -85,6 +89,53 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
 
 
 
+#===================================================================================================
+# Indent
+#===================================================================================================
+def Indent(text, indent=1, indentation='    '):
+    '''
+    Indents multiple lines of text.
+
+    :param list(str)|str text:
+        The text to apply the indentation.
+
+    :param int indent:
+        Number of indentations to add. Defaults to 1.
+
+    :param str indentation:
+        The text used as indentation. Defaults to 4 spaces.
+
+    :return str:
+        Returns the text with applied indentation.
+    '''
+    indentation = indent * indentation
+
+    lines = text
+    if isinstance(lines, str):
+        append_eol = lines.endswith('\n')
+        lines = lines.splitlines()
+    else:
+        append_eol = True
+
+    result = []
+    for i in lines:
+        if i.strip():
+            result.append(indentation + i)
+        else:
+            result.append(i)
+    if result:
+        result = '\n'.join(result)
+        if append_eol:
+            result += '\n'
+    else:
+        result = ''
+    return result
+
+
+
+#===================================================================================================
+# SafeSplit
+#===================================================================================================
 def SafeSplit(s, sep, maxsplit=None, default=''):
     '''
     Perform a string split granting the size of the resulting list.

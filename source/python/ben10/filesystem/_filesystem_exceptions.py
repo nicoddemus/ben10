@@ -101,3 +101,22 @@ class FileAlreadyExistsError(FileError):
 class FileOnlyActionError(FileError):
     def GetMessage(self, filename):
         return 'Action performed over "%s" only possible with a file.' % filename
+
+
+
+#===================================================================================================
+# MultipleFilesNotFound
+#===================================================================================================
+class MultipleFilesNotFound(FileNotFoundError):
+    '''
+    Raised when a filename search algorithm fails to find a valid filename match.
+
+    The error lists all the candidate filenames.
+    '''
+
+    def __init__(self, filenames, header=''):
+        self.header = header
+        self.filenames = filenames
+
+    def __str__(self):
+        return self.header + 'Files not found: %s' % ','.join(self.filenames)
