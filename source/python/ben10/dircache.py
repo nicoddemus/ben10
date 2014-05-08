@@ -98,6 +98,15 @@ class DirCache(object):
 
 
     def _DownloadRemote(self, extract_dir, target_dir):
+        '''
+        Internal method that actually downloads the remote resource. Handles archive remotes.
+
+        :param str extract_dir:
+            A temporary directory where to extract archive remote resources.
+            Only used if the remote resource is an archive.
+        :param str target_dir:
+            The final destination of the remote resource.
+        '''
         if os.path.splitext(self.__filename)[1] in ('.zip', '.tbz2'):
             local_archive_filename = extract_dir + '/' + self.__filename
             CopyFile(self.__remote, local_archive_filename)
