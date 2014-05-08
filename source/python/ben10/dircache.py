@@ -63,7 +63,7 @@ class DirCache(object):
             real contents available on cache_dir.
             If cache is disabled, the remote contents are copied to the local directory.
 
-        :param str cache_dir:
+        :param str|None cache_dir:
             A base directory to store the actual remote content.
             If None disables the cache for this instance of DirCache.
         '''
