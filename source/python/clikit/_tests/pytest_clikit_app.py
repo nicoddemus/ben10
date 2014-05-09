@@ -48,14 +48,13 @@ class Test:
 
     def testHelp(self):
 
-        def TestCmd(console_, first, second, option=1, option_yes=True, option_no=False):
+        def TestCmd(console_, first, second, option=1, option_no=False):
             '''
             This is a test.
 
             :param first: This is the first parameter.
             :param second: This is the second and last parameter.
             :param option: This must be a number.
-            :param option_yes: If set, says yes.
             :param option_no: If set, says nop.
             '''
 
@@ -96,7 +95,7 @@ class Test:
                     This is a test.
 
                     Usage:
-                        test-cmd <first> <second> [--option=1],[--option_yes],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option_no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -104,7 +103,6 @@ class Test:
 
                     Options:
                         --option   This must be a number. [default: 1]
-                        --option_yes   If set, says yes.
                         --option_no   If set, says nop.
 
 
@@ -122,7 +120,7 @@ class Test:
                     This is a test.
 
                     Usage:
-                        test-cmd <first> <second> [--option=1],[--option_yes],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option_no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -130,7 +128,6 @@ class Test:
 
                     Options:
                         --option   This must be a number. [default: 1]
-                        --option_yes   If set, says yes.
                         --option_no   If set, says nop.
 
 
@@ -322,6 +319,33 @@ class Test:
         app.TestScript(inspect.getdoc(self.testOptionArgs))
 
 
+    def testBoolArgFalse(self):
+        '''
+        >test command
+        False
+        >test command --option
+        True
+        '''
+        app = App('test', color=False, buffered_console=True)
+        def Command(console_, option=False):
+            console_.Print(option)
+        app.Add(Command)
+        app.TestScript(inspect.getdoc(self.testBoolArgFalse))
+
+
+    def testBoolArgTrue(self):
+        # We cannot have a command with boolean default True
+        app = App('test', color=False, buffered_console=True)
+        def Command(console_, option=True):
+            console_.Print(option)
+
+        with pytest.raises(RuntimeError) as e:
+            app.Add(Command)
+
+        assert str(e.value) == \
+            'Clikit commands are not allowed to have boolean parameters that default to True.'
+
+
     def testColor(self):
         app = App('test', color=True, buffered_console=True)
 
@@ -430,8 +454,8 @@ class Test:
         def Bravo(console_):
             console_.Print('Bravo')
 
-        app.ExecuteCommand('alpha') == (app.RETCODE_OK, 'Alpha\n')
-        app.ExecuteCommand('bravo') == (app.RETCODE_OK, 'Bravo\n')
+        assert app.ExecuteCommand('alpha') == (app.RETCODE_OK, 'Alpha\n')
+        assert app.ExecuteCommand('bravo') == (app.RETCODE_OK, 'Bravo\n')
 
 
     def testFixtureDecorator(self):
