@@ -1,0 +1,2 @@
+greeting = raw_input('')
+print "testExecuteInput: Hello, %s!" % greeting

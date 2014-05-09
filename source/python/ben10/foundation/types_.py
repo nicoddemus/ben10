@@ -438,8 +438,8 @@ def MergeDictsRecursively(original_dict, merging_dict):
 #===================================================================================================
 class Method(object):
     '''
-        This class is an 'organization' class, so that subclasses are considered as methods
-        (and its __call__ method is checked for the parameters)
+    This class is an 'organization' class, so that subclasses are considered as methods
+    (and its __call__ method is checked for the parameters)
     '''
 
 
