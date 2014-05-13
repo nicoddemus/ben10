@@ -1,0 +1,6 @@
+import sys
+import os
+print "testExecute"
+print "Arguments:"
+for i, i_arg in enumerate(sys.argv):
+    print '-', i, '-', os.path.normcase(i_arg)

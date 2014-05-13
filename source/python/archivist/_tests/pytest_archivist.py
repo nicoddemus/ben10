@@ -1,12 +1,10 @@
+from ben10.filesystem import FileAlreadyExistsError
 
 
 
 #===================================================================================================
 # Test
 #===================================================================================================
-from ben10.filesystem import FileAlreadyExistsError
-
-
 class Test:
 
     def testExtractRar(self, embed_data):

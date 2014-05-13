@@ -449,10 +449,12 @@ class Test:
 
         m = My()
         m.m1 = MyWrongMethod()
-        assert _IsImplementationFullChecking(m, _InterfM1) == False
+        r = _IsImplementationFullChecking(m, _InterfM1)
+        assert r == False
 
         m.m1 = MyRightMethod()
-        assert _IsImplementationFullChecking(m, _InterfM1) == True
+        r = _IsImplementationFullChecking(m, _InterfM1)
+        assert r == True
 
         del m.m1
         assert IsImplementation(m, _InterfM1) == True

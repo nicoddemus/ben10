@@ -1,0 +1,14 @@
+
+PATH (sorted)
+    - path1
+    - path2
+
+PYTHONPATH (sorted)
+    - pythonpath1
+    - pythonpath2
+
+var1
+    - value1
+
+var2
+    - value2

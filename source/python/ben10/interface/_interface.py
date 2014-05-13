@@ -1,5 +1,5 @@
 from ben10.foundation.decorators import Deprecated, Override
-from ben10.foundation.is_frozen import IsFrozen
+from ben10.foundation.is_frozen import IsDevelopment
 from ben10.foundation.klass import IsInstance
 from ben10.foundation.reraise import Reraise
 from ben10.foundation.singleton import Singleton
@@ -33,7 +33,7 @@ class BadImplementationError(InterfaceError):
 class InterfaceImplementationMetaClass(type):
     def __new__(cls, name, bases, dct):
         C = type.__new__(cls, name, bases, dct)
-        if not IsFrozen():  # Only doing check in dev mode.
+        if IsDevelopment():  # Only doing check in dev mode.
             for I in dct.get('__implements__', []):
                 # Will do full checking this first time, and also cache the results
                 AssertImplements(C, I)
@@ -400,7 +400,7 @@ class CacheInterfaceAttrs(object):
             cache = self.cache
         except AttributeError:
             # create it on the 1st access
-            from _cached_method import ImmutableParamsCachedMethod
+            from ._cached_method import ImmutableParamsCachedMethod
             cache = self.cache = ImmutableParamsCachedMethod(self.__GetInterfaceMethodsAndAttrs)
         return cache(interface)
 

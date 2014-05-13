@@ -1,0 +1,12 @@
+import time
+
+# Initial wait so the test have time to check for the missing file.
+time.sleep(0.2)
+
+oss = file('testExecuteNoWait.txt', 'w')
+try:
+    print >> oss, "testExecuteNoWait: Sleeping..."
+    time.sleep(0.1)
+    print >> oss, "testExecuteNoWait: Finished"
+finally:
+    oss.close()
