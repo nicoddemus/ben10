@@ -54,7 +54,7 @@ class Git(object):
         command_line = ['git'] + command_line
 
         from ben10.execute import Execute2
-        output, retcode = System().Execute2(
+        output, retcode = Execute2(
             command_line,
             cwd=repo_path,
             output_callback=output_callback,
