@@ -199,6 +199,11 @@ class ConfPlugin():
 class TooFewArgumentError(RuntimeError):
     pass
 
+class UnrecognizedArgumentsError(RuntimeError):
+    def __init__(self, arguments):
+        self.arguments = arguments
+        RuntimeError.__init__(self)
+
 class MyArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
@@ -208,6 +213,10 @@ class MyArgumentParser(argparse.ArgumentParser):
         '''
         if message == 'too few arguments':
             raise TooFewArgumentError()
+
+        if message.startswith('unrecognized arguments: '):
+            raise UnrecognizedArgumentsError(message[24:])
+
 
 
 #===================================================================================================
@@ -485,16 +494,19 @@ class App(object):
             # Parse parameters/options
             try:
                 command_opts = parser.parse_args(args)
+                fixtures = self.GetFixtures(argv)
+                result = command.Call(fixtures, command_opts.__dict__)
+                if result is None:
+                    result = self.RETCODE_OK
+                return result
             except TooFewArgumentError:
                 self.console.PrintError('<red>ERROR: Too few arguments.</>', newlines=2)
                 self.PrintHelp(command)
                 return self.RETCODE_ERROR
-
-            fixtures = self.GetFixtures(argv)
-            result = command.Call(fixtures, command_opts.__dict__)
-            if result is None:
-                result = self.RETCODE_OK
-            return result
+            except UnrecognizedArgumentsError, e:
+                self.console.PrintError('<red>ERROR: Unrecognized arguments: %s</>' % e.arguments, newlines=2)
+                self.PrintHelp(command)
+                return self.RETCODE_ERROR
 
         except InvalidCommand as exception:
             self.console.PrintError('<red>ERROR: Unknown command %s</>' % str(exception))

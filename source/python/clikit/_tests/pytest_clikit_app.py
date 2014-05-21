@@ -199,7 +199,7 @@ class Test:
 
             '''),
             app.RETCODE_ERROR
-    )
+        )
 
 
     def testConf(self, tmpdir):
@@ -317,6 +317,29 @@ class Test:
         app.Add(Command)
 
         app.TestScript(inspect.getdoc(self.testOptionArgs))
+
+
+    def testUnknownOptionArgs(self):
+        app = App('test', color=False, buffered_console=True)
+        def Command(console_):
+            console_.Print('hello')
+        app.Add(Command)
+
+        app.TestScript(Dedent(
+            '''
+            >test command --foo --bar
+            ERROR: Unrecognized arguments: --foo --bar
+
+            (no description)
+
+            Usage:
+                command\s\s
+
+            Parameters:
+
+            Options:
+            '''.replace('\s', ' ')
+        ))
 
 
     def testBoolArgFalse(self):
