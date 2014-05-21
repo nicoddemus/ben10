@@ -3,6 +3,7 @@
 	<name>ben10</name>
 	<comment></comment>
 	<projects>
+		<project>aasimar10</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
