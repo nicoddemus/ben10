@@ -93,9 +93,11 @@ class Command:
             '''
             :param str name:
                 The argument name.
+
             :param ARG_TYPE_XXX arg_type:
                 The type of the argument in CliKit scope.
                 See ARG_TYPE_XXX constants.
+
             :param object default:
                 The default value for this argument.
             '''
@@ -104,16 +106,23 @@ class Command:
             self.default = default
             self.description = '(no description)'
 
+            # For the command line, all options with underscores are replaced by hyphens.
+            # argparse handles this and replaces back to underscore when setting option values
+            if arg_type == self.ARG_TYPE_OPTION:
+                self.argparse_name = name.replace('_', '-')
+            else:
+                self.argparse_name = name
+
 
         def __str__(self):
             if self.arg_type == self.ARG_TYPE_TRAIL:
-                return '*' + self.name
+                return '*' + self.argparse_name
             elif any(map(lambda x: self.default is x, (Command.Arg.NO_DEFAULT, True, False))):
-                return self.name
+                return self.argparse_name
             elif self.default is None:
-                return '%s=VALUE' % self.name
+                return '%s=VALUE' % self.argparse_name
             else:
-                return '%s=%s' % (self.name, self.default)
+                return '%s=%s' % (self.argparse_name, self.default)
 
 
         def __repr__(self):
@@ -133,7 +142,7 @@ class Command:
                 return
 
             if self.arg_type == self.ARG_TYPE_TRAIL:
-                parser.add_argument(self.name, nargs='+')
+                parser.add_argument(self.argparse_name, nargs='+')
                 return
 
             if self.arg_type == self.ARG_TYPE_OPTION:
@@ -146,17 +155,17 @@ class Command:
                     # either setting or not setting them would lead to the same effect.
                     assert self.default is not True, 'Can\'t handle boolean options with default=True'
 
-                    parser.add_argument('--%s' % self.name, action='store_true', default=self.default)
+                    parser.add_argument('--%s' % self.argparse_name, action='store_true', default=self.default)
                 else:
                     # All other parameter types work as usual and must receive a value
-                    parser.add_argument('--%s' % self.name, default=self.default)
+                    parser.add_argument('--%s' % self.argparse_name, default=self.default)
                 return
 
             if self.arg_type is self.ARG_TYPE_POSITIONAL:
                 if self.default is self.NO_DEFAULT:
-                    parser.add_argument(self.name)
+                    parser.add_argument(self.argparse_name)
                 else:
-                    parser.add_argument(self.name, nargs='?', default=self.default)
+                    parser.add_argument(self.argparse_name, nargs='?', default=self.default)
                 return
 
             raise TypeError('Unknown arg_type==%r' % self.arg_type)
@@ -288,14 +297,14 @@ class Command:
         ), indent=1, newlines=2)
         console.Print('Parameters:')
         for i in positionals:
-            console.Print('<teal>%s</>   %s' % (i.name, i.description), indent=1)
+            console.Print('<teal>%s</>   %s' % (i.argparse_name, i.description), indent=1)
         console.Print()
         console.Print('Options:')
         for i in optionals:
             if any(map(lambda x: i.default is x, (Command.Arg.NO_DEFAULT, None, True, False))):
-                console.Print('--%s   %s' % (i.name, i.description), indent=1)
+                console.Print('--%s   %s' % (i.argparse_name, i.description), indent=1)
             else:
-                console.Print('--%s   %s [default: %s]' % (i.name, i.description, i.default), indent=1)
+                console.Print('--%s   %s [default: %s]' % (i.argparse_name, i.description, i.default), indent=1)
         return console.GetOutput()
 
 
