@@ -1,5 +1,5 @@
 junit_patterns:
-- ben10/pytest.xml
+- "**/build/{dist}-{platform}-tests/*.xml"
 
 platform-windows:build_batch_commands:
 - |
