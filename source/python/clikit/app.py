@@ -67,7 +67,7 @@ class ConsolePlugin():
             '--no-color',
             dest='console_color',
             action='store_false',
-            default=True,
+            default=None,
             help='Do not colorize output'
         )
 
@@ -76,7 +76,9 @@ class ConsolePlugin():
         '''
         Implements IClikitPlugin.HandleOptions
         '''
-        self.__console.verbosity = getattr(opts, 'console_verbosity', 1)
+        self.__console.verbosity = opts['console_verbosity']
+        if opts['console_color'] is not None:
+            self.__console.color = opts['console_color']
 
 
     def GetFixtures(self):
@@ -458,6 +460,10 @@ class App(object):
         parser = self.CreateArgumentParser()
         opts, args = parser.parse_known_args(argv)
 
+        # Give plugins change to handle options
+        for i_plugin in self.plugins.itervalues():
+            i_plugin.HandleOptions(opts.__dict__)
+
         # Print help for the available commands
         if not args:
             self.PrintHelp()
@@ -472,10 +478,6 @@ class App(object):
             if opts.help:
                 self.PrintHelp(command)
                 return self.RETCODE_OK
-
-            # Give plugins change to handle options
-            for i_plugin in self.plugins.itervalues():
-                i_plugin.HandleOptions(opts.__dict__)
 
             # Configure parser with command specific parameters/options
             command.ConfigureArgumentParser(parser)
