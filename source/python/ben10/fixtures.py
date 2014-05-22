@@ -203,7 +203,7 @@ class _EmbedDataFixture(object):
         '''
         Compare two files contents, showing a nice diff view if the files differs.
 
-        Searches for the filenames both outside or inside the data directory.
+        Searches for the filenames both inside and outside the data directory (in that order).
 
         :param str filename1:
         :param str filename2:
@@ -217,12 +217,17 @@ class _EmbedDataFixture(object):
         import os
 
         def FindFile(filename):
-            r_filename = filename
-            if not os.path.isfile(r_filename):
-                r_filename = self.GetDataFilename(r_filename)
-            if not os.path.isfile(r_filename):
-                raise MultipleFilesNotFound([filename, r_filename])
-            return r_filename
+            # See if this path exists in the data dir
+            data_filename = self.GetDataFilename(filename)
+            if os.path.isfile(data_filename):
+                return data_filename
+
+            # If not, we might have already received a full path
+            if os.path.isfile(filename):
+                return filename
+
+            # If we didn't find anything, raise an error
+            raise MultipleFilesNotFound([filename, data_filename])
 
         filename1 = FindFile(filename1)
         filename2 = FindFile(filename2)
