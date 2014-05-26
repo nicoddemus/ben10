@@ -88,15 +88,20 @@ class Test:
 
 
     def testCwd(self, embed_data):
-        current_dir = os.getcwd()
+        current_dir = StandardizePath(os.getcwd())
 
         data_dir = embed_data.GetDataDirectory(absolute=True)
 
-        assert os.getcwd() == current_dir
+        assert StandardizePath(os.getcwd()) == current_dir
         with Cwd(data_dir) as obtained_dir:
             assert StandardizePath(os.getcwd()) == data_dir
             assert obtained_dir == data_dir
-        assert os.getcwd() == current_dir
+        assert StandardizePath(os.getcwd()) == current_dir
+
+        with Cwd(None) as obtained_dir:
+            assert StandardizePath(os.getcwd()) == current_dir
+            assert obtained_dir is None
+        assert StandardizePath(os.getcwd()) == current_dir
 
 
     def testCreateMD5(self, embed_data):

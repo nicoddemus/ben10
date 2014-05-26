@@ -103,7 +103,6 @@ class FileOnlyActionError(FileError):
         return 'Action performed over "%s" only possible with a file.' % filename
 
 
-
 #===================================================================================================
 # MultipleFilesNotFound
 #===================================================================================================

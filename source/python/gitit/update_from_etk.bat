@@ -1,4 +1,4 @@
-copy /qe x:\etk\sharedscripts10\source\python\sharedscripts10\git.py
+copy /qe x:\etk\sharedscripts10\source\python\sharedscripts10\_git_impl.py git.py
 
 mkdir _tests
 copy /qe x:\etk\sharedscripts10\source\python\sharedscripts10\_tests\pytest_git.py _tests

@@ -86,7 +86,8 @@ def Cwd(directory):
         Target directory to enter
     '''
     old_directory = os.getcwd()
-    os.chdir(directory)
+    if directory is not None:
+        os.chdir(directory)
     try:
         yield directory
     finally:
