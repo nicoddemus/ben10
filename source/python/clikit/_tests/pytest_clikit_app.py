@@ -95,7 +95,7 @@ class Test:
                     This is a test.
 
                     Usage:
-                        test-cmd <first> <second> [--option=1],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option-no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -103,7 +103,7 @@ class Test:
 
                     Options:
                         --option   This must be a number. [default: 1]
-                        --option_no   If set, says nop.
+                        --option-no   If set, says nop.
 
 
                 '''
@@ -120,7 +120,7 @@ class Test:
                     This is a test.
 
                     Usage:
-                        test-cmd <first> <second> [--option=1],[--option_no]
+                        test-cmd <first> <second> [--option=1],[--option-no]
 
                     Parameters:
                         first   This is the first parameter.
@@ -128,7 +128,7 @@ class Test:
 
                     Options:
                         --option   This must be a number. [default: 1]
-                        --option_no   If set, says nop.
+                        --option-no   If set, says nop.
 
 
                 '''
@@ -199,7 +199,7 @@ class Test:
 
             '''),
             app.RETCODE_ERROR
-    )
+        )
 
 
     def testConf(self, tmpdir):
@@ -317,6 +317,46 @@ class Test:
         app.Add(Command)
 
         app.TestScript(inspect.getdoc(self.testOptionArgs))
+
+
+    def testOptionUnderscore(self):
+        '''
+        >test command
+        my_option = default
+        >test command --my-option=custom
+        my_option = custom
+        '''
+        app = App('test', color=False, buffered_console=True)
+
+        def Command(console_, my_option='default'):
+            console_.Print('my_option = ' + my_option)
+
+        app.Add(Command)
+
+        app.TestScript(inspect.getdoc(self.testOptionUnderscore))
+
+
+    def testUnknownOptionArgs(self):
+        app = App('test', color=False, buffered_console=True)
+        def Command(console_):
+            console_.Print('hello')
+        app.Add(Command)
+
+        app.TestScript(Dedent(
+            '''
+            >test command --foo --bar
+            ERROR: Unrecognized arguments: --foo --bar
+
+            (no description)
+
+            Usage:
+                command\s\s
+
+            Parameters:
+
+            Options:
+            '''.replace('\s', ' ')
+        ))
 
 
     def testBoolArgFalse(self):

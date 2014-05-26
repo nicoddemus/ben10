@@ -65,16 +65,16 @@ class Test:
             'console_',
             'filename',
             'option=yes',
-            'no_setup',
-            'no_default=VALUE',
+            'no-setup',
+            'no-default=VALUE',
             '*config'
         ]
         assert map(repr, cmd.args.values()) == [
             '<Arg console_>',
             '<Arg filename>',
             '<Arg option=yes>',
-            '<Arg no_setup>',
-            '<Arg no_default=VALUE>',
+            '<Arg no-setup>',
+            '<Arg no-default=VALUE>',
             '<Arg *config>',
         ]
         assert cmd.kwargs is None
@@ -101,7 +101,7 @@ class Test:
             cmd.Call({'console_' : console}, {})
 
         assert cmd.FormatHelp() == '''Usage:
-    Hello <filename> <*config> [--option=yes],[--no_setup],[--no_default=VALUE]
+    Hello <filename> <*config> [--option=yes],[--no-setup],[--no-default=VALUE]
 
 Parameters:
     filename   The name of the file.
@@ -109,14 +109,14 @@ Parameters:
 
 Options:
     --option   (no description) [default: yes]
-    --no_setup   False if set
-    --no_default   Receives None
+    --no-setup   False if set
+    --no-default   Receives None
 '''
 
         import argparse
         parser = argparse.ArgumentParser('TEST')
         cmd.ConfigureArgumentParser(parser)
-        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--no_setup] [--no_default NO_DEFAULT]
+        assert parser.format_help() == '''usage: TEST [-h] [--option OPTION] [--no-setup] [--no-default NO_DEFAULT]
             filename config [config ...]
 
 positional arguments:
@@ -126,8 +126,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --option OPTION
-  --no_setup
-  --no_default NO_DEFAULT
+  --no-setup
+  --no-default NO_DEFAULT
 '''
 
     def testNoArgument(self):

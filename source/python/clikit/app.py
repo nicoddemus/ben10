@@ -67,7 +67,7 @@ class ConsolePlugin():
             '--no-color',
             dest='console_color',
             action='store_false',
-            default=True,
+            default=None,
             help='Do not colorize output'
         )
 
@@ -76,7 +76,9 @@ class ConsolePlugin():
         '''
         Implements IClikitPlugin.HandleOptions
         '''
-        self.__console.verbosity = getattr(opts, 'console_verbosity', 1)
+        self.__console.verbosity = opts['console_verbosity']
+        if opts['console_color'] is not None:
+            self.__console.color = opts['console_color']
 
 
     def GetFixtures(self):
@@ -197,6 +199,11 @@ class ConfPlugin():
 class TooFewArgumentError(RuntimeError):
     pass
 
+class UnrecognizedArgumentsError(RuntimeError):
+    def __init__(self, arguments):
+        self.arguments = arguments
+        RuntimeError.__init__(self)
+
 class MyArgumentParser(argparse.ArgumentParser):
 
     def error(self, message):
@@ -206,6 +213,10 @@ class MyArgumentParser(argparse.ArgumentParser):
         '''
         if message == 'too few arguments':
             raise TooFewArgumentError()
+
+        if message.startswith('unrecognized arguments: '):
+            raise UnrecognizedArgumentsError(message[24:])
+
 
 
 #===================================================================================================
@@ -458,6 +469,10 @@ class App(object):
         parser = self.CreateArgumentParser()
         opts, args = parser.parse_known_args(argv)
 
+        # Give plugins change to handle options
+        for i_plugin in self.plugins.itervalues():
+            i_plugin.HandleOptions(opts.__dict__)
+
         # Print help for the available commands
         if not args:
             self.PrintHelp()
@@ -473,26 +488,25 @@ class App(object):
                 self.PrintHelp(command)
                 return self.RETCODE_OK
 
-            # Give plugins change to handle options
-            for i_plugin in self.plugins.itervalues():
-                i_plugin.HandleOptions(opts.__dict__)
-
             # Configure parser with command specific parameters/options
             command.ConfigureArgumentParser(parser)
 
             # Parse parameters/options
             try:
                 command_opts = parser.parse_args(args)
+                fixtures = self.GetFixtures(argv)
+                result = command.Call(fixtures, command_opts.__dict__)
+                if result is None:
+                    result = self.RETCODE_OK
+                return result
             except TooFewArgumentError:
                 self.console.PrintError('<red>ERROR: Too few arguments.</>', newlines=2)
                 self.PrintHelp(command)
                 return self.RETCODE_ERROR
-
-            fixtures = self.GetFixtures(argv)
-            result = command.Call(fixtures, command_opts.__dict__)
-            if result is None:
-                result = self.RETCODE_OK
-            return result
+            except UnrecognizedArgumentsError, e:
+                self.console.PrintError('<red>ERROR: Unrecognized arguments: %s</>' % e.arguments, newlines=2)
+                self.PrintHelp(command)
+                return self.RETCODE_ERROR
 
         except InvalidCommand as exception:
             self.console.PrintError('<red>ERROR: Unknown command %s</>' % str(exception))
