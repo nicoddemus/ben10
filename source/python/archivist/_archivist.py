@@ -248,8 +248,6 @@ class Archivist(object):
 
         # Extract archive
         for i_name in archive.ListFilenames():
-            if i_name.endswith('/'):
-                continue
             target_filename = os.path.normpath(os.path.join(target_dir, i_name))
             if os.path.isdir(target_filename):
                 continue

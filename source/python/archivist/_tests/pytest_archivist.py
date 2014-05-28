@@ -15,6 +15,10 @@ class Test:
         self._TestArchive(embed_data, embed_data['root_dir.zip'])
 
 
+    def testCreateAndExtract7Zip(self, embed_data):
+        self._TestArchive(embed_data, embed_data['7zip.zip'], extract_only=True)
+
+
     def testCreateAndExtractBz2(self, embed_data):
         self._TestArchive(embed_data, embed_data['alpha.tar.bz2'])
 
@@ -33,11 +37,12 @@ class Test:
 
     def testExceptions(self, embed_data):
         from archivist import Archivist
-        from ben10.filesystem import CreateFile
+        from ben10.filesystem import CreateDirectory, CreateFile
         import os
         import pytest
 
         CreateFile(embed_data['alpha.INVALID'], '')
+        CreateDirectory(embed_data['CREATE/root_dir/empty_dir'])
 
         archive = Archivist()
 

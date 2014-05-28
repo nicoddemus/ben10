@@ -61,7 +61,9 @@ class ZipWrapper(object):
 
     @Implements(IArchiveWrapper.ListFilenames)
     def ListFilenames(self):
-        return [i for i in self.wrapped.namelist() if not i.endswith('/')]
+        from ben10.filesystem import StandardizePath
+
+        return [StandardizePath(i) for i in self.wrapped.namelist() if not i.endswith('/')]
 
 
     @Implements(IArchiveWrapper.ListDirs)
@@ -98,9 +100,8 @@ class RarWrapper(object):
 
     def ListFilenames(self):
         from ben10.filesystem import StandardizePath
-        result = self.wrapped.namelist()
-        result = [StandardizePath(i) for i in result]
-        return result
+
+        return [StandardizePath(i) for i in self.wrapped.namelist() if not i.endswith('/')]
 
 
     def ListDirs(self):
