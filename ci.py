@@ -14,9 +14,8 @@ def Pylint(params, output_filename):
     sys.stdout = file(output_filename, 'w')
     try:
         Run(params.split())
-    except SystemExit:
-        # TODO: handle exit code from pylint
-        pass
+    except SystemExit as e:
+        assert e.code == 0, "Expecting a successful run of pylint"
     finally:
         sys.stdout.close()
         sys.stdout = sys_stdout
@@ -26,8 +25,7 @@ old_cwd = os.getcwd()
 os.chdir(os.path.dirname(__file__))
 try:
     pytest_retcode = Pytest('--junitxml=pytest.xml --cov-report xml --cov ben10 source/python/')
-    # TODO: Disabled until we can configure job's done to use pylint.
-    #Pylint('-f parseable -d I0011,R0801 ben10', 'pylint.out')
+    Pylint('-f parseable -d I0011,R0801 ben10', 'pylint.out')
 finally:
     os.chdir(old_cwd)
 

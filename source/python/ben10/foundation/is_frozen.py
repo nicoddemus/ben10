@@ -45,7 +45,7 @@ def SetIsFrozen(is_frozen):
 # Since we perform the application checks in the executable we can't use IsFrozen.
 # The following checks are tied to this flag:
 # - DevelopmentCheckType
-# - Interface class check (TODO)
+# - Interface class check
 #===================================================================================================
 def IsDevelopment():
     '''

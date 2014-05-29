@@ -79,7 +79,7 @@ def Dedent(text, ignore_first_linebreak=True, ignore_last_linebreak=True):
         # Current line and previous winner have no common whitespace:
         # there is no margin.
         else:
-            # TODO: Can't find a way to cover this? Is this coverable?
+            # TODO: BEN-18: Improve coverage
             margin = ""
             break
 

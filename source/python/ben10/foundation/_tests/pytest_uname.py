@@ -4,6 +4,7 @@ from ben10.foundation.pushpop import PushPop
 from ben10.foundation.uname import (GetApplicationDir, GetExecutableDir, GetUserHomeDir,
     IsRunningOn64BitMachine)
 import os
+import pytest
 import sys
 
 
@@ -13,6 +14,7 @@ import sys
 #===================================================================================================
 class Test():
 
+    @pytest.mark.skipif('sys.platform != "win32"')
     def testIsRunningOn64BitMachine(self, monkeypatch):
         import ctypes
 

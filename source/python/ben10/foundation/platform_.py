@@ -53,12 +53,13 @@ class Platform(object):
     REDHAT = 'redhat'
     UBUNTU = 'ubuntu'
     DARWIN = 'darwin'
+    DEBIAN = 'debian'
 
     FLAVOUR_WINDOWS = 'windows'
     FLAVOUR_LINUX = 'linux'
     FLAVOUR_DARWIN = 'darwin'
 
-    _VALID_NAMES = [WIN, REDHAT, UBUNTU, DARWIN]
+    _VALID_NAMES = [WIN, REDHAT, DEBIAN, UBUNTU, DARWIN]
     _VALID_BITS = ['32', '64']
     _VALID_DEBUG = [True, False]
 
@@ -147,6 +148,7 @@ class Platform(object):
             'win64d' : (cls.WIN, '64', True),
             'redhat64' : (cls.REDHAT, '64', False),
             'ubuntu64' : (cls.UBUNTU, '64', False),
+            'debian64' : (cls.DEBIAN, '64', False),
             'darwin32' : (cls.DARWIN, '32', False),
         }
         try:
@@ -174,6 +176,7 @@ class Platform(object):
             'amd64.win32' : (cls.WIN, '64'),
             'amd64.redhat' : (cls.REDHAT, '64'),
             'amd64.ubuntu' : (cls.UBUNTU, '64'),
+            'amd64.debian' : (cls.DEBIAN, '64'),
             'i686.darwin' : (cls.DARWIN, '32'),
         }
         try:
@@ -212,6 +215,7 @@ class Platform(object):
                 DIST_MAP = {
                     'fedora' : 'redhat',
                     'Ubuntu' : 'ubuntu',
+                    'Debian' : 'debian',
                 }
                 MACHINE_MAP = {
                     'i686' : '32',
@@ -315,6 +319,7 @@ class Platform(object):
             self.WIN : self.FLAVOUR_WINDOWS,
             self.REDHAT : self.FLAVOUR_LINUX,
             self.UBUNTU : self.FLAVOUR_LINUX,
+            self.DEBIAN : self.FLAVOUR_LINUX,
             self.DARWIN : self.FLAVOUR_DARWIN,
         }
         try:
@@ -372,6 +377,7 @@ class Platform(object):
             'win64d' : 'amd64.win32',
             'redhat64' : 'amd64.redhat',
             'ubuntu64' : 'amd64.ubuntu',
+            'debian64' : 'amd64.debian',
             'darwin32' : 'i686.darwin',
         }
         try:
@@ -406,6 +412,7 @@ class Platform(object):
             'win64d' : 'Windows 64-bit DEBUG',
             'redhat64' : 'RedHat Linux 64-bit',
             'ubuntu64' : 'Ubuntu Linux 64-bit',
+            'debian64' : 'Debian Linux 64-bit',
             'darwin32' : 'Darwin 32-bit',
         }
         try:

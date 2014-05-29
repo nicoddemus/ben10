@@ -562,7 +562,7 @@ class Test:
                             ''
                     return MyMethod()
                 else:
-                    raise AttributeError  # TODO: COVER
+                    raise AttributeError  # TODO: BEN-18: Improve coverage
 
         m1 = M1()
         m1.m1()

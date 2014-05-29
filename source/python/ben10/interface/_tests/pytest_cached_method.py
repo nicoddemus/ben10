@@ -164,7 +164,7 @@ class Test:
                 self.id = 1
                 self.n_calls = 0
 
-# TODO: Not covered
+# TODO: BEN-18: Improve coverage
 #             def __str__(self):
 #                 return '%s %d' % (self.name, self.id)
 
