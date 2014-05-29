@@ -10,7 +10,7 @@ import sys
 #===================================================================================================
 def IsRunningOn64BitMachine():
     '''
-    TODO: Move this to Platform class.
+    TODO: BEN-19: Refactor: Move uname stuff to Platform class.
 
     :rtype: bool
     :returns:

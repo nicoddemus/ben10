@@ -641,7 +641,8 @@ class Test:
             _AssertImplementsFullChecking(a_flawed_zoo, IZoo)
 
 
-# TODO: This is BAD... testing Scalar, XField, Subject on a BASIC module. Move these elsewhere
+# TODO: BEN-22: Check for excessive-dependency on interface module.
+#       This is BAD... testing Scalar, XField, Subject on a BASIC module. Move these elsewhere
 #     def testScalarAttribute(self):
 #         from coilib50.units import Scalar
 #

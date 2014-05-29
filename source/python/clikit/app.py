@@ -575,7 +575,8 @@ class App(object):
         :param *kwargs:
             Keyword arguments passed to the command function "as is".
 
-        TODO: This is not handling fixtures. It ALWAYS passes console as the first parameter.
+        TODO: BEN-23: Handle fixture on clikit.app.App.ExecuteCommand.
+              This is not handling fixtures. It ALWAYS passes console as the first parameter.
         '''
         from .console import BufferedConsole
 

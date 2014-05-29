@@ -126,7 +126,8 @@ class ModuleFinder(object):
         return sorted(finder.modules.keys() + finder.badmodules.keys())
 
 
-# TODO: This is no longer necessary on ben10 since it was used to check dependencies and we now
+# TODO: BEN-20: Check imported code for applicability.
+#       This is no longer necessary on ben10 since it was used to check dependencies and we now
 #       use snakefood and aa project.module_deps.
 #     @classmethod
 #     def GetEsssImports(cls, path):
@@ -143,7 +144,7 @@ class ModuleFinder(object):
 #             e.g. set(['coilib50', 'sharedscripts10'])
 #
 #
-#         TODO: 0034731: Move GetEsssImports from coilib50 to sharedscripts10
+#         TODO: EDEN-257: Move GetEsssImports from coilib50 to sharedscripts10
 #         '''
 #
 #         def IsEsssProject(module_path):

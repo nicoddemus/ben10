@@ -106,7 +106,8 @@ class Test:
         assert not IsInstance(B(), 'C')
 
 
-# TODO: Not executed on tests... might as well be commented. Create a test for it.
+# TODO: BEN-18: Improve coverage.
+#       Not executed on tests... might as well be commented. Create a test for it.
 #     def profileIsInstance(self):
 #         '''
 #             Results obtained (after optimizing):

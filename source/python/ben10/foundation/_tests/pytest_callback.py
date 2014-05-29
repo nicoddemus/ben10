@@ -781,7 +781,6 @@ class Test(object):
         assert len(handled_errors) == 7
 
 
-    # TODO:
     def testKeyReusedAfterDead(self, monkeypatch):
         self._gotten_key = False
         def GetKey(*args, **kwargs):

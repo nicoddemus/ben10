@@ -58,7 +58,6 @@ def Md5Hex(filename=None, contents=None):
     :returns:
         Returns a string with the hex digest of the stream.
     '''
-    # TODO: 0060634: Allow Md5Hex to receive a file-like object as parameter
     import hashlib
     md5 = hashlib.md5()
 

@@ -40,7 +40,8 @@ class Test:
         assert alpha.without_value == ()
 
 
-# TODO: Not executed on tests, might as well be commented. Create a test for it.
+# TODO: BEN-18: Improve coverage.
+#       Not executed on tests, might as well be commented. Create a test for it.
 #     def probeBunchMemory(self):
 #         # Slots
 #         #

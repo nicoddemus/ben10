@@ -1,7 +1,8 @@
 from ben10.foundation import is_frozen
 from ben10.foundation.platform_ import Platform
 from ben10.foundation.pushpop import PushPop
-from ben10.foundation.uname import GetApplicationDir, GetUserHomeDir, IsRunningOn64BitMachine
+from ben10.foundation.uname import (GetApplicationDir, GetExecutableDir, GetUserHomeDir,
+    IsRunningOn64BitMachine)
 import os
 import sys
 
@@ -13,13 +14,20 @@ import sys
 class Test():
 
     def testIsRunningOn64BitMachine(self, monkeypatch):
+        import ctypes
+
+        def mock_IsWow64Process(a, result):
+            print dir(result)
+            result = 0
+
         monkeypatch.setattr(Platform, 'GetCurrentPlatform', classmethod(lambda x:'win64'))
         assert IsRunningOn64BitMachine()
 
-#        TODO: In this case it checks using IsWow64Process... shoudn't be better/easier to check for PROGRAMFILES(x86)
-#              environment variable?
-#        monkeypatch.setattr(Platform, 'GetCurrentPlatform', classmethod(lambda x:'win32'))
-#        assert not IsRunningOn64BitMachine()
+        # When CurrentPlatform returns win32 we fallback the test to IsWow64Process, mocked here to
+        # ensure it will return "false" for 64-bits.
+        monkeypatch.setattr(ctypes.windll.kernel32, 'IsWow64Process', mock_IsWow64Process)
+        monkeypatch.setattr(Platform, 'GetCurrentPlatform', classmethod(lambda x:'win32'))
+        assert not IsRunningOn64BitMachine()
 
 
     def testGetUserHomeDir(self):
@@ -40,3 +48,7 @@ class Test():
             assert GetApplicationDir() == os.path.dirname(os.path.dirname(sys.executable))
         finally:
             is_frozen.SetIsFrozen(is_frozen_)
+
+
+    def testGetExecutableDir(self):
+        assert GetExecutableDir() == os.path.dirname(sys.executable)

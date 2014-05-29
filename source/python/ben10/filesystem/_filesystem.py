@@ -220,7 +220,6 @@ def CreateMD5(source_filename, target_filename=None):
         md5_contents = Md5Hex(filename=source_filename)
     else:
         # Md5Hex can't handle remote files, we open it and pray we won't run out of memory.
-        # TODO: 0060634: Allow Md5Hex to receive a file-like object as parameter
         md5_contents = Md5Hex(contents=GetFileContents(source_filename))
 
     # Write MD5 hash to a file

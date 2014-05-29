@@ -47,7 +47,8 @@ def AsImmutable(value, return_str_if_not_expected=True):
 
     # Now, on to the isinstance series...
 
-    # TODO: Can't do tests with these. Do they have real use?
+    # TODO: BEN-20: Check imported code for applicability
+    # Can't do tests with these. Do they have real use?
     if isinstance(value, (int, long, float, str, bool)):
         return value
     if isinstance(value, (tuple, list)):
