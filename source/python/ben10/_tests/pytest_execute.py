@@ -12,11 +12,22 @@ import time
 #===================================================================================================
 # Test
 #===================================================================================================
-class Test:
+class Test(object):
 
     def _AssertExecute(self, expected_output, *args, **kwargs):
         obtained_output = Execute(*args, **kwargs)
+        self._AssertOutput(obtained_output, expected_output)
+
+
+    def _AssertOutput(self, obtained_output, expected_output):
+        # Removes known debug files:
+        # - Coverage.py warning (travis-ci)
+        # - pydev debugging: (inside PyCharm IDE)
+        obtained_output = [i for i in obtained_output if not i.startswith("Coverage.py warning:")]
+        obtained_output = [i for i in obtained_output if not i.startswith("pydev debugger: ")]
         obtained_output = '\n'.join(obtained_output)
+        obtained_output = obtained_output.lstrip('\n')
+
         assert obtained_output == expected_output
 
 
@@ -80,32 +91,30 @@ class Test:
 
 
     def testExecuteInput(self, embed_data):
-        obtained_output = Execute(
+        self._AssertExecute(
+            Dedent(
+                '''
+                    testExecuteInput: Hello, planet earth!
+                '''
+            ),
             ['python', embed_data.GetDataFilename('testExecuteInput.py_')],
-            input='planet earth'
-        )
-        assert (
-            [i for i in obtained_output]
-            == [
-                'testExecuteInput: Hello, planet earth!',
-            ]
+            input='planet earth',
         )
 
 
     def testExecuteAndEnviron(self, embed_data):
-        obtained_output = Execute(
+        self._AssertExecute(
+            Dedent(
+                '''
+                    testExecuteAndEnviron: ALPHA: alpha
+                    testExecuteAndEnviron: BRAVO: bravo
+                '''
+            ),
             ['python', embed_data.GetDataFilename('testExecuteAndEnviron.py_')],
             environ={
                 'ALPHA' : 'alpha',
                 'BRAVO' : 'bravo',
             },
-        )
-        assert(
-            [i for i in obtained_output]
-            == [
-                'testExecuteAndEnviron: ALPHA: alpha',
-                'testExecuteAndEnviron: BRAVO: bravo',
-            ]
         )
 
 

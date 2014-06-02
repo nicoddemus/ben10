@@ -3,7 +3,7 @@ python:
   - "2.7"
 install:
     - sudo apt-get install -qq unrar
-    - pip install -r requirements.txt --use-mirrors
+    - pip install -r requirements.txt
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
 script:
     - export PYTHONPATH=$PYTHONPATH:$PWD/source/python
