@@ -4,6 +4,7 @@ python:
 install:
     - sudo apt-get install -qq unrar
     - pip install -r requirements.txt
+    - pip install coveralls
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
 script:
     - export PYTHONPATH=$PYTHONPATH:$PWD/source/python
